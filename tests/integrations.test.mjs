@@ -49,6 +49,15 @@ test("malformed or truncated model output never becomes a valid moderation verdi
   await assert.rejects(api.moderateContent("hello"), error => error.status === 502);
 });
 
+test("search carries a named origin and bounded radius without inventing coordinates", async () => {
+  process.env.ANTHROPIC_API_KEY = "test-placeholder";
+  const filters = { query: "", category: "building", layer: "rated", dietary: [], openNow: false, tags: [], near: "Garden Halls", radiusKm: 1.5 };
+  fakeClaude(filters);
+  assert.deepEqual(await api.searchWithClaude("campus buildings within 1.5 km near Garden Halls"), filters);
+  fakeClaude({ ...filters, radiusKm: -1 });
+  await assert.rejects(api.searchWithClaude("near campus"), error => error.status === 502);
+});
+
 test("blank optional Claude settings use the default model and omit the workspace header", async () => {
   process.env.ANTHROPIC_API_KEY = "test-placeholder";
   process.env.ANTHROPIC_MODEL = " ";

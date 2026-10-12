@@ -47,11 +47,38 @@ export function stringList(value: unknown, label: string, allowed?: readonly str
 }
 
 export const criterionGroups = {
+  building: ["comfort", "wifi", "accessibility"],
   lecture: ["comfort", "plugs", "wifi", "noise", "accessibility"],
   study: ["comfort", "plugs", "wifi", "noise", "accessibility"],
   accommodation: ["value", "cleanliness", "social", "staff", "location"],
   rental: ["landlord", "deposit", "damp", "value", "noise"],
 } as const;
+
+export function communityRequestInput(body: Record<string, unknown>) {
+  const kind = textField(body.kind, "Request type", 1, 20);
+  if (kind !== "correction" && kind !== "takedown") throw new HttpError(400, "Choose a correction or privacy request.");
+  const contact = body.contact ? textField(body.contact, "Contact email", 5, 254).toLowerCase() : null;
+  if (contact && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) throw new HttpError(400, "Enter a valid contact email.");
+  let evidenceUrl: string | null = null;
+  if (body.evidenceUrl) {
+    const value = textField(body.evidenceUrl, "Evidence link", 1, 1000);
+    let url: URL;
+    try { url = new URL(value); } catch { throw new HttpError(400, "Use a public HTTPS evidence link."); }
+    if (url.protocol !== "https:" || url.username || url.password) throw new HttpError(400, "Use a public HTTPS evidence link.");
+    evidenceUrl = url.toString();
+  }
+  return { kind, targetId: safeId(body.targetId || "general", "Place or contribution reference"), contact,
+    reason: textField(body.reason, "Details", 10, 2000), evidenceUrl };
+}
+
+export function collectionUpdateInput(body: Record<string, unknown>) {
+  const instructions = textField(body.collectionInstructions ?? "", "Collection instructions", 0, 500);
+  const privacy = privateInformationReason(instructions);
+  if (privacy) throw new HttpError(400, privacy);
+  const portions = body.portionsRemaining == null || body.portionsRemaining === "" ? null : finiteNumber(body.portionsRemaining, "Portions remaining", 0, 10000);
+  if (portions !== null && !Number.isInteger(portions)) throw new HttpError(400, "Enter a whole number of portions.");
+  return { instructions, portions };
+}
 
 export function reviewInput(body: Record<string, unknown>, category?: keyof typeof criterionGroups) {
   const rating = finiteNumber(body.rating, "Rating", 1, 5);

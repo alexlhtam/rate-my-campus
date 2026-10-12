@@ -2,16 +2,20 @@ import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
+import { createRequire } from 'node:module';
 
 const source = await readFile(new URL('../lib/data.ts', import.meta.url), 'utf8');
 const { outputText } = ts.transpileModule(source, {
-  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true },
 });
-const data = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
+const module = {exports:{}};
+new Function('require','module','exports',outputText)(createRequire(new URL('../lib/data.ts', import.meta.url)),module,module.exports);
+const data = module.exports;
 const placeById = new Map(data.places.map(place => [place.id, place]));
 
 test('demo reviews aggregate through the same canonical keys accepted by the review form', () => {
   const expected = {
+    building: ['comfort', 'wifi', 'accessibility'],
     study: ['comfort', 'plugs', 'wifi', 'noise', 'accessibility'],
     lecture: ['comfort', 'plugs', 'wifi', 'noise', 'accessibility'],
     halls: ['value', 'cleanliness', 'social', 'staff', 'location'],

@@ -85,6 +85,6 @@ export default function CampusBuildings(viewport: CampusViewport) {
   return <svg className="campus-buildings" width={viewport.width} height={viewport.height} viewBox={`0 0 ${viewport.width} ${viewport.height}`} aria-hidden="true"
     style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
     {buildings.map(building => <path key={building.id} data-building={building.name} d={building.path}
-      fill="#f1edf8" fillRule="evenodd" stroke="#b5aac9" strokeWidth="0.9" strokeLinejoin="round" />)}
+      fill="#c6b5de" fillRule="evenodd" stroke="#a88ec2" strokeWidth="0.9" strokeLinejoin="round" />)}
   </svg>;
 }

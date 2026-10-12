@@ -67,7 +67,8 @@ async function claudeJSON<T>(instruction: string, input: unknown, validator: z.Z
 
 export const searchFiltersSchema = z.object({
   query: z.string().max(160),
-  category: z.enum(["study", "lecture", "halls", "rental"]).nullable(),
+  category: z.enum(["study", "lecture", "halls", "rental", "building"]).nullable(),
+  near: z.string().max(160).nullable().optional(), radiusKm: z.number().min(.05).max(50).nullable().optional(),
   dietary: z.array(z.enum(["vegan", "vegetarian", "halal", "gluten-free"])).max(4),
   openNow: z.boolean(), tags: z.array(z.string().max(60)).max(6),
   layer: z.enum(["rated", "freebie", "food", "deal"]).nullable(),
@@ -75,7 +76,7 @@ export const searchFiltersSchema = z.object({
 
 export async function searchWithClaude(text: string) {
   return claudeJSON(
-    'Translate the request into search filters. Schema: {"query":string,"category":"study"|"lecture"|"halls"|"rental"|null,"dietary":("vegan"|"vegetarian"|"halal"|"gluten-free")[],"openNow":boolean,"tags":string[],"layer":"rated"|"freebie"|"food"|"deal"|null}. food means leftover food alerts; freebie means society freebies; deal means student discounts. Put only remaining place-name words in query, not words already represented by filters. Use tags such as quiet, plugs, late, accessible, wifi. openNow only when explicitly requested. Use null for unspecified category/layer. Do not invent places, availability or opening hours.',
+    'Translate the request into search filters. Schema: {"query":string,"category":"study"|"lecture"|"halls"|"rental"|"building"|null,"near":string|null,"radiusKm":number|null,"dietary":("vegan"|"vegetarian"|"halal"|"gluten-free")[],"openNow":boolean,"tags":string[],"layer":"rated"|"freebie"|"food"|"deal"|null}. food means leftover food alerts; freebie means society freebies; deal means student discounts. Put only remaining place-name words in query, not words already represented by filters. Use tags such as quiet, plugs, late, accessible, wifi. openNow only for explicitly open now, not open late. Put late in tags for open-late requests. Put a named starting place or area after near in near; use me only for an explicit near-me request. radiusKm is an explicit numeric distance limit, otherwise null. Do not include the starting place words in query. Use null for unspecified category/layer. Do not invent places, availability or opening hours.',
     { request: text.slice(0, 800) }, searchFiltersSchema,
   );
 }

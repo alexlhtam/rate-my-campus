@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Check, ExternalLink, Gift, LoaderCircle, MapPin, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import CampusMap, { type MapPosition, type MapProvider } from './campus-map';
 import { places } from '@/lib/data';
+import { hasCoordinates } from '@/lib/place-search';
 
 type ImportStatus = { anthropic: boolean; google: boolean; unionImport: boolean; signedIn: boolean; verified: boolean; moderator: boolean };
 type Draft = {
@@ -139,10 +140,10 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
       </div>}
       <label>Or choose a campus place<select defaultValue="" onChange={event => {
         const place = places.find(value => value.id === event.target.value);
-        if (!place) return;
+        if (!place || !hasCoordinates(place)) return;
         setPosition({ lat: place.lat, lng: place.lng }); setLocationSource('manual'); setConfirmed(false); setMatches([]);
         setDraft({ ...draft, location: place.name });
-      }}><option value="" disabled>Select a public campus location</option>{places.filter(place => !place.demo && ['study', 'lecture'].includes(place.category)).map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>
+      }}><option value="" disabled>Select a located campus place</option>{places.filter(hasCoordinates).filter(place => !place.demo && ['study', 'lecture', 'building'].includes(place.category)).map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>
       <div className="location-confirm">
         <CampusMap items={[]} onSelect={() => {}} confirm initialPosition={position} requireGoogle={locationSource === 'google'} onProviderChange={setMapProvider} onPosition={next => { setPosition(next); setConfirmed(false); }} />
         <span>Move the map to confirm the entrance · {position.lat.toFixed(5)}, {position.lng.toFixed(5)}</span>

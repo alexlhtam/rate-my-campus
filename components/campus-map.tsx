@@ -1,9 +1,11 @@
 'use client';
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import type {Map as GLMap,GeoJSONSource,StyleSpecification,ErrorEvent as MapErrorEvent} from 'maplibre-gl';
 import {MapPin,Plus,Minus,LocateFixed,Star,Gift,Utensils,Tag,Search,X,Building2,ChevronDown,ExternalLink,Compass,Layers,Info} from 'lucide-react';
 import FlatCampusMap from './campus-flat-map';
-import {CAMPUS_VIEWS,prepareCampusGeometry,mapBuildings,geometryBounds,searchBuildings,groupScreenPins,isSafeSource,type CampusBuilding,type CampusDirectory,type CampusGeometry,type CampusFootprintIndex} from '@/lib/campus-map-model';
+import {placesInBuilding} from '@/lib/data';
+import {positionMapOverlays,layoutOverlayGroups,type MapOverlay,type OverlayGroupLayout} from '@/lib/campus-map-overlays';
+import {CAMPUS_VIEWS,prepareCampusGeometry,mapBuildings,geometryBounds,searchBuildings,isSafeSource,type CampusBuilding,type CampusDirectory,type CampusGeometry,type CampusFootprintIndex} from '@/lib/campus-map-model';
 
 export type MapPosition={lat:number;lng:number};
 export type MapProvider='google'|'openstreetmap'|'unavailable';
@@ -22,6 +24,12 @@ const osmStyle=(enabled:boolean):StyleSpecification=>({version:8,sources:{street
 export default function CampusMap(props:Props){
  const {items,selected,confirm=false,initialPosition,requireGoogle=false}=props;
  const container=useRef<HTMLDivElement>(null),mapRef=useRef<GLMap|null>(null),callbacks=useRef(props);callbacks.current=props;
+ const overlayRefs=useRef(new Map<string,MapOverlay>());
+ const groupLayoutRef=useRef<OverlayGroupLayout<MapItem>|null>(null);
+ const registerOverlay=(key:string,point:MapPosition)=>(element:HTMLButtonElement|null)=>{if(element)overlayRefs.current.set(key,{element,point});else overlayRefs.current.delete(key)};
+ // Parent updates can change contents while the camera is moving. Correct their
+ // initial positions before paint as well as on the map's own render frame.
+ useLayoutEffect(()=>{if(mapRef.current)positionMapOverlays(mapRef.current,overlayRefs.current.values())});
  const [ready,setReady]=useState(false),[fallback,setFallback]=useState(false),[revision,setRevision]=useState(0),[threeD,setThreeD]=useState(!confirm),[labels,setLabels]=useState(true);
  const [provider,setProvider]=useState<MapProvider>(requireGoogle?'unavailable':'openstreetmap'),[connection,setConnection]=useState<'checking'|'google'|'openstreetmap'>('checking'),[session,setSession]=useState(''),[copyright,setCopyright]=useState('');
  const [geometry,setGeometry]=useState<CampusGeometry>(emptyGeometry),[directory,setDirectory]=useState<CampusDirectory>(emptyDirectory),[dataError,setDataError]=useState('');
@@ -45,7 +53,7 @@ export default function CampusMap(props:Props){
 
  useEffect(()=>{
   if(!container.current||fallback)return;
-  let disposed=false,map:GLMap|undefined,observer:ResizeObserver|undefined,frame=0;
+  let disposed=false,map:GLMap|undefined,observer:ResizeObserver|undefined;
   (async()=>{
    try{
     const gl=await import('maplibre-gl');if(disposed||!container.current)return;
@@ -55,8 +63,12 @@ export default function CampusMap(props:Props){
     map=new gl.Map({container:container.current,style:osmStyle(!requireGoogle),center:start,zoom:confirm?17:16.65,pitch:confirm?0:42,bearing:0,minZoom:10,maxZoom:20,maxPitch:60,attributionControl:false,renderWorldCopies:false,canvasContextAttributes:{antialias:true},dragRotate:!confirm,touchPitch:!confirm,fadeDuration:100});
     mapRef.current=map;
     map.getCanvas().setAttribute('aria-label',confirm?'Confirm location: drag the map or use arrow keys':'UCL campus map: drag to pan, scroll or pinch to zoom, right-drag to rotate');
-    const update=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;if(!disposed)setRevision(value=>value+1)})};
-    map.on('move',update);map.on('resize',update);
+    // Keep marker anchors fixed throughout a gesture. Rebuilding collision groups
+    // during a drag changes their representative place and makes bubbles slide.
+    // Their positions update synchronously with the canvas, outside React state.
+    const update=()=>{if(!disposed)setRevision(value=>value+1)};
+    map.on('render',()=>{if(!disposed&&map)positionMapOverlays(map,overlayRefs.current.values())});
+    map.on('resize',update);
     map.on('moveend',()=>{update();if(confirm){const center=map!.getCenter();callbacks.current.onPosition?.({lat:center.lat,lng:center.lng})}});
     map.on('load',()=>{if(!disposed){setReady(true);update()}});
     map.on('error',event=>{if(/WebGL|context|GPU/i.test(event.error.message)&&!disposed)setFallback(true)});
@@ -69,7 +81,7 @@ export default function CampusMap(props:Props){
     observer=new ResizeObserver(()=>map?.resize());observer.observe(container.current);
    }catch{if(!disposed)setFallback(true)}
   })();
-  return()=>{disposed=true;cancelAnimationFrame(frame);observer?.disconnect();map?.remove();mapRef.current=null};
+  return()=>{disposed=true;observer?.disconnect();map?.remove();mapRef.current=null;overlayRefs.current.clear()};
  // Form coordinate changes update the existing map in the effect below.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[confirm,fallback]);
@@ -79,12 +91,12 @@ export default function CampusMap(props:Props){
   const map=mapRef.current;if(!ready||!map||confirm)return;
   if(!map.getSource('campus')){
    map.addSource('campus',{type:'geojson',data:geometry});
-   map.addLayer({id:'campus-ground',type:'fill',source:'campus',paint:{'fill-color':'#e9e3f2','fill-opacity':.8,'fill-outline-color':'#b5aac9'}});
-   map.addLayer({id:'campus-buildings',type:'fill-extrusion',source:'campus',minzoom:14,filter:['!=',['get','isOutline'],true],paint:{'fill-extrusion-color':'#f1edf8','fill-extrusion-height':['get','renderHeight'],'fill-extrusion-base':['get','renderBase'],'fill-extrusion-opacity':1,'fill-extrusion-vertical-gradient':true}});
+   map.addLayer({id:'campus-ground',type:'fill',source:'campus',paint:{'fill-color':'#d5c7e7','fill-opacity':.8,'fill-outline-color':'#a88ec2'}});
+   map.addLayer({id:'campus-buildings',type:'fill-extrusion',source:'campus',minzoom:14,filter:['!=',['get','isOutline'],true],paint:{'fill-extrusion-color':'#c6b5de','fill-extrusion-height':['get','renderHeight'],'fill-extrusion-base':['get','renderBase'],'fill-extrusion-opacity':1,'fill-extrusion-vertical-gradient':true}});
    map.setLight({anchor:'viewport',color:'#ffffff',intensity:.38,position:[1.2,200,40]});
   }else (map.getSource('campus') as GeoJSONSource).setData(geometry);
  },[geometry,ready,confirm]);
- useEffect(()=>{const map=mapRef.current;if(!map?.getLayer('campus-buildings'))return;map.setPaintProperty('campus-buildings','fill-extrusion-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#c8b2e8','#f1edf8']);map.setPaintProperty('campus-ground','fill-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#d9c7ef','#e9e3f2'])},[activeBuilding,ready,geometry]);
+ useEffect(()=>{const map=mapRef.current;if(!map?.getLayer('campus-buildings'))return;map.setPaintProperty('campus-buildings','fill-extrusion-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#ad91ce','#c6b5de']);map.setPaintProperty('campus-ground','fill-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#bea7d8','#d5c7e7'])},[activeBuilding,ready,geometry]);
  useEffect(()=>{const map=mapRef.current;if(!ready||!map)return;if(map.getLayer('campus-buildings'))map.setLayoutProperty('campus-buildings','visibility',threeD?'visible':'none');map.easeTo({pitch:threeD?42:0,bearing:threeD?map.getBearing():0,duration:450})},[threeD,ready,geometry]);
 
  useEffect(()=>{
@@ -137,15 +149,19 @@ export default function CampusMap(props:Props){
   map.flyTo({center:view.center,zoom:view.zoom,pitch:threeD&&next!=='london'?42:0,duration:900});
  }
  const map=mapRef.current,bounds=map?.getBounds(),width=container.current?.clientWidth||0,height=container.current?.clientHeight||0;
- const projected=!fallback&&ready&&map&&!confirm?items.filter(item=>valid(item)&&bounds?.contains([item.lng,item.lat])).map(item=>{const p=map.project([item.lng,item.lat]);return {item,x:p.x,y:p.y}}):[];
- const groups=groupScreenPins(projected).filter(group=>group.x>-20&&group.y>0&&group.x<width+20&&group.y<height);
+ // Keep off-screen markers mounted so a pan reveals them in that very frame.
+ // The map container clips them; no React render is needed to enter the viewport.
+ const projected=!fallback&&ready&&map&&!confirm?items.filter(item=>valid(item)).map(item=>{const p=map.project([item.lng,item.lat]);return {item,x:p.x,y:p.y}}):[];
+ const groupLayout=layoutOverlayGroups(projected,groupLayoutRef.current,Boolean(map?.isMoving()));groupLayoutRef.current=groupLayout;
+ const groups=groupLayout.groups;
  const labelCandidates=!fallback&&ready&&map&&labels&&!confirm&&map.getZoom()>=15.4?buildings.filter(building=>building.coordinates&&bounds?.contains([building.coordinates.lng,building.coordinates.lat])).map(building=>{const p=map.project([building.coordinates!.lng,building.coordinates!.lat]);return {building,x:p.x,y:p.y}}):[];
  const visibleLabels:typeof labelCandidates=[];
  for(const label of labelCandidates){if(label.y<90||label.y>height-130||label.x<40||label.x>width-40||visibleLabels.some(other=>Math.abs(other.x-label.x)<125&&Math.abs(other.y-label.y)<46)||groups.some(pin=>Math.abs(pin.x-label.x)<55&&Math.abs(pin.y-label.y)<30))continue;visibleLabels.push(label);if(visibleLabels.length>=18)break;}
  const searchResults=searchBuildings(buildings,buildingQuery,directoryCampus).filter(building=>coverageFilter==='all'||mappedIds.has(building.id)===(coverageFilter==='mapped')),currentFeature=geometry.features.find(feature=>feature.properties.buildingId===activeBuilding?.id&&!feature.properties.isOutline),zoom=map?.getZoom()||16.65;
  const visibleCount=buildings.filter(building=>mappedIds.has(building.id)&&building.coordinates&&bounds?.contains([building.coordinates.lng,building.coordinates.lat])).length;
+ const buildingReviewPlaces=activeBuilding?placesInBuilding(activeBuilding.id):[];
 
- return <div className={`campus-map atlas ${confirm?'confirm-map':''} ${fallback?'atlas-fallback':''}`} data-map-engine={fallback?'flat':'maplibre'} data-revision={revision}>
+ return <div className={`campus-map atlas ${confirm?'confirm-map':''} ${fallback?'atlas-fallback':''}`} style={{overflow:'clip'}} data-map-engine={fallback?'flat':'maplibre'} data-revision={revision}>
   <div ref={container} className="atlas-canvas">{fallback&&<FlatCampusMap {...props} focusView={flatFocus} directoryOverlay onRecenter={()=>changeCampus(campus)}/>}</div>
   {fallback&&!confirm&&<div className="atlas-fallback-note">2D map · 3D isn’t available in this browser</div>}
   {!fallback&&(!ready||requireGoogle&&provider!=='google')&&<div className="atlas-loading" role="status">{!ready||connection==='checking'||connection==='google'?'Loading the map…':'Google Maps is unavailable. Reset to a manual campus location to continue.'}</div>}
@@ -160,10 +176,10 @@ export default function CampusMap(props:Props){
     <div className="atlas-directory-results">{searchResults.map(building=><button type="button" key={building.id} onClick={()=>focusBuilding(building)}><span className="atlas-building-icon"><Building2 size={16}/></span><span><b>{building.name}</b><small>{building.address||building.use||'Listed by UCL'}</small>{building.membership?.status==='ucl-partner'&&<small>Partner residence{building.accommodation?.operator?` · ${building.accommodation.operator}`:''}</small>}{!mappedIds.has(building.id)&&<em>Footprint not yet mapped</em>}</span><ChevronDown size={13} className="atlas-go"/></button>)}{!searchResults.length&&<p>No UCL locations match these filters.</p>}</div>
     <p className="atlas-directory-credit">UCL buildings and verified partner residences. A listing does not mean public access. Coverage is still being expanded.</p>
    </section>}
-   {visibleLabels.map(({building,x,y})=><button type="button" className={`atlas-building-label ${activeBuilding?.id===building.id?'active':''}`} key={building.id} style={{left:x,top:y}} onClick={()=>focusBuilding(building)} aria-label={`About ${building.name}`}>{building.name}</button>)}
-   {groups.map(group=>{const first=group.items[0],Icon=icons[first.type||'rated']||Star;return <button type="button" key={group.items.map(item=>item.id).join('-')} className={`map-pin atlas-pin ${first.type||'rated'} ${group.items.some(item=>item.id===selected)?'selected':''}`} style={{left:group.x,top:group.y}} aria-label={group.items.length>1?`${group.items.length} places and alerts here`:`View ${first.name||first.title}`} aria-pressed={group.items.some(item=>item.id===selected)} onClick={()=>{setActiveBuilding(null);if(group.items.length>1)setPinGroup(group.items);else callbacks.current.onSelect(first.id)}}><Icon size={14}/>{!first.type&&<b>{first.score||'—'}</b>}{group.items.length>1&&<span className="atlas-pin-count">{group.items.length}</span>}<span className="pin-tooltip">{group.items.length>1?`${group.items.length} spots here`:first.name||first.title}</span></button>})}
+   {visibleLabels.map(({building,x,y})=><button type="button" className={`atlas-building-label ${activeBuilding?.id===building.id?'active':''}`} key={building.id} ref={registerOverlay(`label:${building.id}`,building.coordinates!)} data-map-overlay="label" style={{left:x,top:y}} onClick={()=>focusBuilding(building)} aria-label={`About ${building.name}`}>{building.name}</button>)}
+   {groups.map(group=>{const first=group.items[0],Icon=icons[first.type||'rated']||Star;return <button type="button" key={group.items.map(item=>item.id).join('-')} className={`map-pin atlas-pin ${first.type||'rated'} ${group.items.some(item=>item.id===selected)?'selected':''}`} ref={registerOverlay(`pin:${group.items.map(item=>item.id).join('-')}`,first)} data-map-overlay="pin" style={{left:group.x,top:group.y,transitionProperty:'background-color,box-shadow',transformOrigin:'center bottom'}} aria-label={group.items.length>1?`${group.items.length} places and alerts here`:`View ${first.name||first.title}`} aria-pressed={group.items.some(item=>item.id===selected)} onClick={()=>{setActiveBuilding(null);if(group.items.length>1)setPinGroup(group.items);else callbacks.current.onSelect(first.id)}}><Icon size={14}/>{!first.type&&<b>{first.score||'—'}</b>}{group.items.length>1&&<span className="atlas-pin-count">{group.items.length}</span>}<span className="pin-tooltip">{group.items.length>1?`${group.items.length} spots here`:first.name||first.title}</span></button>})}
    {pinGroup&&<section className="atlas-building-card" aria-label="Places at this location"><button type="button" className="atlas-card-close" aria-label="Close places" onClick={()=>setPinGroup(null)}><X size={17}/></button><p className="atlas-eyebrow">A little closer</p><h3>{pinGroup.length} spots here</h3><div className="atlas-group-list">{pinGroup.map(item=><button type="button" key={item.id} onClick={()=>{setPinGroup(null);callbacks.current.onSelect(item.id)}}><span>{item.name||item.title}</span><b>{item.score||'View'} →</b></button>)}</div></section>}
-   {activeBuilding&&<section className="atlas-building-card" aria-label={`${activeBuilding.name} building information`}><button type="button" className="atlas-card-close" aria-label="Close building information" onClick={()=>setActiveBuilding(null)}><X size={17}/></button><p className="atlas-eyebrow"><Building2 size={12}/> UCL building directory</p><h3>{activeBuilding.name}</h3><p>{activeBuilding.address}</p>{activeBuilding.use&&<p>{activeBuilding.use}</p>}<div className="atlas-building-tags"><span>{activeBuilding.campus==='east'?'UCL East':activeBuilding.campus==='bloomsbury'?'Bloomsbury':'UCL location'}</span>{currentFeature?<span>Mapped footprint</span>:<span>Footprint not yet mapped</span>}{activeBuilding.membership?.status==='ucl-partner'&&<span>Partner residence</span>}</div>{activeBuilding.membership?.status==='ucl-partner'?<p className="atlas-source-note">Partner residence{activeBuilding.accommodation?.operator?` operated by ${activeBuilding.accommodation.operator}`:''}, listed by UCL Accommodation. This does not imply UCL owns or occupies the whole building.</p>:activeBuilding.membership?.scope&&<p className="atlas-source-note">{occupation[activeBuilding.membership.scope]||activeBuilding.membership.scope}</p>}{items.some(item=>item.campusBuildingId===activeBuilding.id)&&<div className="atlas-group-list">{items.filter(item=>item.campusBuildingId===activeBuilding.id).map(item=><button type="button" key={item.id} onClick={()=>{setActiveBuilding(null);callbacks.current.onSelect(item.id)}}><span>{item.name||item.title}</span><b>{item.score} ★ →</b></button>)}</div>}<div className="atlas-source-links">{activeBuilding.officialSourceUrls?.filter(isSafeSource).slice(0,1).map(url=><a key={url} href={url} target="_blank" rel="noreferrer">UCL information <ExternalLink size={12}/></a>)}{isSafeSource(currentFeature?.properties.sourceUrl)&&<a href={currentFeature!.properties.sourceUrl} target="_blank" rel="noreferrer">Footprint source <ExternalLink size={12}/></a>}</div>{currentFeature&&<p className="atlas-source-note">3D height: {String(currentFeature.properties.visualHeightStatus||'illustrative estimate').replaceAll('-',' ')}. Building positions do not indicate an entrance.</p>}{!currentFeature&&<p className="atlas-coverage-gap">{gapReasons.get(activeBuilding.id)||'The address is listed by UCL; a building footprint has not yet been verified.'}</p>}</section>}
+   {activeBuilding&&<section className="atlas-building-card" aria-label={`${activeBuilding.name} building information`}><button type="button" className="atlas-card-close" aria-label="Close building information" onClick={()=>setActiveBuilding(null)}><X size={17}/></button><p className="atlas-eyebrow"><Building2 size={12}/> UCL building directory</p><h3>{activeBuilding.name}</h3><p>{activeBuilding.address}</p>{activeBuilding.use&&<p>{activeBuilding.use}</p>}<div className="atlas-building-tags"><span>{activeBuilding.campus==='east'?'UCL East':activeBuilding.campus==='bloomsbury'?'Bloomsbury':'UCL location'}</span>{currentFeature?<span>Mapped footprint</span>:<span>Footprint not yet mapped</span>}{activeBuilding.membership?.status==='ucl-partner'&&<span>Partner residence</span>}</div>{activeBuilding.membership?.status==='ucl-partner'?<p className="atlas-source-note">Partner residence{activeBuilding.accommodation?.operator?` operated by ${activeBuilding.accommodation.operator}`:''}, listed by UCL Accommodation. This does not imply UCL owns or occupies the whole building.</p>:activeBuilding.membership?.scope&&<p className="atlas-source-note">{occupation[activeBuilding.membership.scope]||activeBuilding.membership.scope}</p>}{buildingReviewPlaces.length>0&&<div className="atlas-group-list">{buildingReviewPlaces.map(place=><button type="button" key={place.id} onClick={()=>{setActiveBuilding(null);callbacks.current.onSelect(place.id)}}><span>{place.name}<small>{place.parentPlaceId?'Room or space reviews':'Building reviews and discussion'}</small></span><b>{items.find(item=>item.id===place.id)?.score||'View'} →</b></button>)}</div>}<div className="atlas-source-links">{activeBuilding.officialSourceUrls?.filter(isSafeSource).slice(0,1).map(url=><a key={url} href={url} target="_blank" rel="noreferrer">UCL information <ExternalLink size={12}/></a>)}{isSafeSource(currentFeature?.properties.sourceUrl)&&<a href={currentFeature!.properties.sourceUrl} target="_blank" rel="noreferrer">Footprint source <ExternalLink size={12}/></a>}</div>{currentFeature&&<p className="atlas-source-note">3D height: {String(currentFeature.properties.visualHeightStatus||'illustrative estimate').replaceAll('-',' ')}. Building positions do not indicate an entrance.</p>}{!currentFeature&&<p className="atlas-coverage-gap">{gapReasons.get(activeBuilding.id)||'The address is listed by UCL; a building footprint has not yet been verified.'}</p>}</section>}
    <div className="atlas-legend"><span><i/>Campus footprint</span><b>{fallback?`${mappedCount} mapped locations`:`${visibleCount} nearby buildings`}</b><button type="button" aria-label="About the campus map data" onClick={()=>{setShowInfo(value=>!value);setDirectoryOpen(false)}}><Info size={14}/></button></div>
    {showInfo&&<section className="atlas-info"><b>{mappedCount} of {buildings.length} locations mapped</b><p>Includes UCL buildings and partner residences in the published directory. OpenStreetMap supplies the outlines and building sections. Courtyards stay open; neighbouring buildings stay flat.</p><p>Some listed addresses still need a verified footprint. Heights use mapped values or estimates; this is not a measured architectural model.</p><button type="button" className="atlas-show-gaps" onClick={()=>{setCoverageFilter('unmapped');setDirectoryCampus('all');setBuildingQuery('');setShowInfo(false);setDirectoryOpen(true)}}>See {buildings.length-mappedCount} unmapped locations →</button><a href="https://www.ucl.ac.uk/estates/our-services/area-facilities-management" target="_blank" rel="noreferrer">UCL Estates building list ↗</a>{directory.datasetDate&&<small>Source check: {directory.datasetDate}</small>}</section>}
    {dataError&&<div className="atlas-data-error" role="status">{dataError}</div>}

@@ -138,7 +138,7 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
   const attribution = activeProvider === 'google' ? coverage!.copyright : '© OpenStreetMap contributors';
 
   return <div className={'campus-map ' + (confirm ? 'confirm-map' : '')} ref={container} tabIndex={0} role="region"
-    aria-label={confirm ? 'Confirm pin location. Drag the map or use arrow keys.' : 'Campus map. Use arrow keys to pan.'} style={{ touchAction: 'none' }}
+    aria-label={confirm ? 'Confirm pin location. Drag the map or use arrow keys.' : 'Campus map. Use arrow keys to pan.'} style={{ touchAction: 'none', overflow: 'clip' }}
     onPointerDown={event => {
       if (event.button !== 0 || activeProvider === 'unavailable' || (event.target as HTMLElement).closest('button,a,input')) return;
       const start = project(center.lat, center.lng, zoom);
