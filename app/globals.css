@@ -25,3 +25,6 @@
 
 /* Short map panels keep all directory controls reachable by scrolling. */
 .atlas-directory{overflow-y:auto;overscroll-behavior:contain}.atlas-directory-results{flex-shrink:0}.atlas-fallback .atlas-fallback-note{top:85px;left:auto;right:18px;font-size:8px;pointer-events:none;z-index:7}.atlas-fallback .atlas-canvas>.campus-map>.map-controls{bottom:165px;z-index:8}
+
+.atlas-legend i{border-color:#b5aac9;background:#e9e3f2}.atlas-building-label.active{background:#e9dff6;color:#72528f}
+@media(max-height:600px){.atlas-building-card{top:90px;bottom:60px;max-height:none}.atlas-info{top:90px;bottom:60px;max-height:none}.atlas-directory{max-height:calc(100% - 135px)}}

@@ -79,12 +79,12 @@ export default function CampusMap(props:Props){
   const map=mapRef.current;if(!ready||!map||confirm)return;
   if(!map.getSource('campus')){
    map.addSource('campus',{type:'geojson',data:geometry});
-   map.addLayer({id:'campus-ground',type:'fill',source:'campus',paint:{'fill-color':'#e5ebe5','fill-opacity':.8,'fill-outline-color':'#a9b9ad'}});
-   map.addLayer({id:'campus-buildings',type:'fill-extrusion',source:'campus',minzoom:14,filter:['!=',['get','isOutline'],true],paint:{'fill-extrusion-color':'#f5f5ed','fill-extrusion-height':['get','renderHeight'],'fill-extrusion-base':['get','renderBase'],'fill-extrusion-opacity':1,'fill-extrusion-vertical-gradient':true}});
+   map.addLayer({id:'campus-ground',type:'fill',source:'campus',paint:{'fill-color':'#e9e3f2','fill-opacity':.8,'fill-outline-color':'#b5aac9'}});
+   map.addLayer({id:'campus-buildings',type:'fill-extrusion',source:'campus',minzoom:14,filter:['!=',['get','isOutline'],true],paint:{'fill-extrusion-color':'#f1edf8','fill-extrusion-height':['get','renderHeight'],'fill-extrusion-base':['get','renderBase'],'fill-extrusion-opacity':1,'fill-extrusion-vertical-gradient':true}});
    map.setLight({anchor:'viewport',color:'#ffffff',intensity:.38,position:[1.2,200,40]});
   }else (map.getSource('campus') as GeoJSONSource).setData(geometry);
  },[geometry,ready,confirm]);
- useEffect(()=>{const map=mapRef.current;if(!map?.getLayer('campus-buildings'))return;map.setPaintProperty('campus-buildings','fill-extrusion-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#efaf97','#f5f5ed']);map.setPaintProperty('campus-ground','fill-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#f4ae91','#e5ebe5'])},[activeBuilding,ready,geometry]);
+ useEffect(()=>{const map=mapRef.current;if(!map?.getLayer('campus-buildings'))return;map.setPaintProperty('campus-buildings','fill-extrusion-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#c8b2e8','#f1edf8']);map.setPaintProperty('campus-ground','fill-color',['case',['==',['get','buildingId'],activeBuilding?.id||''],'#d9c7ef','#e9e3f2'])},[activeBuilding,ready,geometry]);
  useEffect(()=>{const map=mapRef.current;if(!ready||!map)return;if(map.getLayer('campus-buildings'))map.setLayoutProperty('campus-buildings','visibility',threeD?'visible':'none');map.easeTo({pitch:threeD?42:0,bearing:threeD?map.getBearing():0,duration:450})},[threeD,ready,geometry]);
 
  useEffect(()=>{
