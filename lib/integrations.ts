@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canonicalSearchTag } from "./campus-search";
 
 // Server module: import only from server routes or other server modules.
 export class IntegrationError extends Error {
@@ -28,7 +29,7 @@ const imageSchema = z.object({
 });
 export type ExtractionImage = z.infer<typeof imageSchema>;
 
-async function claudeJSON<T>(instruction: string, input: unknown, validator: z.ZodType<T>, image?: ExtractionImage): Promise<T> {
+async function claudeJSON<T>(instruction: string, input: unknown, validator: z.ZodType<T, z.ZodTypeDef, unknown>, image?: ExtractionImage): Promise<T> {
   const key = await secret("ANTHROPIC_API_KEY");
   const config = await runtimeEnv();
   const model = typeof config.ANTHROPIC_MODEL === "string" ? config.ANTHROPIC_MODEL.trim() : "";
@@ -72,13 +73,34 @@ export const searchFiltersSchema = z.object({
   dietary: z.array(z.enum(["vegan", "vegetarian", "halal", "gluten-free"])).max(4),
   openNow: z.boolean(), tags: z.array(z.string().max(60)).max(6),
   layer: z.enum(["rated", "freebie", "food", "deal"]).nullable(),
+  clarification: z.string().max(300).nullable().optional(),
 });
 
+const searchInterpretationSchema = searchFiltersSchema.or(z.object({
+  clarification: z.string().trim().min(1).max(300),
+}).transform(({ clarification }) => ({
+  query: "", category: null, layer: null, tags: [], dietary: [], openNow: false, clarification,
+})));
+
 export async function searchWithClaude(text: string) {
-  return claudeJSON(
-    'Translate the request into search filters. Schema: {"query":string,"category":"study"|"lecture"|"halls"|"rental"|"building"|null,"near":string|null,"radiusKm":number|null,"dietary":("vegan"|"vegetarian"|"halal"|"gluten-free")[],"openNow":boolean,"tags":string[],"layer":"rated"|"freebie"|"food"|"deal"|null}. food means leftover food alerts; freebie means society freebies; deal means student discounts. Put only remaining place-name words in query, not words already represented by filters. Use tags such as quiet, plugs, late, accessible, wifi. openNow only for explicitly open now, not open late. Put late in tags for open-late requests. Put a named starting place or area after near in near; use me only for an explicit near-me request. radiusKm is an explicit numeric distance limit, otherwise null. Do not include the starting place words in query. Use null for unspecified category/layer. Do not invent places, availability or opening hours.',
-    { request: text.slice(0, 800) }, searchFiltersSchema,
+  const result = await claudeJSON(
+    `Interpret the meaning of a campus search, including informal language; do not treat the sentence as literal keywords.
+Schema: {"query":string,"category":"study"|"lecture"|"halls"|"rental"|"building"|null,"near":string|null,"radiusKm":number|null,"dietary":("vegan"|"vegetarian"|"halal"|"gluten-free")[],"openNow":boolean,"tags":string[],"layer":"rated"|"freebie"|"food"|"deal"|null,"clarification":string|null}.
+The ONLY supported tags are quiet, plugs, wifi, late, accessible. Each is a mandatory filter, so select only needs expressed by the user, not extra desirable features. Never emit an adjective such as nice, cosy, good, productive or cheap as a tag or query. query must contain ONLY an explicitly requested place name or item name (e.g. pizza), or an empty string. Never put conversational filler or generic intent words in query.
+Interpret revision, coursework, getting work done and locking in as category study, layer rated. A dying laptop means plugs; getting away from noise means quiet. Do not infer quiet just because someone wants to study. Best/top-rated places use the existing rating sort, not a best tag.
+food means leftover food alerts, freebie means society freebies, deal means student discounts. These layers require category null. Dining or restaurant recommendations are not supported: ask whether they want leftover food or student deals. Do not silently turn every food question into leftover food.
+openNow is true only for explicitly open now, not open late. Use late for open-late requests. Put the requested starting place/area in near, not query; use me only for an explicit near-me request. radiusKm is an explicit numeric distance limit, otherwise null. Unspecified category/layer are null. Unspecified dietary/tags are [], openNow false, query empty.
+For a genuinely ambiguous request like "somewhere nice", return a short clarification question asking whether they mean a study space, accommodation, free food or deals. For unsupported constraints (live empty seats, exact rent, coffee, atmosphere, group-room availability, negative filters), explain the limitation and ask for a supported alternative using clarification. Otherwise clarification is null. Do not claim to know results, prices, ratings, availability, amenities or opening hours; you are interpreting intent, not answering from invented facts. We only have a campus catalogue and published reviews, with limited coverage.
+Examples: "my laptop is dying and I need to finish an essay" => query "", category study, layer rated, tags ["plugs"]. "somewhere I can concentrate away from the noise" => query "", category study, layer rated, tags ["quiet"]. "where can I lock in after dark near Bloomsbury" => query "", category study, layer rated, tags ["late"], near Bloomsbury. "best place to revise" => query "", category study, layer rated, tags []. "is there pizza left near Wilkins" => query "pizza", category null, layer food, tags [], near Wilkins.`,
+    { request: text.slice(0, 800) }, searchInterpretationSchema,
   );
+  const tags = result.tags.map(canonicalSearchTag);
+  // Unsupported model output must ask for clarification, not silently eliminate
+  // every place (or discard a requested constraint and imply it was satisfied).
+  if (tags.some(tag => tag === null) && !result.clarification) {
+    result.clarification = 'I can check quiet areas, plugs, Wi-Fi, late opening and accessibility when recorded. Which of those matters, or are you looking for food, deals or a named place?';
+  }
+  return { ...result, tags: [...new Set(tags.filter((tag): tag is NonNullable<typeof tag> => tag !== null))] };
 }
 
 const pinSchema = z.object({

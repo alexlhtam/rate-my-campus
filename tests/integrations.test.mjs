@@ -4,7 +4,10 @@ import fs from "node:fs/promises";
 import ts from "typescript";
 
 // Exercise service contracts without external requests or real credentials.
-const source = (await fs.readFile(new URL("../lib/integrations.ts", import.meta.url), "utf8"));
+const searchSource = await fs.readFile(new URL("../lib/campus-search.ts", import.meta.url), "utf8");
+const searchModule = ts.transpileModule(searchSource, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText;
+const searchImport = `data:text/javascript;base64,${Buffer.from(searchModule).toString("base64")}`;
+const source = (await fs.readFile(new URL("../lib/integrations.ts", import.meta.url), "utf8")).replace('from "./campus-search"', `from "${searchImport}"`);
 const temporaryModule = new URL(".integration-under-test.mjs", import.meta.url);
 await fs.writeFile(temporaryModule, ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText);
 const api = await import(temporaryModule.href);
@@ -47,6 +50,40 @@ test("malformed or truncated model output never becomes a valid moderation verdi
   await assert.rejects(api.moderateContent("hello"), error => error.status === 502);
   globalThis.fetch = async () => Response.json({ content: [], stop_reason: "max_tokens" });
   await assert.rejects(api.moderateContent("hello"), error => error.status === 502);
+});
+
+test("search translates informal intent using supported capabilities instead of arbitrary keywords", async () => {
+  process.env.ANTHROPIC_API_KEY = "test-placeholder";
+  globalThis.fetch = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    assert.match(body.system, /Interpret the meaning/);
+    assert.match(body.system, /ONLY supported tags are quiet, plugs, wifi, late, accessible/);
+    assert.match(body.system, /dying laptop means plugs/);
+    assert.match(body.system, /Do not infer quiet just because someone wants to study/);
+    assert.equal(JSON.parse(body.messages[0].content[0].text).request, "my laptop is dying and I need to finish an essay");
+    return Response.json({ content: [{ type: "text", text: JSON.stringify({ query: "", category: "study", layer: "rated", dietary: [], openNow: false, tags: ["power outlets", "plug sockets"] }) }], stop_reason: "end_turn" });
+  };
+  const result = await api.searchWithClaude("my laptop is dying and I need to finish an essay");
+  assert.equal(result.query, "");
+  assert.equal(result.category, "study");
+  assert.deepEqual(result.tags, ["plugs"]);
+});
+
+test("unsupported adjectives cannot silently become impossible map filters", async () => {
+  process.env.ANTHROPIC_API_KEY = "test-placeholder";
+  fakeClaude({ query: "", category: "study", layer: "rated", dietary: [], openNow: false, tags: ["cosy", "productive"] });
+  const result = await api.searchWithClaude("somewhere cosy to be productive");
+  assert.ok(result.clarification);
+  assert.deepEqual(result.tags, []);
+});
+
+test("a clarification-only Claude response is a valid question, not a service failure", async () => {
+  process.env.ANTHROPIC_API_KEY = "test-placeholder";
+  fakeClaude({ clarification: "Do you mean a study space, accommodation, free food or deals?" });
+  const result = await api.searchWithClaude("somewhere nice");
+  assert.match(result.clarification, /study space/);
+  assert.equal(result.query, "");
+  assert.deepEqual(result.tags, []);
 });
 
 test("search carries a named origin and bounded radius without inventing coordinates", async () => {
