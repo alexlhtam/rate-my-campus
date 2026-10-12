@@ -45,6 +45,8 @@ next-env.d.ts
 !/build/sites-vite-plugin.LICENSE
 !/build/sites-vite-plugin.ts
 !/build/sites-worker.ts
+!/build/private-env-plugin.mjs
+!/build/map-worker-plugin.mjs
 
 /dist/
 /.wrangler/
@@ -59,3 +61,8 @@ next-env.d.ts
 
 .dev.vars*
 *.tsbuildinfo
+__pycache__/
+*.pyc
+
+# MapLibre worker copied from node_modules by scripts/copy-map-worker.mjs
+/public/vendor/

@@ -16,7 +16,7 @@ function fakeClaude(data) {
 }
 test.afterEach(() => {
   globalThis.fetch = originalFetch;
-  for (const key of ["ANTHROPIC_API_KEY", "GOOGLE_MAPS_API_KEY", "UNION_IMPORT_ENABLED"]) {
+  for (const key of ["ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "ANTHROPIC_WORKSPACE_ID", "GOOGLE_MAPS_API_KEY", "UNION_IMPORT_ENABLED"]) {
     if (originalEnvironment[key] === undefined) delete process.env[key]; else process.env[key] = originalEnvironment[key];
   }
 });
@@ -47,6 +47,18 @@ test("malformed or truncated model output never becomes a valid moderation verdi
   await assert.rejects(api.moderateContent("hello"), error => error.status === 502);
   globalThis.fetch = async () => Response.json({ content: [], stop_reason: "max_tokens" });
   await assert.rejects(api.moderateContent("hello"), error => error.status === 502);
+});
+
+test("blank optional Claude settings use the default model and omit the workspace header", async () => {
+  process.env.ANTHROPIC_API_KEY = "test-placeholder";
+  process.env.ANTHROPIC_MODEL = " ";
+  process.env.ANTHROPIC_WORKSPACE_ID = " ";
+  globalThis.fetch = async (_url, options) => {
+    assert.equal(JSON.parse(options.body).model, "claude-sonnet-4-6");
+    assert.equal("anthropic-workspace-id" in options.headers, false);
+    return Response.json({ content: [{ type: "text", text: '{"approved":true,"reasons":[]}' }], stop_reason: "end_turn" });
+  };
+  assert.equal((await api.moderateContent("The study room has useful sockets.")).approved, true);
 });
 
 test("photo extraction is a draft and calculates the discount from validated prices", async () => {

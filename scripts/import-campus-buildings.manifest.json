@@ -1,0 +1,1392 @@
+{
+  "auditDate": "2026-10-12",
+  "matches": [
+    {
+      "buildingId": "ucl-andrew-huxley-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 27703112
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-institute-of-archaeology",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40205772
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-astor-college",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "relation",
+          "id": 20292805
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-bedford-way-26",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 868884091,
+          "role": "outline"
+        },
+        {
+          "id": 557495166,
+          "role": "part"
+        },
+        {
+          "id": 557495167,
+          "role": "part"
+        },
+        {
+          "id": 557814876,
+          "role": "part"
+        },
+        {
+          "id": 868884092,
+          "role": "part"
+        },
+        {
+          "id": 868884103,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-bentham-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40253194
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-bernard-katz-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 681098584
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-bidborough-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 368973625
+        },
+        {
+          "id": 368973627,
+          "role": "part"
+        },
+        {
+          "id": 881276636,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-bloomsbury-theatre",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 383553353
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-campbell-house-east",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40253193
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-campbell-house-west",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40253192
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-central-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 343250647
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-chadwick-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 50059492
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-chandler-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 132165777
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-charles-bell-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40836227
+        }
+      ],
+      "notes": [
+        "OSM address uses Foley Street frontage; official UCL directory uses67-73 Riding House Street. Shared building name and intersecting street block support the identity join; this is not entrance geocoding."
+      ]
+    },
+    {
+      "buildingId": "ucl-christopher-ingold-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40205764
+        },
+        {
+          "id": 483804430,
+          "role": "part",
+          "name": "Christopher Ingold Auditorium"
+        },
+        {
+          "id": 558255422,
+          "role": "part"
+        },
+        {
+          "id": 558255423,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "Auditorium is a separately mapped part associated by its OSM name.",
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-cruciform-building",
+      "matchBasis": "Official UCL Cruciform Building and Cruciform Hub pages; OSM building relation 11790454 explicitly associates outline way863409196 with the cross-shaped upper part27432119 and six lower parts. The former single-envelope extrusion was incorrect.",
+      "features": [
+        {
+          "type": "way",
+          "id": 863409196,
+          "role": "outline"
+        },
+        {
+          "id": 27432119,
+          "role": "part",
+          "relation": 11790454
+        },
+        {
+          "id": 863409197,
+          "role": "part",
+          "relation": 11790454
+        },
+        {
+          "id": 863409198,
+          "role": "part",
+          "relation": 11790454
+        },
+        {
+          "id": 863409199,
+          "role": "part",
+          "relation": 11790454
+        },
+        {
+          "id": 863409200,
+          "role": "part",
+          "relation": 11790454
+        },
+        {
+          "id": 863409201,
+          "role": "part",
+          "relation": 11790454
+        },
+        {
+          "id": 863409202,
+          "role": "part",
+          "relation": 11790454
+        }
+      ],
+      "notes": [
+        "The outer building envelope is non-extruded. The mapped internal building parts provide the displayed massing.",
+        "OSM upper structure has121 coordinate vertices and4 building levels plus1 roof level; the six podium parts have1 or2 building levels. The display preserves the diagonal cross shape instead of extruding the whole podium."
+      ]
+    },
+    {
+      "buildingId": "ucl-darwin-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 27702973
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-dms-watson-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 849005554
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-dr-williamss-library",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 224890389
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-drayton-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 15703989
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-engineering-front-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 802236339
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-euston-road-169",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 107005572
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-foster-court",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 27703173
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-frances-gardner-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 136629911
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gordon-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40253189
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gordon-square-16-18",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557825742
+        },
+        {
+          "type": "way",
+          "id": 557825743
+        },
+        {
+          "type": "way",
+          "id": 557825744
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gordon-square-19-20-and-21",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557825739
+        },
+        {
+          "type": "way",
+          "id": 557825740
+        },
+        {
+          "type": "way",
+          "id": 557825741
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gordon-square-22-23-24-25-and-26",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557825734
+        },
+        {
+          "type": "way",
+          "id": 557825735
+        },
+        {
+          "type": "way",
+          "id": 557825736
+        },
+        {
+          "type": "way",
+          "id": 557825737
+        },
+        {
+          "type": "way",
+          "id": 557825738
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gordon-square-48",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557814844
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gordon-square-49-51",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557814847
+        }
+      ],
+      "notes": [
+        "Only the unambiguously matched51 Gordon Square footprint is included;49-50 remain unmatched."
+      ]
+    },
+    {
+      "buildingId": "ucl-22-gordon-street",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 483804431
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gordon-street-25",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40205767
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gower-street-66-72",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 42155126
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-lewis-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40269406
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-henry-morley-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 224890376
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ian-baker-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1527797910
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-7-queen-square",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 800170200
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-queen-square-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 800172165
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-20-bedford-way",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 51517608,
+          "role": "outline"
+        },
+        {
+          "id": 557159358,
+          "role": "part"
+        },
+        {
+          "id": 557159359,
+          "role": "part"
+        },
+        {
+          "id": 557159360,
+          "role": "part"
+        },
+        {
+          "id": 557159361,
+          "role": "part"
+        },
+        {
+          "id": 557159362,
+          "role": "part"
+        },
+        {
+          "id": 557159363,
+          "role": "part"
+        },
+        {
+          "id": 557159366,
+          "role": "part"
+        },
+        {
+          "id": 557159367,
+          "role": "part"
+        },
+        {
+          "id": 557159368,
+          "role": "part"
+        },
+        {
+          "id": 557159369,
+          "role": "part"
+        },
+        {
+          "id": 557159370,
+          "role": "part"
+        },
+        {
+          "id": 557495171,
+          "role": "part"
+        },
+        {
+          "id": 557495172,
+          "role": "part"
+        },
+        {
+          "id": 557495173,
+          "role": "part"
+        },
+        {
+          "id": 557495174,
+          "role": "part"
+        },
+        {
+          "id": 557495175,
+          "role": "part"
+        },
+        {
+          "id": 557495176,
+          "role": "part"
+        },
+        {
+          "id": 557495177,
+          "role": "part"
+        },
+        {
+          "id": 557495178,
+          "role": "part"
+        },
+        {
+          "id": 557495179,
+          "role": "part"
+        },
+        {
+          "id": 557495180,
+          "role": "part"
+        },
+        {
+          "id": 557495182,
+          "role": "part"
+        },
+        {
+          "id": 557495183,
+          "role": "part"
+        },
+        {
+          "id": 557495188,
+          "role": "part"
+        },
+        {
+          "id": 557495189,
+          "role": "part"
+        },
+        {
+          "id": 557495190,
+          "role": "part"
+        },
+        {
+          "id": 557495191,
+          "role": "part"
+        },
+        {
+          "id": 557495192,
+          "role": "part"
+        },
+        {
+          "id": 557495193,
+          "role": "part"
+        },
+        {
+          "id": 557495194,
+          "role": "part"
+        },
+        {
+          "id": 557495195,
+          "role": "part"
+        },
+        {
+          "id": 868884093,
+          "role": "part"
+        },
+        {
+          "id": 868884097,
+          "role": "part"
+        },
+        {
+          "id": 868884098,
+          "role": "part"
+        },
+        {
+          "id": 868884100,
+          "role": "part"
+        },
+        {
+          "id": 868884101,
+          "role": "part"
+        },
+        {
+          "id": 868884102,
+          "role": "part"
+        },
+        {
+          "id": 868884104,
+          "role": "part"
+        },
+        {
+          "type": "relation",
+          "id": 7962897,
+          "role": "part",
+          "notes": [
+            "Multipolygon building part: retain three courtyard holes. Do not separately extrude its outer way557495184."
+          ]
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-ioe-gordon-square-55-59",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 51517611,
+          "role": "outline"
+        },
+        {
+          "id": 557814873,
+          "role": "part"
+        },
+        {
+          "id": 557814874,
+          "role": "part"
+        },
+        {
+          "id": 877702972,
+          "role": "part"
+        },
+        {
+          "id": 877702973,
+          "role": "part"
+        },
+        {
+          "id": 877702974,
+          "role": "part"
+        },
+        {
+          "id": 877702975,
+          "role": "part"
+        },
+        {
+          "id": 877702976,
+          "role": "part"
+        },
+        {
+          "id": 877702977,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-ioe-woburn-square-11",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557814886
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ioe-woburn-square-15",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557814881
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-john-dodgson-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 368973626
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-kathleen-lonsdale-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40269405
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-london-centre-for-nanotechnology",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 50059831
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-malet-place-engineering-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 27703019
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-maple-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 750589882
+        },
+        {
+          "type": "way",
+          "id": 750589883
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-marshgate",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 964277509,
+          "role": "outline"
+        },
+        {
+          "id": 1371161563,
+          "role": "part"
+        },
+        {
+          "id": 1371161564,
+          "role": "part"
+        },
+        {
+          "id": 1371161565,
+          "role": "part"
+        },
+        {
+          "id": 1371161566,
+          "role": "part"
+        },
+        {
+          "id": 1371161567,
+          "role": "part"
+        },
+        {
+          "id": 1371161568,
+          "role": "part"
+        },
+        {
+          "id": 1371161569,
+          "role": "part"
+        },
+        {
+          "id": 1371161570,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "The outer building envelope is non-extruded. The mapped internal building parts provide the displayed massing."
+      ],
+      "heightConflict": {
+        "osmClaim": "Outline and some parts have building:levels=12",
+        "officialClaim": "UCL Estates describes eight floors, including double-height spaces.",
+        "officialSourceUrl": "https://www.ucl.ac.uk/estates/case-studies/2024/feb/marshgate",
+        "resolution": "No surveyed metric height is available. OSM part geometry and level-derived visual massing are retained as estimates; floor count is not asserted as fact and the discrepancy is unresolved."
+      }
+    },
+    {
+      "buildingId": "ucl-medawar-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40205769
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-medical-research-council-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 875290551
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-medical-sciences-and-anatomy",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 27703147
+        },
+        {
+          "type": "way",
+          "id": 27702997
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-north-west-wing",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 50059498
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-one-pool-street",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 964277508,
+          "role": "outline"
+        },
+        {
+          "id": 1337950246,
+          "role": "part"
+        },
+        {
+          "id": 1337950247,
+          "role": "part"
+        },
+        {
+          "id": 1337950248,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "The outer building envelope is non-extruded. The mapped internal building parts provide the displayed massing."
+      ]
+    },
+    {
+      "buildingId": "ucl-paul-ogorman-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 48161697
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-physics-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 847530492
+        },
+        {
+          "id": 50059491,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-ramsay-hall",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1527797911
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-rayne-institute",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 248989218
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-roberts-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 802236338
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-rockefeller-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40916732
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-roger-williams-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 748992327
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-rubin-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 51517614
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-sainsbury-wellcome-centre",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "relation",
+          "id": 20292806
+        },
+        {
+          "id": 1486043579,
+          "role": "part"
+        },
+        {
+          "id": 1486043580,
+          "role": "part"
+        },
+        {
+          "id": 1486043581,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-schafer-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 87071672
+        },
+        {
+          "type": "way",
+          "id": 204167221
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-school-of-pharmacy",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 28270162
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-senate-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "relation",
+          "id": 11948662,
+          "role": "outline"
+        },
+        {
+          "id": 557159470,
+          "role": "part"
+        },
+        {
+          "id": 557159473,
+          "role": "part"
+        },
+        {
+          "id": 557159475,
+          "role": "part"
+        },
+        {
+          "id": 557159476,
+          "role": "part"
+        },
+        {
+          "id": 557159477,
+          "role": "part"
+        },
+        {
+          "id": 557159478,
+          "role": "part"
+        },
+        {
+          "id": 877702983,
+          "role": "part"
+        },
+        {
+          "id": 877702984,
+          "role": "part"
+        },
+        {
+          "id": 877702985,
+          "role": "part"
+        },
+        {
+          "id": 877702986,
+          "role": "part"
+        },
+        {
+          "id": 877702987,
+          "role": "part"
+        },
+        {
+          "id": 877702988,
+          "role": "part"
+        },
+        {
+          "id": 877702989,
+          "role": "part"
+        },
+        {
+          "id": 877702990,
+          "role": "part"
+        },
+        {
+          "id": 877702991,
+          "role": "part"
+        },
+        {
+          "id": 877702992,
+          "role": "part"
+        },
+        {
+          "id": 877702994,
+          "role": "part"
+        },
+        {
+          "id": 877702995,
+          "role": "part"
+        },
+        {
+          "id": 877702996,
+          "role": "part"
+        },
+        {
+          "id": 877702997,
+          "role": "part"
+        },
+        {
+          "id": 877702999,
+          "role": "part"
+        },
+        {
+          "id": 877703000,
+          "role": "part"
+        },
+        {
+          "id": 877703001,
+          "role": "part"
+        },
+        {
+          "id": 877703002,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-shropshire-house",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 218592867
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-slade-school-of-fine-art-north-wing",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 50059489
+        },
+        {
+          "id": 863414332,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-south-wing",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 50059493
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-school-of-slavonic-and-east-european-studies",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40253190
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-student-centre",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 681098586
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-taviton-street",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40253191
+        }
+      ],
+      "notes": [
+        "Only the4 Taviton Street building footprint is matched; the official directory groups2 and3-4."
+      ]
+    },
+    {
+      "buildingId": "ucl-torrington-place-1-19",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1050322259
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-torrington-place-33-35",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 591527747
+        },
+        {
+          "type": "way",
+          "id": 591527748
+        },
+        {
+          "type": "way",
+          "id": 591527749
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-tottenham-court-road-188",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 749898376
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ucl-gosich-main-building-philip-ullman-wing-and-wellcome-trust-bldg",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 28226880
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-wilkins-building",
+      "matchBasis": "Official UCL building name or street-number address matched to named/addressed OpenStreetMap building geometry; manually reviewed 2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 680050665,
+          "role": "part",
+          "relation": 11627754
+        },
+        {
+          "id": 847930398,
+          "role": "part",
+          "relation": 11627754,
+          "name": "Main building connecting part"
+        },
+        {
+          "id": 90022990,
+          "role": "part",
+          "relation": 11627754,
+          "name": "Octagon"
+        },
+        {
+          "id": 847530485,
+          "role": "part",
+          "relation": 11627754,
+          "name": "Portico"
+        },
+        {
+          "id": 4960705,
+          "role": "outline",
+          "relation": 11627754,
+          "name": "Main Building envelope"
+        },
+        {
+          "id": 863414326,
+          "role": "part"
+        },
+        {
+          "id": 863414327,
+          "role": "part"
+        },
+        {
+          "id": 863414328,
+          "role": "part"
+        },
+        {
+          "id": 863414329,
+          "role": "part"
+        },
+        {
+          "id": 863414330,
+          "role": "part"
+        },
+        {
+          "id": 863414331,
+          "role": "part"
+        },
+        {
+          "id": 863414333,
+          "role": "part"
+        },
+        {
+          "id": 877709710,
+          "role": "part"
+        },
+        {
+          "id": 877709711,
+          "role": "part"
+        },
+        {
+          "id": 877709712,
+          "role": "part"
+        },
+        {
+          "id": 877709714,
+          "role": "part"
+        },
+        {
+          "id": 877709715,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "Main Building relation11627754 includes separately identified North/South/Chadwick/North-West wings. Their geometry is exported once under each official directory identity. Unknown relative elevations remain estimates.",
+        "OSM building parts have been reviewed against the building envelope. Full source rings are retained without smoothing or clipping."
+      ]
+    },
+    {
+      "buildingId": "ucl-south-quad-pop-up-learning-hub",
+      "matchBasis": "Official UCL current inclusive-facilities directory (August2026, building410) and September2026 update establish continued use; OSM named UCL South Quad Pop Up Learning Hub footprint.",
+      "features": [
+        {
+          "id": 848060317
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 The app has server adapters for Claude and Google Maps, and uses Supabase for data, photos and UCL email sign-in. A configured account is not automatically connected to this deployment. Configure the following names as **environment variables** in the Vercel project (Supabase's own variables are covered in the README's *Deploy on Vercel with Supabase*); never add keys to browser code, source files or a chat message.
 
+For local use, copy `.env.example` to `.env.local` in the project root (or run `vercel env pull .env.local`) and fill in the blank values there. The file is ignored by Git and Next.js loads it automatically; restart the process after editing. The LAN preview remains an isolated demo even when local credentials are present. Local files are never deployed; configure hosted values in Vercel.
+
 | Name | Value to configure |
 |---|---|
 | `ANTHROPIC_API_KEY` | Your existing Anthropic API key |

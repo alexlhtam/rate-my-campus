@@ -28,10 +28,13 @@ This is a **demo on each device**, not a shared live database. Reviews, posts an
 
 ## Live service configuration
 
-Set production server environment variables in Vercel. Local development uses an ignored `.env.local` with the names in `.env.example`. Never commit credentials.
+Set production server environment variables in Vercel. Locally, copy `.env.example` to `.env.local` (or run `vercel env pull .env.local`) and fill in only the services you want to connect; Next.js loads it for `npm run dev`, `npm run build` and `npm start`. Restart after edits. A fresh clone can start with every service disconnected.
+
+`.env*` files are ignored by Git, except the blank `.env.example` template. Only the Supabase URL and anon key use the browser-visible `NEXT_PUBLIC_` prefix; never give a secret that prefix. Local files are not deployed. The LAN demo still blocks live accounts and paid services.
 
 - `ANTHROPIC_API_KEY`: Claude search, text/photo extraction, summaries and automatic moderation.
 - `ANTHROPIC_MODEL`: optional, defaults to `claude-sonnet-4-6`.
+- `ANTHROPIC_WORKSPACE_ID`: optional workspace selection; leave blank when not needed.
 - `GOOGLE_MAPS_API_KEY`: server key restricted to Google Map Tiles API and Places API (New). No browser key is used. Enable billing, quotas and alerts in Google Cloud.
 - Supabase variables: see *Deploy on Vercel with Supabase* above. Email codes are sent by Supabase Auth through its SMTP settings.
 - `ADMIN_USER_IDS`: Supabase Auth user IDs for the exception/reports queue and event importer.
@@ -41,9 +44,13 @@ Routine suitable submissions are published automatically after Claude checks the
 
 ## Demo and real data
 
-The demo includes 14 directory entries (13 real places and one explicitly fictional rental), 26 synthetic reviews, 6 illustrative alerts/deals and 8 sample threads. Demo contributions stay in browser storage and are separated from real ratings and public records. Switch to real activity to view only actual community content. No real reviews or Union events have been fabricated or seeded into the database.
+The demo includes 14 reviewable places (13 real places and one explicitly fictional rental), 26 synthetic reviews, 6 illustrative alerts/deals and 8 sample threads. These are separate from the wider researched building directory. Demo contributions stay in browser storage and are separated from real ratings and public records. Switch to real activity to view only actual community content. No real reviews or Union events have been fabricated or seeded into the database.
 
-When Google is disconnected, a clearly attributed OpenStreetMap map remains available. Campus building footprints are real OpenStreetMap polygons. Most heights are estimates from mapped floors or labelled illustrative defaults. The fixed-perspective extrusion is a visual aid, not an architectural survey or extracted Google 3D mesh.
+The MapLibre map supports pan, zoom, rotation, a flat/3D toggle and building labels, with views for Bloomsbury, UCL East and across London. Its building directory searches names, aliases and addresses, filters by campus, and opens source-linked building cards. Unlocated entries remain searchable with an explicit notice. Overlapping place and alert pins open a list so each item remains selectable.
+
+Only reviewed UCL-associated footprints are raised. OpenStreetMap outlines preserve courtyards and building parts; source records distinguish buildings, shared sites and partial occupation. Heights use available mapped values, floor-based estimates or labelled visual defaults. Google supplies the roadmap when configured, with server-side key handling and viewport attribution. Otherwise a clearly attributed OpenStreetMap basemap is shown. Browsers without working WebGL receive a flat raster map with basic pins and navigation; the full building directory and rotation belong to the MapLibre view.
+
+Real reviewable places link to the researched directory through `campusBuildingId`. Matched markers use representative footprint positions, including shared positions for rooms in the same building; they do not identify an entrance. Unmatched positions remain approximate. See [map research and matching notes](docs/MAP-RESEARCH.md) for provenance and limitations.
 
 The Union importer accepts a single public event URL, extracts explicit food/merch evidence with Claude, asks the operator to confirm time/location, credits the source and deduplicates it. Imports are limited to one per hour. No recurring crawler is running.
 

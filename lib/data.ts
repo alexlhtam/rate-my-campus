@@ -1,13 +1,16 @@
 /**
  * Demo community content is deliberately synthetic. Never import these records
  * into a production ratings aggregate or present them as verified submissions.
- * Coordinates are approximate public-building locations, not room entrances.
+ * Matched coordinates are representative footprint points, not room entrances.
+ * Unmatched public places and fictional area pins retain approximate positions.
  */
 export type PlaceCategory = "study" | "lecture" | "halls" | "rental";
 export type PinType = "freebie" | "food" | "deal";
 
 export interface Place {
   id: string;
+  /** Stable official-directory join; multiple reviewed rooms may share a building. */
+  campusBuildingId?: string;
   name: string;
   category: PlaceCategory;
   lat: number;
@@ -41,6 +44,8 @@ export interface Review {
 
 export interface Pin {
   id: string;
+  /** Present only when this demo alert names a verified campus building. */
+  campusBuildingId?: string;
   type: PinType;
   title: string;
   description: string;
@@ -92,8 +97,8 @@ export const campusCenter = { lat: 51.5246, lng: -0.1331 };
 
 export const places: Place[] = [
   {
-    id: "student-centre", name: "UCL Student Centre", category: "study",
-    lat: 51.52488, lng: -0.13215, address: "27–28 Gordon Square, Bloomsbury",
+    id: "student-centre", campusBuildingId: "ucl-student-centre", name: "UCL Student Centre", category: "study",
+    lat: 51.5247529, lng: -0.1326144, address: "27–28 Gordon Square, Bloomsbury",
     description: "A light-filled home for individual study and group work, right in the heart of campus. Bring your UCL ID and check whether your preferred space needs booking.",
     image: "/images/student-centre.jpg", imageCredit: "student-centre",
     tags: ["Group study", "Individual study", "UCL ID required"], openLabel: "UCL ID required", distance: "2 min",
@@ -101,8 +106,8 @@ export const places: Place[] = [
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/student-centre",
   },
   {
-    id: "main-library", name: "UCL Main Library", category: "study",
-    lat: 51.52462, lng: -0.13306, address: "Wilkins Building, Gower Street",
+    id: "main-library", campusBuildingId: "ucl-wilkins-building", name: "UCL Main Library", category: "study",
+    lat: 51.5246607, lng: -0.1338349, address: "Wilkins Building, Gower Street",
     description: "The historic library in the Wilkins Building, with collections and study spaces at the centre of UCL's Bloomsbury campus.",
     image: "/images/main-quad.jpg", imageCredit: "main-quad",
     tags: ["Library", "Main campus", "UCL ID required"], openLabel: "Check opening hours", distance: "1 min",
@@ -110,8 +115,8 @@ export const places: Place[] = [
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/main-library",
   },
   {
-    id: "senate-house", name: "Senate House Library", category: "study",
-    lat: 51.52103, lng: -0.12881, address: "Senate House, Malet Street",
+    id: "senate-house", campusBuildingId: "ucl-senate-house", name: "Senate House Library", category: "study",
+    lat: 51.5211506, lng: -0.1288017, address: "Senate House, Malet Street",
     description: "University of London's library in a landmark Bloomsbury building. Check registration, access arrangements and opening hours before visiting.",
     image: "/images/senate-house.jpg", imageCredit: "senate-house",
     tags: ["Library", "Bloomsbury", "Registration required"], openLabel: "Check access requirements", distance: "7 min",
@@ -119,40 +124,40 @@ export const places: Place[] = [
     sourceUrl: "https://www.london.ac.uk/senate-house-library",
   },
   {
-    id: "science-library", name: "UCL Science Library", category: "study",
-    lat: 51.52346, lng: -0.13207, address: "DMS Watson Building, Malet Place",
+    id: "science-library", campusBuildingId: "ucl-dms-watson-building", name: "UCL Science Library", category: "study",
+    lat: 51.5234275, lng: -0.1328217, address: "DMS Watson Building, Malet Place",
     description: "A campus library and study destination on Malet Place. Check the library's current hours and space information before heading over.",
     image: "", tags: ["Library", "Main campus", "UCL ID required"], openLabel: "Check opening hours", distance: "3 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/science-library",
   },
   {
-    id: "ssees-library", name: "SSEES Library", category: "study",
-    lat: 51.5256, lng: -0.13079, address: "16 Taviton Street",
+    id: "ssees-library", campusBuildingId: "ucl-school-of-slavonic-and-east-european-studies", name: "SSEES Library", category: "study",
+    lat: 51.5252813, lng: -0.1317938, address: "16 Taviton Street",
     description: "UCL's School of Slavonic and East European Studies library, a short walk from the main quad on Taviton Street.",
     image: "", tags: ["Library", "Specialist collections", "UCL ID required"], openLabel: "Check opening hours", distance: "4 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/ssees-library",
   },
   {
-    id: "ioe-library", name: "IOE Library", category: "study",
-    lat: 51.52347, lng: -0.12775, address: "20 Bedford Way",
+    id: "ioe-library", campusBuildingId: "ucl-20-bedford-way", name: "IOE Library", category: "study",
+    lat: 51.5229307, lng: -0.1281569, address: "20 Bedford Way",
     description: "The Newsam Library and Archives at UCL's Institute of Education, on the eastern side of Bloomsbury campus.",
     image: "", tags: ["Library", "Education", "UCL ID required"], openLabel: "Check opening hours", distance: "6 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/ioe/student-helpdesk/student-support/ucl-and-ioe-library-services",
   },
   {
-    id: "cruciform-lt1", name: "Cruciform Lecture Theatre 1", category: "lecture",
-    lat: 51.52429, lng: -0.13461, address: "Cruciform Building, Gower Street",
+    id: "cruciform-lt1", campusBuildingId: "ucl-cruciform-building", name: "Cruciform Lecture Theatre 1", category: "lecture",
+    lat: 51.5241002, lng: -0.1350661, address: "Cruciform Building, Gower Street",
     description: "A teaching space in the Cruciform Building, opposite the main campus. Building location shown; consult your timetable for the room entrance.",
     image: "", tags: ["Teaching space", "Gower Street"], openLabel: "Timetabled access", distance: "3 min",
     criteria: categoryCriteria.lecture,
     sourceUrl: "https://www.ucl.ac.uk/medical-sciences/divisions/wolfson-institute-biomedical-research/cruciform-building",
   },
   {
-    id: "gustave-tuck", name: "Gustave Tuck Lecture Theatre", category: "lecture",
-    lat: 51.52439, lng: -0.13302, address: "Wilkins Building, Gower Street",
+    id: "gustave-tuck", campusBuildingId: "ucl-wilkins-building", name: "Gustave Tuck Lecture Theatre", category: "lecture",
+    lat: 51.5246607, lng: -0.1338349, address: "Wilkins Building, Gower Street",
     description: "A lecture theatre on the second floor of the Wilkins Building. Check the official campus map for the appropriate entrance.",
     image: "/images/main-quad.jpg", imageCredit: "main-quad",
     tags: ["Teaching space", "Wilkins Building"], openLabel: "Timetabled access", distance: "2 min",
@@ -160,44 +165,44 @@ export const places: Place[] = [
     sourceUrl: "https://www.ucl.ac.uk/your-universe/contact",
   },
   {
-    id: "logan-hall", name: "Logan Hall", category: "lecture",
-    lat: 51.52307, lng: -0.12725, address: "IOE, 20 Bedford Way",
+    id: "logan-hall", campusBuildingId: "ucl-20-bedford-way", name: "Logan Hall", category: "lecture",
+    lat: 51.5229307, lng: -0.1281569, address: "IOE, 20 Bedford Way",
     description: "The IOE's large hall for lectures and events at 20 Bedford Way. Attendance and entry depend on the scheduled event.",
     image: "", tags: ["Teaching space", "Events", "Bedford Way"], openLabel: "Event access", distance: "7 min",
     criteria: categoryCriteria.lecture,
-    sourceUrl: "https://www.ucl.ac.uk/maps/",
+    sourceUrl: "https://www.ucl.ac.uk/qualitative-health-research-network/2026-qhrn-conference-programme-and-logistics",
   },
   {
-    id: "ingold-auditorium", name: "Christopher Ingold Auditorium", category: "lecture",
-    lat: 51.52525, lng: -0.13162, address: "Christopher Ingold Building, 20 Gordon Street",
+    id: "ingold-auditorium", campusBuildingId: "ucl-christopher-ingold-building", name: "Christopher Ingold Auditorium", category: "lecture",
+    lat: 51.5253827, lng: -0.1322802, address: "Christopher Ingold Building, 20 Gordon Street",
     description: "The XLG2 auditorium in the Christopher Ingold Building. Follow your event or teaching instructions for access.",
     image: "", tags: ["Teaching space", "Gordon Street"], openLabel: "Timetabled access", distance: "3 min",
     criteria: categoryCriteria.lecture,
-    sourceUrl: "https://www.ucl.ac.uk/maps/",
+    sourceUrl: "https://www.ucl.ac.uk/engineering/computer-science/collaborate/alumni",
   },
   {
-    id: "ramsay-hall", name: "Ramsay Hall", category: "halls",
-    lat: 51.52278, lng: -0.13775, address: "20 Maple Street",
+    id: "ramsay-hall", campusBuildingId: "ucl-ramsay-hall", name: "Ramsay Hall", category: "halls",
+    lat: 51.5224791, lng: -0.1383567, address: "20 Maple Street",
     description: "UCL student accommodation on Maple Street. Ratings shown in this demo are fictional examples, not residents' experiences.",
     image: "", tags: ["UCL accommodation", "Fitzrovia"], openLabel: "Residents only", distance: "7 min",
     criteria: categoryCriteria.halls,
     sourceUrl: "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
   },
   {
-    id: "astor-college", name: "Astor College", category: "halls",
-    lat: 51.52185, lng: -0.13713, address: "99 Charlotte Street",
+    id: "astor-college", campusBuildingId: "ucl-astor-college", name: "Astor College", category: "halls",
+    lat: 51.5208379, lng: -0.1375345, address: "99 Charlotte Street",
     description: "UCL student accommodation on Charlotte Street. Explore the review format using illustrative ratings and discussions.",
     image: "", tags: ["UCL accommodation", "Fitzrovia"], openLabel: "Residents only", distance: "8 min",
     criteria: categoryCriteria.halls,
     sourceUrl: "https://www.ucl.ac.uk/study/astor-college",
   },
   {
-    id: "john-adams-hall", name: "John Adams Hall", category: "halls",
+    id: "john-adams-hall", campusBuildingId: "ucl-john-adams-hall", name: "John Adams Hall", category: "halls",
     lat: 51.52656, lng: -0.13135, address: "15–23 Endsleigh Street",
-    description: "UCL student accommodation close to the Bloomsbury campus. Demo reviews help you try the accommodation criteria.",
+    description: "UCL student accommodation close to the Bloomsbury campus. The map position is approximate. Demo reviews help you try the accommodation criteria.",
     image: "", tags: ["UCL accommodation", "Bloomsbury"], openLabel: "Residents only", distance: "5 min",
     criteria: categoryCriteria.halls,
-    sourceUrl: "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+    sourceUrl: "https://www.ucl.ac.uk/study/john-adams-hall",
   },
   {
     id: "example-rental", name: "Example Bloomsbury rental", category: "rental",
@@ -250,10 +255,10 @@ export const seedReviews: Review[] = reviewInputs.map(([placeId, rating, text, t
 
 /** Every pin below is a fictional demo, including its society/committee. */
 export const seedPins: Pin[] = [
-  { id: "demo-food-pizza", type: "food", title: "Pizza looking for a good home", description: "Demo alert: a few slices left after a society meetup. Stock photo for illustration. Ask the organiser about ingredients and handling; dietary tags are illustrative.", location: "Student Centre · ground floor", lat: 51.52478, lng: -0.13202, dietary: ["Vegetarian"], durationMinutes: 24, image: "/images/pizza-demo.jpg", imageCredit: "pizza-demo", demo: true, organizer: "Example society committee" },
+  { id: "demo-food-pizza", campusBuildingId: "ucl-student-centre", type: "food", title: "Pizza looking for a good home", description: "Demo alert: a few slices left after a society meetup. Stock photo for illustration. Ask the organiser about ingredients and handling; dietary tags are illustrative.", location: "Student Centre · ground floor", lat: 51.5247529, lng: -0.1326144, dietary: ["Vegetarian"], durationMinutes: 24, image: "/images/pizza-demo.jpg", imageCredit: "pizza-demo", demo: true, organizer: "Example society committee" },
   { id: "demo-freebie-totes", type: "freebie", title: "Meet a society. Take a tote.", description: "Illustrative society welcome stall with tote bags and stickers. This is not a scraped or scheduled Union event.", location: "UCL Main Quad", lat: 51.52452, lng: -0.13402, dietary: [], durationMinutes: 105, demo: true, organizer: "Example society" },
   { id: "demo-deal-pastries", type: "deal", title: "Pastries for the walk home", description: "Demo yellow-sticker deal: a bag of mixed pastries. Stock photo for illustration. Price and availability are fictional; a real deal needs a current photo and confirmed shop.", location: "Goodge Street area · example shop", lat: 51.52037, lng: -0.13557, dietary: ["Vegetarian"], durationMinutes: 52, price: 1.25, originalPrice: 3.5, image: "/images/pastries-demo.jpg", imageCredit: "pastries-demo", demo: true },
-  { id: "demo-food-sandwiches", type: "food", title: "Lunch meeting, bonus sandwiches", description: "Demo alert: unopened sandwich packs from an example event, including illustrative vegan options. Check ingredients, use-by date and storage directly with the host.", location: "Wilkins Building · foyer", lat: 51.52434, lng: -0.13328, dietary: ["Vegan"], durationMinutes: 16, demo: true, organizer: "Example event team" },
+  { id: "demo-food-sandwiches", campusBuildingId: "ucl-wilkins-building", type: "food", title: "Lunch meeting, bonus sandwiches", description: "Demo alert: unopened sandwich packs from an example event, including illustrative vegan options. Check ingredients, use-by date and storage directly with the host.", location: "Wilkins Building · foyer", lat: 51.5246607, lng: -0.1338349, dietary: ["Vegan"], durationMinutes: 16, demo: true, organizer: "Example event team" },
   { id: "demo-deal-fruit", type: "deal", title: "A little fruit, a smaller price", description: "Illustrative deal for a mixed fruit bag. This is a fictional offer, not a claim about any local retailer.", location: "Torrington Place area · example shop", lat: 51.52287, lng: -0.13405, dietary: ["Vegan", "Vegetarian"], durationMinutes: 78, price: 0.75, originalPrice: 2.5, demo: true },
   { id: "demo-freebie-coffee", type: "freebie", title: "Coffee & a conversation", description: "Fictional society drop-in with coffee and biscuits. Try the filters and card details; no real event is taking place at this demo pin.", location: "Gordon Square", lat: 51.52434, lng: -0.13052, dietary: ["Vegetarian"], durationMinutes: 65, demo: true, organizer: "Example student society" },
 ];

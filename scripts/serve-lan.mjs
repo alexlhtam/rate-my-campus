@@ -56,7 +56,7 @@ export function routeRequest(method, rawPath) {
   if (url.pathname === "/api/community/state") return { kind: "json", status: 200, body: demoState };
   if (url.pathname === "/api/map/provider") return { kind: "json", status: 200, body: demoMap };
   if (url.pathname.startsWith("/api/")) return { kind: "blocked", status: 503, error: "Live services are unavailable in the local Wi-Fi demo." };
-  if (url.pathname === "/" || url.pathname === "/favicon.svg" || ["/_next/static/", "/data/", "/images/"].some((prefix) => url.pathname.startsWith(prefix))) return { kind: "proxy", path: url.pathname + url.search };
+  if (url.pathname === "/" || url.pathname === "/favicon.svg" || ["/_next/static/", "/vendor/", "/data/", "/images/"].some((prefix) => url.pathname.startsWith(prefix))) return { kind: "proxy", path: url.pathname + url.search };
   return { kind: "blocked", status: 404, error: "This route is unavailable in the local Wi-Fi demo." };
 }
 
