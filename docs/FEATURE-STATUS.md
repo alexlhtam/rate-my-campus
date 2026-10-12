@@ -1,6 +1,6 @@
 # Campus feature implementation
 
-This branch builds on `feat/campus-map-overhaul`. Credentials and live-service deployment remain with Alex. Apply the new community-tools migration before deploying the application; see [community operations](COMMUNITY-OPERATIONS.md).
+This branch builds on the campus map overhaul merged in PR #2 and includes the current password sign-in and dialog behaviour from `main`. Credentials and live-service deployment remain with Alex. Apply the new community-tools migration before deploying the application; see [community operations](COMMUNITY-OPERATIONS.md).
 
 ## Implemented
 
@@ -38,4 +38,4 @@ This branch builds on `feat/campus-map-overhaul`. Credentials and live-service d
 
 ## Validation
 
-Automated checks cover source-backed place joins, unknown coordinates, London opening times/overnight exceptions, search filters, privacy-preserving share/calendar formats, ownership checks, complete aggregates, pagination, moderation races, photos and retention. Browser checks cover desktop/mobile layout, Garden Halls, searches, comparisons, collections and QR sharing. Live email/Claude/Google calls are not represented as production-verified.
+All 151 automated tests and the optimized production build pass. Automated checks cover source-backed place joins, unknown coordinates, London opening times/overnight exceptions, search filters, privacy-preserving share/calendar formats, ownership checks, complete aggregates, pagination, moderation races, photos and retention. Browser checks cover desktop/mobile layout, map movement and focus after resizing, Garden Halls, searches, comparisons, collections, contribution controls and QR sharing. Live email/Claude/Google calls are not represented as production-verified.
