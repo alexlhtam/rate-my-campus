@@ -1,0 +1,22 @@
+name: Deploy main to Vercel
+
+# Vercel's GitHub webhook has missed some pushes to main. This calls the
+# project's deploy hook as a backstop; the URL is a repository secret.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger production deploy
+        env:
+          DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_MAIN }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then echo "VERCEL_DEPLOY_HOOK_MAIN is not set" >&2; exit 1; fi
+          curl --fail --silent --show-error -X POST "$DEPLOY_HOOK" > /dev/null
