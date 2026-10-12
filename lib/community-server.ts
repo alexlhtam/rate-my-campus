@@ -1,44 +1,52 @@
-import { env } from "cloudflare:workers";
+import { getDatabase, isUniqueViolation, type Database } from "./db";
 import { moderateContent, moderatePhoto, runtimeEnv } from "./integrations";
 import {
   HttpError, assertSameOrigin, imageType, postInput, privateInformationReason,
   readLimitedBody, record, reviewInput, safeId, stripImageMetadata, textField, uclEmail,
 } from "./community-validation";
 import { places } from "./data";
+import { adminClient, authClient, authConfigured, currentUser, photoStorage } from "./supabase";
 
 export { HttpError } from "./community-validation";
 type Row = Record<string, unknown>;
 type VerifiedProfile = { userId: string; email: string; verified: true };
 
-function database(): D1Database {
-  if (!env.DB) throw new HttpError(503, "Community storage is not connected yet. Your demo is still available.");
-  return env.DB;
+function database(): Database {
+  const db = getDatabase();
+  if (!db) throw new HttpError(503, "Community storage is not connected yet. Your demo is still available.");
+  return db;
 }
 
-function identity(request: Request): string {
-  // These headers are supplied and authenticated by Sites dispatch, not browser code.
-  const userId = request.headers.get("oai-authenticated-user-id");
-  if (!userId) throw new HttpError(401, "Sign in with ChatGPT, then verify your UCL email.");
-  return userId;
+async function identity(): Promise<string> {
+  // Supabase Auth verifies the session cookie; browser-supplied headers are never trusted.
+  const user = await currentUser();
+  if (!user) throw new HttpError(401, "Sign in with your @ucl.ac.uk email first.");
+  return user.userId;
 }
 
-export async function requireVerified(request: Request): Promise<VerifiedProfile> {
-  const userId = identity(request);
-  const profile = await database().prepare("SELECT email FROM profiles WHERE user_id = ?").bind(userId).first<{ email: string }>();
-  if (!profile) throw new HttpError(403, "Verify your @ucl.ac.uk email before contributing.");
-  return { userId, email: profile.email, verified: true };
+export async function requireVerified(): Promise<VerifiedProfile> {
+  const user = await currentUser();
+  if (!user) throw new HttpError(403, "Verify your @ucl.ac.uk email before contributing.");
+  // An email-code sign-in is itself the UCL verification, so the profile row records it.
+  const now = Date.now();
+  try {
+    await database().prepare("INSERT INTO profiles (user_id, email, verified_at, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO NOTHING").bind(user.userId, user.email, now, now).run();
+  } catch (error) {
+    if (isUniqueViolation(error)) throw new HttpError(409, "This UCL address is already linked to another account.");
+    throw error;
+  }
+  return { userId: user.userId, email: user.email, verified: true };
 }
 
 export async function consumeRateLimit(userId: string, scope: string, limit: number, windowSeconds: number): Promise<void> {
   const now = Date.now();
   const windowMs = windowSeconds * 1000;
   const key = `${scope}:${userId}:${Math.floor(now / windowMs)}`;
-  const result = await database().prepare("INSERT INTO rate_limits (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1 RETURNING count")
+  const result = await database().prepare("INSERT INTO rate_limits (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = rate_limits.count + 1 RETURNING count")
     .bind(key, now + windowMs).first<{ count: number }>();
   if (!result || result.count > limit) throw new HttpError(429, "A few too many requests. Please wait before trying again.");
   // Bounded cleanup keeps temporary identifiers from being retained indefinitely.
   await database().prepare("DELETE FROM rate_limits WHERE key IN (SELECT key FROM rate_limits WHERE expires_at < ? LIMIT 100)").bind(now).run();
-  await database().prepare("DELETE FROM email_codes WHERE user_id IN (SELECT user_id FROM email_codes WHERE expires_at < ? LIMIT 100)").bind(now).run();
 }
 
 function json(value: unknown, status = 200): Response {
@@ -78,9 +86,9 @@ function publicReply(row: Row, own = false): Row {
     ...(own && row.moderation_reason ? { moderationReason: row.moderation_reason } : {}) };
 }
 
-async function communityState(request: Request): Promise<Response> {
+async function communityState(): Promise<Response> {
   const db = database();
-  const userId = request.headers.get("oai-authenticated-user-id") || "";
+  const userId = (await currentUser())?.userId || "";
   const [profile, result, config] = await Promise.all([
     userId ? db.prepare("SELECT email, verified_at FROM profiles WHERE user_id = ?").bind(userId).first<Row>() : null,
     db.batch<Row>([
@@ -105,7 +113,7 @@ async function communityState(request: Request): Promise<Response> {
     votes: result[4].results.map((row) => ({ targetId: row.target_id, kind: row.kind, count: row.count })),
     myVotes: result[5].results.map((row) => ({ targetId: row.target_id, kind: row.kind })),
     profile: profile ? { verified: true, signedIn: true, accountId: userId, email: profile.email, verifiedAt: iso(profile.verified_at), isAdmin } : { verified: false, signedIn: Boolean(userId), ...(userId ? { accountId: userId } : {}), isAdmin: false },
-    services: { email: Boolean(config.RESEND_API_KEY && config.EMAIL_FROM), ai: Boolean(config.ANTHROPIC_API_KEY), google: Boolean(config.GOOGLE_MAPS_API_KEY) },
+    services: { email: authConfigured(), ai: Boolean(config.ANTHROPIC_API_KEY), google: Boolean(config.GOOGLE_MAPS_API_KEY) },
   });
 }
 
@@ -113,67 +121,48 @@ async function sha256(value: string): Promise<string> {
   const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
-function codeHashInput(userId: string, email: string, code: string, salt: string): string { return JSON.stringify(["ucl-email-verification-v1", userId, email, code, salt]); }
-function constantEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let difference = 0;
-  for (let i = 0; i < a.length; i++) difference |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return difference === 0;
+
+function clientAddress(request: Request): string {
+  return request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
 }
 
 async function requestCode(request: Request): Promise<Response> {
-  const userId = identity(request);
   const body = await jsonBody(request);
   const email = uclEmail(body.email);
-  const config = await runtimeEnv();
-  if (!config.RESEND_API_KEY || !config.EMAIL_FROM) throw new HttpError(503, "UCL email verification is not connected yet. Explore the clearly labelled demo while email is configured.");
-  await consumeRateLimit(userId, "email-request", 3, 3600);
+  const auth = await authClient();
+  if (!auth) throw new HttpError(503, "UCL email sign-in is not connected yet. Explore the clearly labelled demo while email is configured.");
+  await consumeRateLimit(await sha256(clientAddress(request)), "email-request", 5, 3600);
   await consumeRateLimit(await sha256(email), "email-recipient", 5, 3600);
-  const number = new Uint32Array(1);
-  do { crypto.getRandomValues(number); } while (number[0] >= 4294800000);
-  const code = String(100000 + number[0] % 900000);
-  const salt = crypto.randomUUID();
-  const codeHash = await sha256(codeHashInput(userId, email, code, salt));
-  await database().prepare("INSERT INTO email_codes (user_id, email, code_hash, salt, expires_at, attempts) VALUES (?, ?, ?, ?, ?, 0) ON CONFLICT(user_id) DO UPDATE SET email = excluded.email, code_hash = excluded.code_hash, salt = excluded.salt, expires_at = excluded.expires_at, attempts = 0")
-    .bind(userId, email, codeHash, salt, Date.now() + 10 * 60000).run();
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST", headers: { Authorization: `Bearer ${config.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: config.EMAIL_FROM, to: [email], subject: "Your UCL community verification code", text: `Your verification code is ${code}.\n\nIt expires in 10 minutes. Only enter it in the UCL community map where you requested it. If you did not request this code, ignore this email.` }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!response.ok) throw new Error("Delivery failed");
-  } catch {
-    await database().prepare("DELETE FROM email_codes WHERE user_id = ? AND code_hash = ?").bind(userId, codeHash).run();
-    throw new HttpError(502, "The verification email could not be sent. Please try again later.");
-  }
-  return json({ ok: true, expiresIn: 600, message: "Check your UCL inbox for the six-digit code." });
+  // Supabase Auth emails a one-time code; the email template must include {{ .Token }}.
+  const { error } = await auth.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  if (error) throw new HttpError(error.status === 429 ? 429 : 502, "The sign-in email could not be sent. Please try again later.");
+  return json({ ok: true, expiresIn: 600, message: "Check your UCL inbox for the sign-in code." });
 }
 
 async function verifyCode(request: Request): Promise<Response> {
-  const userId = identity(request);
   const body = await jsonBody(request);
   const email = uclEmail(body.email);
-  const code = textField(body.code, "Code", 6, 6);
-  if (!/^\d{6}$/.test(code)) throw new HttpError(400, "Enter the six-digit email code.");
-  await consumeRateLimit(userId, "email-verify", 15, 3600);
-  const row = await database().prepare("UPDATE email_codes SET attempts = attempts + 1 WHERE user_id = ? AND email = ? AND expires_at > ? AND attempts < 5 RETURNING code_hash, salt")
-    .bind(userId, email, Date.now()).first<{ code_hash: string; salt: string }>();
-  const calculated = await sha256(codeHashInput(userId, email, code, row?.salt || "expired"));
-  if (!row || !constantEqual(row.code_hash, calculated)) throw new HttpError(400, "The code is incorrect or expired. Request a new one after five attempts.");
-  const consumed = await database().prepare("DELETE FROM email_codes WHERE user_id = ? AND code_hash = ? RETURNING user_id").bind(userId, row.code_hash).first();
-  if (!consumed) throw new HttpError(400, "This code has already been used.");
-  const other = await database().prepare("SELECT user_id FROM profiles WHERE email = ? AND user_id <> ?").bind(email, userId).first();
-  if (other) throw new HttpError(409, "This UCL address is already linked to an account. Sign in to that account.");
+  const code = textField(body.code, "Code", 6, 10);
+  if (!/^\d{6,10}$/.test(code)) throw new HttpError(400, "Enter the code from your email.");
+  const auth = await authClient();
+  if (!auth) throw new HttpError(503, "UCL email sign-in is not connected yet.");
+  await consumeRateLimit(await sha256(email), "email-verify", 15, 3600);
+  const { data, error } = await auth.auth.verifyOtp({ email, token: code, type: "email" });
+  if (error || !data.user) throw new HttpError(400, "The code is incorrect or expired. Request a new one.");
   const now = Date.now();
   try {
     await database().prepare("INSERT INTO profiles (user_id, email, verified_at, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET email = excluded.email, verified_at = excluded.verified_at")
-      .bind(userId, email, now, now).run();
+      .bind(data.user.id, email, now, now).run();
   } catch (error) {
-    if (String(error).includes("UNIQUE")) throw new HttpError(409, "This UCL address is already linked to an account.");
+    if (isUniqueViolation(error)) throw new HttpError(409, "This UCL address is already linked to an account.");
     throw error;
   }
   return json({ ok: true, profile: { verified: true, email } });
+}
+
+async function signOut(): Promise<Response> {
+  await (await authClient())?.auth.signOut();
+  return json({ ok: true });
 }
 
 function placeCategory(placeId: string): "study" | "lecture" | "accommodation" | "rental" {
@@ -194,7 +183,8 @@ async function moderation(content: string, kind: "review" | "pin" | "thread", pr
 
 async function photoModeration(key: string, text: string): Promise<{ status: string; reason: string | null }> {
   try {
-    const photo = await env.BUCKET?.get(key);
+    const download = await photoStorage()?.download(key);
+    const photo = download?.data;
     if (!photo || photo.size > 2_000_000) return { status: "pending", reason: "Photo awaiting a moderator's review." };
     const bytes = new Uint8Array(await photo.arrayBuffer());
     let binary = "";
@@ -214,7 +204,7 @@ async function targetKind(id: string, owner?: string): Promise<"review" | "post"
 }
 
 async function action(request: Request): Promise<Response> {
-  const profile = await requireVerified(request);
+  const profile = await requireVerified();
   const body = await jsonBody(request);
   const action = textField(body.action, "Action", 1, 20);
   const db = database();
@@ -233,7 +223,7 @@ async function action(request: Request): Promise<Response> {
     const data = postInput(body);
     await consumeRateLimit(profile.userId, "post", 10, 3600);
     if (data.sourceUrl) {
-      await requireModerator(request);
+      await requireModerator();
       const imported = await db.prepare("SELECT id FROM posts WHERE source_url = ?").bind(data.sourceUrl).first();
       if (imported) throw new HttpError(409, "This Union event has already been imported.");
     }
@@ -250,7 +240,7 @@ async function action(request: Request): Promise<Response> {
       row = await db.prepare("INSERT INTO posts (id, user_id, type, title, description, location, lat, lng, expires_at, starts_at, source_url, source_name, dietary, photo_key, price, original_price, status, moderation_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *")
         .bind(id, profile.userId, data.type, data.title, data.description, data.location, data.lat, data.lng, data.expiresAt, data.startsAt, data.sourceUrl, data.sourceName, JSON.stringify(data.dietary), data.photoKey, data.price, data.originalPrice, postModeration.status, postModeration.reason, now).first<Row>();
     } catch (error) {
-      if (data.sourceUrl && String(error).includes("UNIQUE")) throw new HttpError(409, "This Union event has already been imported.");
+      if (data.sourceUrl && isUniqueViolation(error)) throw new HttpError(409, "This Union event has already been imported.");
       throw error;
     }
     return json({ ok: true, post: publicPost(row!, true), message: postModeration.status === "approved" ? "Your pin is live." : "Your pin is awaiting moderation." }, 201);
@@ -285,7 +275,7 @@ async function action(request: Request): Promise<Response> {
       .bind(id, profile.userId, targetId, kind, now).run();
     if (target === "post") {
       // Three independent reports of gone, exceeding confirmations, remove the live pin.
-      await db.prepare("UPDATE posts SET expires_at = MIN(expires_at, ?) WHERE id = ? AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') >= 3 AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') > (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'still')")
+      await db.prepare("UPDATE posts SET expires_at = LEAST(expires_at, ?) WHERE id = ? AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') >= 3 AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') > (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'still')")
         .bind(now, targetId, targetId, targetId, targetId).run();
     }
     return json({ ok: true });
@@ -307,8 +297,9 @@ async function action(request: Request): Promise<Response> {
 }
 
 async function upload(request: Request): Promise<Response> {
-  const profile = await requireVerified(request);
-  if (!env.BUCKET) throw new HttpError(503, "Photo storage is not connected yet.");
+  const profile = await requireVerified();
+  const storage = photoStorage();
+  if (!storage) throw new HttpError(503, "Photo storage is not connected yet.");
   await consumeRateLimit(profile.userId, "upload", 15, 3600);
   const contentType = request.headers.get("content-type") || "";
   if (!contentType.startsWith("multipart/form-data;")) throw new HttpError(415, "Send an image file.");
@@ -321,33 +312,35 @@ async function upload(request: Request): Promise<Response> {
   if (file.type && file.type !== type.mime) throw new HttpError(400, "The image contents do not match its file type.");
   const clean = stripImageMetadata(source, type.mime);
   const key = `photos/${crypto.randomUUID()}.${type.extension}`;
-  await env.BUCKET.put(key, clean, { httpMetadata: { contentType: type.mime } });
+  const stored = await storage.upload(key, clean, { contentType: type.mime, upsert: false });
+  if (stored.error) throw new HttpError(502, "The photo could not be stored. Please try again.");
   try {
     await database().prepare("INSERT INTO photos (key, user_id, mime, bytes, created_at) VALUES (?, ?, ?, ?, ?)").bind(key, profile.userId, type.mime, clean.length, Date.now()).run();
-  } catch (error) { await env.BUCKET.delete(key); throw error; }
+  } catch (error) { await storage.remove([key]); throw error; }
   return json({ ok: true, key, url: `/api/community/photo?key=${encodeURIComponent(key)}` }, 201);
 }
 
 async function photo(request: Request): Promise<Response> {
   const key = new URL(request.url).searchParams.get("key") || "";
-  if (!/^photos\/[a-f0-9-]+\.(jpg|png|webp)$/.test(key) || !env.BUCKET) throw new HttpError(404, "Photo not found.");
-  const userId = request.headers.get("oai-authenticated-user-id") || "";
+  const storage = photoStorage();
+  if (!/^photos\/[a-f0-9-]+\.(jpg|png|webp)$/.test(key) || !storage) throw new HttpError(404, "Photo not found.");
+  const userId = (await currentUser())?.userId || "";
   let allowed = await database().prepare("SELECT mime FROM photos WHERE key = ? AND (user_id = ? OR EXISTS (SELECT 1 FROM posts WHERE photo_key = ? AND status = 'approved' AND expires_at > ?))")
     .bind(key, userId, key, Date.now()).first<{ mime: string }>();
   if (!allowed && userId) {
     try {
-      await requireModerator(request);
+      await requireModerator();
       allowed = await database().prepare("SELECT mime FROM photos WHERE key = ?").bind(key).first<{ mime: string }>();
     } catch { /* Do not reveal whether a private image exists. */ }
   }
   if (!allowed) throw new HttpError(404, "Photo not found.");
-  const image = await env.BUCKET.get(key);
+  const { data: image } = await storage.download(key);
   if (!image) throw new HttpError(404, "Photo not found.");
-  return new Response(image.body, { headers: { "Content-Type": allowed.mime, "X-Content-Type-Options": "nosniff", "Cache-Control": "private, no-store", "Content-Security-Policy": "default-src 'none'; sandbox", "Content-Disposition": "inline; filename=community-photo" } });
+  return new Response(image.stream(), { headers: { "Content-Type": allowed.mime, "X-Content-Type-Options": "nosniff", "Cache-Control": "private, no-store", "Content-Security-Policy": "default-src 'none'; sandbox", "Content-Disposition": "inline; filename=community-photo" } });
 }
 
-async function requireModerator(request: Request): Promise<VerifiedProfile> {
-  const profile = await requireVerified(request);
+async function requireModerator(): Promise<VerifiedProfile> {
+  const profile = await requireVerified();
   const config = await runtimeEnv();
   const admins = typeof config.ADMIN_USER_IDS === "string" ? config.ADMIN_USER_IDS.split(",").map((id) => id.trim()).filter(Boolean) : [];
   if (!admins.includes(profile.userId)) throw new HttpError(403, "This account is not a community moderator.");
@@ -355,7 +348,7 @@ async function requireModerator(request: Request): Promise<VerifiedProfile> {
 }
 
 async function moderationQueue(request: Request): Promise<Response> {
-  await requireModerator(request);
+  await requireModerator();
   const db = database();
   const result = await db.batch<Row>([
     ...["reviews", "posts", "threads", "replies"].map((table) => db.prepare(`SELECT * FROM ${table} WHERE status IN ('pending', 'hidden') OR id IN (SELECT target_id FROM reports) ORDER BY created_at ASC LIMIT 200`)),
@@ -366,7 +359,7 @@ async function moderationQueue(request: Request): Promise<Response> {
 }
 
 async function moderateAction(request: Request): Promise<Response> {
-  const profile = await requireModerator(request);
+  const profile = await requireModerator();
   const body = await jsonBody(request);
   if (body.decision === "resolve-report") {
     const reportId = safeId(body.reportId, "Report");
@@ -396,8 +389,8 @@ async function moderateAction(request: Request): Promise<Response> {
   throw new HttpError(404, "Contribution not found.");
 }
 
-async function exportAccount(request: Request): Promise<Response> {
-  const userId = identity(request);
+async function exportAccount(): Promise<Response> {
+  const userId = await identity();
   const db = database();
   const tables = ["profiles", "reviews", "posts", "threads", "replies", "votes", "reports", "photos"] as const;
   const data = await db.batch(tables.map((table) => db.prepare(`SELECT * FROM ${table} WHERE user_id = ?`).bind(userId)));
@@ -405,19 +398,26 @@ async function exportAccount(request: Request): Promise<Response> {
   return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), account }, null, 2), { headers: { "Content-Type": "application/json", "Content-Disposition": "attachment; filename=community-account.json", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
 }
 
-async function deleteAccount(request: Request): Promise<Response> {
-  const userId = identity(request);
+async function deleteAccount(): Promise<Response> {
+  const userId = await identity();
   const db = database();
+  const admin = adminClient();
+  if (!admin) throw new HttpError(503, "Account deletion is unavailable. Try again later.");
   const objects = await db.prepare("SELECT key FROM photos WHERE user_id = ?").bind(userId).all<{ key: string }>();
-  if (objects.results.length && !env.BUCKET) throw new HttpError(503, "Photo storage is unavailable. Try account deletion again later.");
-  if (env.BUCKET) for (let index = 0; index < objects.results.length; index += 1000) await env.BUCKET.delete(objects.results.slice(index, index + 1000).map((row) => row.key));
+  for (let index = 0; index < objects.results.length; index += 1000) {
+    const removed = await admin.storage.from("photos").remove(objects.results.slice(index, index + 1000).map((row) => row.key));
+    if (removed.error) throw new HttpError(503, "Photo storage is unavailable. Try account deletion again later.");
+  }
   await db.batch([
     db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ?)").bind(userId, userId, userId, userId),
     db.prepare("DELETE FROM reports WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ?)").bind(userId, userId, userId, userId),
     db.prepare("DELETE FROM replies WHERE thread_id IN (SELECT id FROM threads WHERE user_id = ?)").bind(userId),
-    ...["reviews", "posts", "threads", "replies", "votes", "reports", "photos", "email_codes", "profiles"].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(userId)),
+    ...["reviews", "posts", "threads", "replies", "votes", "reports", "photos", "profiles"].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(userId)),
     db.prepare("DELETE FROM rate_limits WHERE key LIKE ? ESCAPE '\\'").bind(`%:${userId.replace(/[\\%_]/g, "\\$&") }:%`),
   ]);
+  await (await authClient())?.auth.signOut();
+  const removed = await admin.auth.admin.deleteUser(userId);
+  if (removed.error) console.error("Auth user deletion failed:", removed.error.name);
   return json({ ok: true, message: "Your community account, contributions and uploaded photos have been deleted." });
 }
 
@@ -425,20 +425,21 @@ export async function communityRoute(request: Request, path: string[]): Promise<
   try {
     const endpoint = path.join("/");
     if (request.method === "GET") {
-      if (endpoint === "state") return await communityState(request);
+      if (endpoint === "state") return await communityState();
       if (endpoint === "photo") return await photo(request);
-      if (endpoint === "account/export") return await exportAccount(request);
+      if (endpoint === "account/export") return await exportAccount();
       if (endpoint === "moderation") return await moderationQueue(request);
     }
     if (request.method === "POST" || request.method === "DELETE") assertSameOrigin(request);
     if (request.method === "POST") {
       if (endpoint === "auth/request") return await requestCode(request);
       if (endpoint === "auth/verify") return await verifyCode(request);
+      if (endpoint === "auth/signout") return await signOut();
       if (endpoint === "action") return await action(request);
       if (endpoint === "upload") return await upload(request);
       if (endpoint === "moderation") return await moderateAction(request);
     }
-    if (request.method === "DELETE" && endpoint === "account") return await deleteAccount(request);
+    if (request.method === "DELETE" && endpoint === "account") return await deleteAccount();
     throw new HttpError(404, "This community endpoint does not exist.");
   } catch (error) {
     if (error instanceof HttpError) return json({ error: error.message }, error.status);

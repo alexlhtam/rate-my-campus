@@ -1,6 +1,6 @@
 # Rate My Campus — connect the live services
 
-The app has server adapters for Claude, Google Maps and Resend. A configured account is not automatically connected to this deployment. Configure the following names as **server runtime secrets** through the Site's supported secrets controls; never add keys to browser code, source files, the hosting manifest or a chat message.
+The app has server adapters for Claude and Google Maps, and uses Supabase for data, photos and UCL email sign-in. A configured account is not automatically connected to this deployment. Configure the following names as **environment variables** in the Vercel project (Supabase's own variables are covered in the README's *Deploy on Vercel with Supabase*); never add keys to browser code, source files or a chat message.
 
 | Name | Value to configure |
 |---|---|
@@ -8,9 +8,7 @@ The app has server adapters for Claude, Google Maps and Resend. A configured acc
 | `ANTHROPIC_MODEL` | Optional; defaults to `claude-sonnet-4-6` |
 | `ANTHROPIC_WORKSPACE_ID` | Optional; required when your Anthropic key needs a workspace selection |
 | `GOOGLE_MAPS_API_KEY` | A server key restricted to Map Tiles API and Places API (New) |
-| `RESEND_API_KEY` | A Resend sending key, ideally restricted to your sending domain |
-| `EMAIL_FROM` | A sender on your verified domain, such as `Rate My Campus <verify@your-domain.example>` |
-| `ADMIN_USER_IDS` | Comma-separated Sites user IDs authorised to moderate/import |
+| `ADMIN_USER_IDS` | Comma-separated Supabase Auth user IDs authorised to moderate/import |
 | `UNION_IMPORT_ENABLED` | Leave unset until source permission and current terms are confirmed; set to `true` to enable manual imports |
 
 **Google setup**
@@ -24,12 +22,14 @@ The app has server adapters for Claude, Google Maps and Resend. A configured acc
 
 The server uses Google's [session-based map tiles](https://developers.google.com/maps/documentation/tile/session_tokens), with Google's supported `styles` option for a pale, minimal roadmap. It returns Google's client cache headers and does not persist tiles. The frontend must retain the [required attribution](https://developers.google.com/maps/documentation/tile/policies) and display Google tiles without colour filters. Any extruded campus-building overlay uses separately attributed open geometry, not extracted Google buildings. Google Places results are suggestions for user confirmation; do not reuse them as a permanently cached place directory. Absent a Google key, the map uses a clearly labelled OpenStreetMap fallback.
 
-**Email verification setup**
+**Email sign-in setup**
 
-1. Create a [Resend account](https://resend.com/) and add a domain you control. A dedicated sending subdomain is suitable; you do not need to control `ucl.ac.uk` to send verification emails **to** UCL students.
-2. Add the DNS records Resend provides at your domain's DNS host, then wait for Resend to mark the domain verified. Follow the exact records shown, preserving existing mail records. [Domain setup](https://resend.com/docs/dashboard/domains/introduction).
-3. Create a sending API key restricted to that domain where supported. Configure `RESEND_API_KEY` and an `EMAIL_FROM` address on the verified domain. Resend's test sender is not a production way to email arbitrary students. [API key settings](https://resend.com/docs/dashboard/api-keys/introduction).
-4. In the app, sign in with ChatGPT, enter your real `@ucl.ac.uk` address, request the code and check the inbox. Enter the code and confirm that posting is enabled. ChatGPT sign-in identifies the account; the separate email code verifies UCL membership.
+Supabase Auth sends the six-digit sign-in code; the app accepts only `@ucl.ac.uk` addresses, so signing in is the UCL verification.
+
+1. Create a [Resend account](https://resend.com/) and add a domain you control. A dedicated sending subdomain is suitable; you do not need to control `ucl.ac.uk` to send codes **to** UCL students. Add the DNS records Resend provides and wait for it to mark the domain verified. [Domain setup](https://resend.com/docs/dashboard/domains/introduction).
+2. In Supabase → Authentication → Emails → SMTP settings, enable custom SMTP with host `smtp.resend.com`, port 465, user `resend`, a Resend API key as the password, and a sender on your verified domain. Supabase's built-in mailer only delivers to your own team's addresses.
+3. Edit the *Magic Link* email template so its body shows `{{ .Token }}`, and keep the email OTP length at 6.
+4. In the app, enter your real `@ucl.ac.uk` address, request the code and check the inbox. Enter the code and confirm that posting is enabled.
 
 **Claude setup**
 
@@ -43,7 +43,7 @@ Routine posts and reviews publish automatically when Claude approves them. Manua
 
 As checked on 12 October 2026, the Union's [robots file](https://studentsunionucl.org/robots.txt) did not prohibit public event paths, but that is not a reuse licence. The linked [terms page](https://studentsunionucl.org/terms-and-conditions) led to shop terms rather than clear event-reuse permission. Automated imports therefore remain off. The implemented operator import accepts one explicit public `https://studentsunionucl.org/whats-on/...` listing, rechecks robots, refuses redirects/private paths, credits the source, and returns a draft; it is limited to one import per hour across the site. No recurring crawler is scheduled. Confirm permission/current terms before enabling it.
 
-Connected requests require Sites identity. Draft extraction additionally requires UCL verification. D1 stores atomic per-user limits across workers: 30 assistant requests/hour, 20 map sessions/hour, 900 map tiles/hour and 120 viewport lookups/hour. Provider quotas and account spend limits remain necessary because per-user limits are not a project-wide budget cap.
+Connected requests require a signed-in UCL account. Postgres stores atomic per-user limits across function instances: 30 assistant requests/hour, 20 map sessions/hour, 900 map tiles/hour and 120 viewport lookups/hour. Provider quotas and account spend limits remain necessary because per-user limits are not a project-wide budget cap.
 
 **Acceptance checks after secrets are configured**
 

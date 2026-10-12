@@ -28,8 +28,7 @@
       ]
     },
     "types": [
-      "node",
-      "@cloudflare/workers-types"
+      "node"
     ]
   },
   "include": [
@@ -42,6 +41,19 @@
   ],
   "exclude": [
     "node_modules",
-    "examples"
+    "examples",
+    "build",
+    "db",
+    "vite.config.ts",
+    "drizzle.config.ts",
+    "cloudflare-env.d.ts",
+    "scripts/connector-preview",
+    "lib/connector-context.ts",
+    "lib/connector-contract.mts",
+    "lib/connectors.ts",
+    "lib/connector-errors.mts",
+    "lib/connector-preview.d.ts",
+    "components/connector-error.tsx",
+    "app/chatgpt-auth.ts"
   ]
 }

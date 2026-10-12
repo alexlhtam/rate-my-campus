@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { currentUser } from "@/lib/supabase";
 import { consumeRateLimit, requireVerified } from "@/lib/community-server";
 import { assertSameOrigin } from "@/lib/community-validation";
 import { extractPin, importUnionEvent, integrationErrorResponse, IntegrationError, integrationStatus, locatePlace, readLimitedText, runtimeEnv, searchWithClaude, summarizeReviews } from "@/lib/integrations";
@@ -14,11 +14,11 @@ const bodySchema = z.object({
   sourceUrl: z.string().url().max(500).optional(),
 });
 
-export async function GET(request: Request) {
-  const [status, identity, env] = await Promise.all([integrationStatus(), getChatGPTUser(), runtimeEnv()]);
+export async function GET() {
+  const [status, identity, env] = await Promise.all([integrationStatus(), currentUser(), runtimeEnv()]);
   const admins = typeof env.ADMIN_USER_IDS === "string" ? env.ADMIN_USER_IDS.split(",").map(value => value.trim()) : [];
   let verified = false;
-  if (identity) { try { await requireVerified(request); verified = true; } catch { /* Status remains false while storage/verification is unavailable. */ } }
+  if (identity) { try { await requireVerified(); verified = true; } catch { /* Status remains false while storage/verification is unavailable. */ } }
   return Response.json({ ...status, signedIn: Boolean(identity), verified, moderator: Boolean(identity && admins.includes(identity.userId)) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
@@ -26,10 +26,10 @@ export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
     if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new IntegrationError(415, "This feature expects a JSON request.");
-    const identity = await getChatGPTUser();
+    const identity = await currentUser();
     if (!identity) throw new IntegrationError(401, "Sign in to use connected services.");
     const body = bodySchema.parse(JSON.parse(await readLimitedText(request, 3_000_000)));
-    // The limit is stored atomically in D1 and applies across workers.
+    // The limit is stored atomically in Postgres and applies across instances.
     await consumeRateLimit(identity.userId, "assist", 30, 3600);
     if (body.action === "search") {
       if (!body.text?.trim()) throw new IntegrationError(400, "Enter a search first.");
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       if (!body.reviews?.length) throw new IntegrationError(400, "There are no reviews to summarise yet.");
       return Response.json({ provider: "anthropic", summary: await summarizeReviews(body.reviews) }, { headers: { "Cache-Control": "no-store" } });
     }
-    await requireVerified(request);
+    await requireVerified();
     if (body.action === "extract") {
       if (!body.text?.trim() && !body.image) throw new IntegrationError(400, "Add a description or a photo first.");
       return Response.json({ provider: "anthropic", pin: await extractPin(body.text || "", body.image) }, { headers: { "Cache-Control": "no-store" } });

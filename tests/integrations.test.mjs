@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import ts from "typescript";
 
 // Exercise service contracts without external requests or real credentials.
-const source = (await fs.readFile(new URL("../lib/integrations.ts", import.meta.url), "utf8")).replace('import { env } from "cloudflare:workers";', "const env = {};");
+const source = (await fs.readFile(new URL("../lib/integrations.ts", import.meta.url), "utf8"));
 const temporaryModule = new URL(".integration-under-test.mjs", import.meta.url);
 await fs.writeFile(temporaryModule, ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText);
 const api = await import(temporaryModule.href);

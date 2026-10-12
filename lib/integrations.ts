@@ -1,4 +1,3 @@
-import { env } from "cloudflare:workers";
 import { z } from "zod";
 
 // Server module: import only from server routes or other server modules.
@@ -7,7 +6,7 @@ export class IntegrationError extends Error {
 }
 
 export async function runtimeEnv(): Promise<Record<string, unknown>> {
-  return { ...(typeof process !== "undefined" ? process.env : {}), ...env };
+  return { ...process.env };
 }
 
 async function secret(name: string): Promise<string> {

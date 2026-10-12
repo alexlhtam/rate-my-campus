@@ -1,4 +1,4 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { currentUser } from "@/lib/supabase";
 import { consumeRateLimit } from "@/lib/community-server";
 import { fetchGoogleMap, googleMapSession, integrationErrorResponse, IntegrationError, integrationStatus } from "@/lib/integrations";
 
@@ -21,7 +21,7 @@ export async function GET(request: Request, context: Context) {
         ? { provider: "google", attribution: "Google Maps", requiresSignIn: true, sessionUrl: "/api/map/session", tileUrl: "/api/map/tile/{z}/{x}/{y}?session={session}", viewportUrl: "/api/map/viewport" }
         : { provider: "openstreetmap", attribution: "© OpenStreetMap contributors", tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", notice: "Google Maps is not connected. Showing OpenStreetMap." }, { headers: { "Cache-Control": "no-store" } });
     }
-    const identity = await getChatGPTUser();
+    const identity = await currentUser();
     if (!identity) throw new IntegrationError(401, "Sign in to load Google Maps.");
     if (request.headers.get("sec-fetch-site") === "cross-site") throw new IntegrationError(403, "Open Rate My Campus directly to load its map.");
     if (!status.google) throw new IntegrationError(503, "Google Maps is not connected yet.");

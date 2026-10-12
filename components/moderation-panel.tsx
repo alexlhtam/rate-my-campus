@@ -98,11 +98,10 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
     {accessDenied ? <div style={styles.card}>
       <ShieldCheck size={24} />
       <h3>Moderator access required</h3>
-      <p style={{ fontSize: 14, lineHeight: 1.6 }}>Sign in with the account assigned as a campus moderator and verify its UCL email. Community reports and other students’ unpublished contributions are available only to moderators.</p>
+      <p style={{ fontSize: 14, lineHeight: 1.6 }}>Sign in with the UCL email assigned as a campus moderator. Community reports and other students’ unpublished contributions are available only to moderators.</p>
       {accountId && <div style={styles.note}><strong>Your account reference</strong><p style={{ overflowWrap: "anywhere", userSelect: "all", margin: "7px 0" }}>{accountId}</p><p style={styles.muted}>The site owner can use this reference when assigning moderator access.</p><button className="button light small" onClick={async () => { try { await navigator.clipboard.writeText(accountId); setNotice("Account reference copied."); } catch { setNotice("Select the account reference above to copy it."); } }}><Copy size={13} /> Copy reference</button></div>}
       <div style={styles.row}>
-        <a className="button dark small" href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in</a>
-        {onAccount && <button className="button light small" onClick={onAccount}>Verify UCL email</button>}
+        {onAccount && <button className="button dark small" onClick={onAccount}>Sign in with UCL email</button>}
         <button className="button light small" onClick={() => void load()}><RefreshCw size={14} /> Check access</button>
       </div>
     </div> : <>

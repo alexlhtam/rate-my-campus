@@ -83,13 +83,12 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) { console.log("Usage: npm run lan -- [--host LAN_IP] [--port 3000] [--worker-port 8787]\nRequires a completed npm run build. Shares an isolated browser-local demo, not live accounts or paid APIs."); return; }
   const iface = selectInterface(os.networkInterfaces(), options.host);
-  if (!existsSync(path.join(root, "dist/server/wrangler.json"))) throw new Error("Build the app first: npm ci, then npm run build.");
+  if (!existsSync(path.join(root, ".next/BUILD_ID"))) throw new Error("Build the app first: npm ci, then npm run build.");
   await freePort("127.0.0.1", options.workerPort);
   await freePort(iface.address, options.port);
 
-  const worker = spawn(process.execPath, ["--import", path.join(root, "scripts/sites-env.mjs"), path.join(root, "node_modules/wrangler/bin/wrangler.js"), "dev", "--config", "dist/server/wrangler.json", "--local", "--persist-to", ".wrangler/state", "--ip", "127.0.0.1", "--port", String(options.workerPort), "--inspector-port", "0"], {
-    cwd: root, stdio: "inherit", windowsHide: true, detached: process.platform !== "win32",
-    env: { ...process.env, CLOUDFLARE_CF_FETCH_ENABLED: "false", WRANGLER_SEND_METRICS: "false" },
+  const worker = spawn(process.execPath, [path.join(root, "node_modules/next/dist/bin/next"), "start", "--hostname", "127.0.0.1", "--port", String(options.workerPort)], {
+    cwd: root, stdio: "inherit", windowsHide: true, detached: process.platform !== "win32", env: { ...process.env },
   });
   let stopped = false, workerExited = false;
   const server = http.createServer({ requestTimeout: 15000, headersTimeout: 10000, maxHeaderSize: 16384 }, (req, res) => {
@@ -97,14 +96,14 @@ async function main() {
     if (req.headers.host !== `${iface.address}:${options.port}` && !(options.port === 80 && req.headers.host === iface.address)) return respond(req, res, 403, { error: "Use the LAN address printed by the launcher." });
     const route = routeRequest(req.method, req.url);
     if (route.kind !== "proxy") return respond(req, res, route.status, route.kind === "json" ? route.body : { error: route.error });
-    // A strict display-header allowlist excludes Sites identity, cookies,
+    // A strict display-header allowlist excludes identity headers, cookies,
     // credentials, proxy headers and server-action headers, including duplicates.
     const upstream = http.request({ hostname: "127.0.0.1", port: options.workerPort, path: route.path, method: req.method, headers: forwardHeaders(req.headers, options.workerPort), timeout: 15000 }, (reply) => {
       const headers = { ...reply.headers }; delete headers["set-cookie"];
       res.writeHead(reply.statusCode || 502, headers); reply.pipe(res);
     });
     upstream.on("timeout", () => upstream.destroy());
-    upstream.on("error", () => { if (!res.headersSent) respond(req, res, 502, { error: "The local Worker is starting. Refresh in a moment." }); else res.destroy(); });
+    upstream.on("error", () => { if (!res.headersSent) respond(req, res, 502, { error: "The local server is starting. Refresh in a moment." }); else res.destroy(); });
     res.on("close", () => upstream.destroy());
     upstream.end();
   });
@@ -124,12 +123,12 @@ async function main() {
     server.close(); server.closeAllConnections(); stopWorker();
   }
   worker.once("error", (error) => { console.error(error.message); stop(1); });
-  worker.once("exit", (code) => { workerExited = true; if (!stopped) { console.error("The local Worker stopped."); stop(code || 1); } });
+  worker.once("exit", (code) => { workerExited = true; if (!stopped) { console.error("The local server stopped."); stop(code || 1); } });
   server.once("error", (error) => { console.error(error.message); stop(1); });
   process.once("SIGINT", () => stop()); process.once("SIGTERM", () => stop());
   process.once("exit", stopWorker);
   server.listen(options.port, iface.address, () => {
-    console.log(`\nRate My Campus Wi-Fi demo: http://${iface.address}:${options.port}\nInterface: ${iface.name}; subnet mask: ${iface.netmask}.\nWait for Wrangler's ready message, then open the address on the same network.\nDemo activity stays separately on each device. Live accounts, admin actions and paid APIs are blocked.\nPress Ctrl+C to stop both the proxy and its local Worker.\n`);
+    console.log(`\nRate My Campus Wi-Fi demo: http://${iface.address}:${options.port}\nInterface: ${iface.name}; subnet mask: ${iface.netmask}.\nWait for Next.js's ready message, then open the address on the same network.\nDemo activity stays separately on each device. Live accounts, admin actions and paid APIs are blocked.\nPress Ctrl+C to stop both the proxy and its local server.\n`);
   });
 }
 
