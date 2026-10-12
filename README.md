@@ -25,7 +25,7 @@ This is a **demo on each device**, not a shared live database. Reviews, posts an
 
 ## Live service configuration
 
-Copy `.env.example` to a private `.env` in the project root, then fill in only the services you want to connect. An existing `.env` must be preserved. `npm run dev` and `npm run build` use Cloudflare's native environment loading; `npm start` and `npm run lan` explicitly load the root `.env`, with optional `.env.local` overrides. Restart after edits. Do not keep a legacy `.dev.vars` alongside `.env`: Cloudflare gives it precedence in development. The LAN demo still blocks live accounts and paid services.
+Copy `.env.example` to a private `.env` in the project root, then fill in only the services you want to connect. An existing `.env` must be preserved. `npm run dev` and `npm run build` use Cloudflare's native environment loading; `npm start` and `npm run lan` explicitly load the root `.env`, with optional `.env.local` overrides. Both files are optional: a fresh clone can start with services disconnected. Restart after edits. Do not keep a legacy `.dev.vars` alongside `.env`: Cloudflare gives it precedence in development. The LAN demo still blocks live accounts and paid services.
 
 `.env*` and `.dev.vars*` are ignored by Git, except the blank `.env.example` template. Application variables are server-only; local environment snapshots are excluded from build output. Do not use `VITE_` or `NEXT_PUBLIC_` for secrets. Set hosted values separately through Sites runtime secrets; local files are not deployed. [Cloudflare environment loading](https://developers.cloudflare.com/workers/development-testing/environment-variables/).
 

@@ -116,7 +116,7 @@ export default function CampusMap(props:Props){
   if(building.coordinates)setCampus(building.campus==='east'?'east':building.campus==='bloomsbury'?'bloomsbury':'london');
   if(bounds){
    const canvas=map.getContainer(),wide=canvas.clientWidth>680;
-   const padding=wide?{top:85,bottom:Math.min(145,canvas.clientHeight*.25),left:360,right:65}:{top:75,bottom:Math.min(390,canvas.clientHeight*.56),left:35,right:55};
+   const padding=wide?{top:85,bottom:Math.min(145,canvas.clientHeight*.25),left:360,right:65}:{top:75,bottom:Math.min(390,canvas.clientHeight*.62),left:35,right:55};
    map.fitBounds(bounds,{padding,maxZoom:18,duration:800});
   }else if(building.coordinates)map.flyTo({center:[building.coordinates.lng,building.coordinates.lat],zoom:17,pitch:threeD?42:0,duration:850});
  }

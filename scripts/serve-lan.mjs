@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
+import { localEnvArgs } from "./local-env.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const demoState = { reviews: [], posts: [], threads: [], replies: [], votes: [], myVotes: [], profile: { verified: false, signedIn: false, isAdmin: false }, services: { email: false, ai: false, google: false } };
@@ -87,7 +88,7 @@ async function main() {
   await freePort("127.0.0.1", options.workerPort);
   await freePort(iface.address, options.port);
 
-  const worker = spawn(process.execPath, ["--import", path.join(root, "scripts/sites-env.mjs"), path.join(root, "node_modules/wrangler/bin/wrangler.js"), "dev", "--config", "dist/server/wrangler.json", "--env-file", path.join(root, ".env"), "--env-file", path.join(root, ".env.local"), "--local", "--persist-to", ".wrangler/state", "--ip", "127.0.0.1", "--port", String(options.workerPort), "--inspector-port", "0"], {
+  const worker = spawn(process.execPath, ["--import", path.join(root, "scripts/sites-env.mjs"), path.join(root, "node_modules/wrangler/bin/wrangler.js"), "dev", "--config", "dist/server/wrangler.json", ...localEnvArgs(root), "--local", "--persist-to", ".wrangler/state", "--ip", "127.0.0.1", "--port", String(options.workerPort), "--inspector-port", "0"], {
     cwd: root, stdio: "inherit", windowsHide: true, detached: process.platform !== "win32",
     env: { ...process.env, CLOUDFLARE_CF_FETCH_ENABLED: "false", WRANGLER_SEND_METRICS: "false" },
   });
