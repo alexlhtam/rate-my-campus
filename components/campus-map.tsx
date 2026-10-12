@@ -161,7 +161,7 @@ export default function CampusMap(props:Props){
  const visibleCount=buildings.filter(building=>mappedIds.has(building.id)&&building.coordinates&&bounds?.contains([building.coordinates.lng,building.coordinates.lat])).length;
  const buildingReviewPlaces=activeBuilding?placesInBuilding(activeBuilding.id):[];
 
- return <div className={`campus-map atlas ${confirm?'confirm-map':''} ${fallback?'atlas-fallback':''}`} data-map-engine={fallback?'flat':'maplibre'} data-revision={revision}>
+ return <div className={`campus-map atlas ${confirm?'confirm-map':''} ${fallback?'atlas-fallback':''}`} style={{overflow:'clip'}} data-map-engine={fallback?'flat':'maplibre'} data-revision={revision}>
   <div ref={container} className="atlas-canvas">{fallback&&<FlatCampusMap {...props} focusView={flatFocus} directoryOverlay onRecenter={()=>changeCampus(campus)}/>}</div>
   {fallback&&!confirm&&<div className="atlas-fallback-note">2D map · 3D isn’t available in this browser</div>}
   {!fallback&&(!ready||requireGoogle&&provider!=='google')&&<div className="atlas-loading" role="status">{!ready||connection==='checking'||connection==='google'?'Loading the map…':'Google Maps is unavailable. Reset to a manual campus location to continue.'}</div>}
