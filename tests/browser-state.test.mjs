@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
-const source = await readFile(new URL('../lib/browser-state.ts', import.meta.url), 'utf8');
+const foodSource = await readFile(new URL('../lib/food.ts', import.meta.url), 'utf8');
+const foodCode=ts.transpileModule(foodSource,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const source = (await readFile(new URL('../lib/browser-state.ts', import.meta.url), 'utf8')).replace("'./food'", "'data:text/javascript;base64,"+Buffer.from(foodCode).toString('base64')+"'");
 const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText;
 const { parseDemoState, readSavedIDs, safeStorageRead, safeStorageWrite } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 test('missing, corrupted and incompatible browser state always produces iterable defaults', () => {
@@ -35,4 +37,24 @@ test('denied reads, full storage and browser storage getter errors are handled w
   const original = globalThis.window;
   try { globalThis.window = Object.defineProperty({}, 'localStorage', { get() { throw new Error('disabled'); } }); assert.equal(safeStorageRead('a'), null); assert.equal(safeStorageWrite('a', 'data'), false); }
   finally { if (original === undefined) delete globalThis.window; else globalThis.window = original; }
+});
+
+test('food metadata, closure and revision survive reload without turning declared details into verified facts', () => {
+  const post = { id: 'food-roundtrip', type: 'food', title: 'Society lunch', description: 'Boxed lunches', location: 'Student Centre', lat: 51.5246, lng: -.134,
+    expiresAt: '2026-10-12T12:45:00Z', createdAt: '2026-10-12T12:00:00Z', availabilityUpdatedAt: '2026-10-12T12:10:00Z', closedAt: '2026-10-12T12:10:00Z', closureReason: 'collected', portionsRemaining: 0, revision: 4, collectionInstructions: 'Collect from the society table.',
+    foodDetails: { allergenStatus: 'provided', allergens: ['milk', 'cereals-gluten'], ingredients: 'Wheat, milk', handling: 'Sealed boxes', sourceLabel: 'Chess Society', pickupAccess: 'ucl', bringContainer: true },
+    freshStillCount: 99, freshGoneCount: 99, userId: 'private-account', demo: false, own: false };
+  const parsed = parseDemoState(JSON.stringify({ posts: [post], foodFeedback: { 'demo-sample': { kind: 'still', at: 1791806400000 } } }));
+  const restored = parsed.posts[0];
+  assert.equal(restored.revision, 4); assert.equal(restored.portionsRemaining, 0); assert.equal(restored.closedAt, post.closedAt); assert.equal(restored.closureReason, 'collected'); assert.equal(restored.availabilityUpdatedAt, post.availabilityUpdatedAt);
+  assert.deepEqual(restored.foodDetails, post.foodDetails); assert.equal(restored.collectionInstructions, post.collectionInstructions);
+  assert.equal(restored.demo, true); assert.equal(restored.own, true); assert.equal(restored.userId, undefined); assert.equal(restored.freshStillCount, undefined); assert.equal(restored.freshGoneCount, undefined);
+  assert.deepEqual(parsed.foodFeedback['demo-sample'], { kind: 'still', at: 1791806400000 });
+});
+
+test('older food drafts keep allergens unknown and malformed feedback is discarded during reload', () => {
+  const post = { id: 'legacy-food', type: 'food', title: 'Lunch', lat: 51.5, lng: -.1, expiresAt: '2026-10-12T13:00:00Z', revision: '5', foodDetails: { allergenStatus: 'provided', allergens: ['not-an-allergen'], ingredients: '  ' } };
+  const parsed = parseDemoState(JSON.stringify({ posts: [post], foodFeedback: { good: { kind: 'gone', at: 1791806400000 }, invalid: { kind: 'admin', at: 1791806400000 }, invalidTime: { kind: 'still', at: 'today' }, '../path': { kind: 'gone', at: 1791806400000 } } }));
+  assert.equal(parsed.posts[0].revision, 0); assert.equal(parsed.posts[0].foodDetails.allergenStatus, 'unknown'); assert.deepEqual(parsed.posts[0].foodDetails.allergens, []);
+  assert.deepEqual(Object.keys(parsed.foodFeedback), ['good']);
 });

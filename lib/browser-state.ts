@@ -1,11 +1,12 @@
+import {readFoodDetails} from './food';
 /** Browser persistence is untrusted and may be unavailable, full or from an older build. */
 type Row = Record<string, unknown>;
-export type DemoState = { reviews: Row[]; posts: Row[]; threads: Row[]; replies: Row[]; reports: Row[]; votes: Record<string, string> };
+export type DemoState = { reviews: Row[]; posts: Row[]; threads: Row[]; replies: Row[]; reports: Row[]; votes: Record<string, string>; foodFeedback: Record<string,{kind:string;at:number}> };
 const id = (value: unknown): value is string => typeof value === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,119}$/.test(value);
 const object = (value: unknown): value is Row => !!value && typeof value === 'object' && !Array.isArray(value);
 const strings = (value: unknown, limit = 20) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string').slice(0, limit).map(item => item.slice(0, 100)) : [];
 const text = (value: unknown, limit: number) => typeof value === 'string' ? value.slice(0, limit) : '';
-const empty = (): DemoState => ({ reviews: [], posts: [], threads: [], replies: [], reports: [], votes: {} });
+const empty = (): DemoState => ({ reviews: [], posts: [], threads: [], replies: [], reports: [], votes: {}, foodFeedback: {} });
 function parse(raw: string | null, max: number): unknown { if (!raw || raw.length > max) return null; try { return JSON.parse(raw); } catch { return null; } }
 function base(row: Row): Row {
   return { id: row.id, demo: true, own: true,
@@ -29,12 +30,16 @@ export function parseDemoState(raw: string | null): DemoState {
     ...(typeof row.price === 'number' && Number.isFinite(row.price) && row.price >= 0 ? { price: row.price } : {}),
     ...(typeof row.originalPrice === 'number' && Number.isFinite(row.originalPrice) && row.originalPrice >= 0 ? { originalPrice: row.originalPrice } : {}),
     collectionInstructions: text(row.collectionInstructions, 500),
+    ...(row.type === 'food' ? {foodDetails:readFoodDetails(row.foodDetails),revision:typeof row.revision==='number'&&Number.isInteger(row.revision)&&row.revision>=0?row.revision:0,
+      availabilityUpdatedAt:typeof row.availabilityUpdatedAt==='string'&&Number.isFinite(Date.parse(row.availabilityUpdatedAt))?row.availabilityUpdatedAt:row.createdAt,
+      closureReason:['collected','ended','withdrawn','community-gone'].includes(String(row.closureReason))?row.closureReason:null,closedAt:typeof row.closedAt==='string'&&Number.isFinite(Date.parse(row.closedAt))?row.closedAt:null}:{}),
     ...(typeof row.portionsRemaining === 'number' && Number.isInteger(row.portionsRemaining) && row.portionsRemaining >= 0 && row.portionsRemaining <= 10000 ? { portionsRemaining: row.portionsRemaining } : {}),
   }));
   result.threads = rows('threads').filter(row => id(row.placeId)).map(row => ({ ...base(row), placeId: row.placeId, title: text(row.title, 160), text: text(row.text, 3000) }));
   result.replies = rows('replies').filter(row => id(row.threadId)).map(row => ({ ...base(row), threadId: row.threadId, text: text(row.text, 1500) }));
   result.reports = rows('reports').filter(row => id(row.targetId)).map(row => ({ ...base(row), targetId: row.targetId, reason: text(row.reason, 2000) }));
   result.votes = Object.fromEntries(Object.entries(object(value.votes) ? value.votes : {}).filter(([key, vote]) => id(key) && typeof vote === 'string' && ['helpful', 'unhelpful', 'still', 'gone'].includes(vote)).slice(0, 3000)) as Record<string, string>;
+  result.foodFeedback=Object.fromEntries(Object.entries(object(value.foodFeedback)?value.foodFeedback:{}).filter(([key,row])=>id(key)&&object(row)&&['still','gone'].includes(String(row.kind))&&typeof row.at==='number'&&Number.isFinite(row.at)).slice(0,1000)) as DemoState['foodFeedback'];
   return result;
 }
 export function readSavedIDs(raw: string | null): string[] {

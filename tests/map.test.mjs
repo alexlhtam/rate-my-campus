@@ -112,6 +112,16 @@ test('GPU fallback retains searchable building coverage and partner information 
   assert.match(markup, /OpenStreetMap contributors/);
 });
 
+test('an unrated live campus does not fill the map with empty review bubbles or hide food alerts', () => {
+  const items = [{id:'unrated-library',name:'Unrated library',lat:51.525,lng:-.134,score:'—'}, {id:'live-food',title:'Society lunch',type:'food',lat:51.525,lng:-.134}];
+  const flat = renderToStaticMarkup(React.createElement(FlatCampusMap,{items,onSelect(){}}));
+  assert.doesNotMatch(flat,/aria-label="View Unrated library"/);
+  assert.match(flat,/aria-label="View Society lunch"/);
+  const map = renderToStaticMarkup(React.createElement(CampusMap,{items,onSelect(){}}));
+  assert.match(map,/aria-label="Find a UCL building"/);
+  assert.doesNotMatch(map,/aria-label="View Unrated library"/);
+});
+
 test('building cards offer review pages even when every rated pin is filtered out', () => {
   const garden = renderToStaticMarkup(React.createElement(GardenCampusMap, {items:[],onSelect(){}}));
   assert.match(garden,/Garden Halls/);

@@ -4,6 +4,8 @@ Apply `supabase/migrations/20261012010000_community_tools.sql` after the base co
 
 This change does not configure email, Supabase credentials, hosting, Claude credentials or Google services. Those remain deployment responsibilities.
 
+The dedicated leftover-food feature also requires `supabase/migrations/20261013000000_leftover_food.sql` after the migrations above. Its food metadata, owner revision controls, fresh community availability rules and private demo are documented in the [leftover-food handoff](LEFTOVER-FOOD.md). Existing credentials and Alex's live-service setup are unchanged.
+
 ## Automatic moderation recovery
 
 - New submissions retry transient Claude errors (429, 502, 504) once immediately. They remain private if both checks fail.

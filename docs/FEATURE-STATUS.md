@@ -1,6 +1,6 @@
 # Campus feature implementation
 
-This branch builds on the campus map overhaul merged in PR #2 and includes the current password sign-in and dialog behaviour from `main`. Credentials and live-service deployment remain with Alex. Apply the new community-tools migration before deploying the application; see [community operations](COMMUNITY-OPERATIONS.md).
+The campus features build on the map overhaul merged in PR #2 and the password sign-in and dialog behaviour from `main`. Credentials and live-service deployment remain with Alex. The leftover-food follow-up additionally needs `20261013000000_leftover_food.sql` after the community-tools migration; see [community operations](COMMUNITY-OPERATIONS.md) and the [food handoff](LEFTOVER-FOOD.md).
 
 ## Implemented
 
@@ -15,11 +15,12 @@ This branch builds on the campus map overhaul merged in PR #2 and includes the c
 - Official study-space availability and booking links, without claiming an unverified live-data integration.
 - Followed places and an in-app inbox for reviews/discussions and conversation replies. No email/push delivery is enabled by this feature.
 - Own contribution status/reasons, review updates, deletion, alert closure, collection instructions and food quantities. The local demo has separate contribution controls that never write to the live service.
+- A dedicated leftover-food feed and three-step composer, conservative Claude drafts, explicit ingredient/allergen/handling claims, confirmed pickup locations, collection countdowns and owner controls. Live availability polls every 15 seconds while visible; current feedback can close a pickup, and revision checks protect quantity edits. Zero/explicit closure ends collection without reservations. The private demo keeps its food posts/photos on the device. See the [food API and lifecycle handoff](LEFTOVER-FOOD.md).
 - Extraction confidence/warnings/discount display and explicit selection among location suggestions before confirming a pin.
 - Cross-user active pin/photo duplicate checks, bounded immediate retries and a durable provider-failure moderation queue. Negative verdicts are not retried; failures never approve content. Revision checks protect later edits and moderator decisions.
 - Public private-takedown requests, signed-in account map corrections and a protected moderator resolution queue. Corrections do not automatically alter factual map data.
 - Bounded retention of expired alerts, orphan photos and resolved private requests, with report holds. Retention/retry processing depends on traffic unless the deployment owner connects a protected scheduler.
-- Darker pastel-purple campus buildings in both 3D and flat views, retaining the white basemap. Map bubbles and labels follow the camera in the same rendered frame, with stable group anchors during panning.
+- Darker pastel-purple campus buildings in both 3D and flat views, retaining the white basemap. Map bubbles and labels follow the camera in the same rendered frame, with stable group anchors during panning. At campus scale only reviewed places show score bubbles; close zoom reveals unrated places. Wider review clusters and clear space around food/other alerts reduce clutter, with selected places always available.
 
 ## Deliberately deferred
 
@@ -38,4 +39,6 @@ This branch builds on the campus map overhaul merged in PR #2 and includes the c
 
 ## Validation
 
-All 151 automated tests and the optimized production build pass. Automated checks cover source-backed place joins, unknown coordinates, London opening times/overnight exceptions, search filters, privacy-preserving share/calendar formats, ownership checks, complete aggregates, pagination, moderation races, photos and retention. Browser checks cover desktop/mobile layout, map movement and focus after resizing, Garden Halls, searches, comparisons, collections, contribution controls and QR sharing. Live email/Claude/Google calls are not represented as production-verified.
+The preceding campus-features release passed 151 automated tests and its optimized production build. Those checks covered source-backed place joins, unknown coordinates, London opening times/overnight exceptions, search filters, privacy-preserving share/calendar formats, ownership checks, complete aggregates, pagination, moderation races, photos and retention. Its browser checks covered desktop/mobile layout, map movement and focus after resizing, Garden Halls, searches, comparisons, collections, contribution controls and QR sharing.
+
+For the leftover-food follow-up, the full suite passes 206 tests and the production build passes. The browser walkthrough covers posting, quantity and detail edits, persistence, closure, feedback, keyboard controls and mobile filtering. See [food validation status](LEFTOVER-FOOD.md#validation-and-release-status). Live email/Claude/Google calls and deployment are not represented as production-verified.
