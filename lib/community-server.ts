@@ -1,3 +1,4 @@
+import {publicFreebie} from './freebies/publication';
 import { getDatabase, isUniqueViolation, type Database } from "./db";
 import { moderateContent, moderatePhoto, runtimeEnv } from "./integrations";
 import {
@@ -72,9 +73,11 @@ function publicReview(row: Row, own = false): Row {
     own, ...(own && row.moderation_reason ? { moderationReason: row.moderation_reason } : {}) };
 }
 function publicPost(row: Row, own = false): Row {
+  if(row.freebie_json)return {...publicFreebie(row),own};
   return { id: row.id, type: row.type, title: row.title, description: row.description, location: row.location,
     lat: row.lat, lng: row.lng, expiresAt: iso(row.expires_at), dietary: parsed(row.dietary, []),
     startsAt: row.starts_at == null ? null : iso(row.starts_at), sourceUrl: row.source_url, sourceName: row.source_name,
+    freebie: parsed(row.freebie_json, null), sourceCheckedAt: row.source_checked_at ? iso(row.source_checked_at) : null,
     photoKey: row.photo_key, photoUrl: row.photo_key ? `/api/community/photo?key=${encodeURIComponent(String(row.photo_key))}` : null,
     image: row.photo_key ? `/api/community/photo?key=${encodeURIComponent(String(row.photo_key))}` : undefined,
     price: row.price, originalPrice: row.original_price, createdAt: iso(row.created_at), status: row.status,
@@ -235,7 +238,9 @@ async function action(request: Request): Promise<Response> {
     return json({ ok: true, review: publicReview(row!, true), message: reviewModeration.status === "approved" ? "Your review is published." : "Your review is awaiting moderation." }, 201);
   }
   if (action === "post") {
-    const data = postInput(body);
+    // Only the server can grant the longer Union window, after checking identity.
+    if(body.sourceUrl)await requireModerator();
+    const data = postInput(body,now,{unionImport:!!body.sourceUrl});
     await consumeRateLimit(profile.userId, "post", 10, 3600);
     if (data.sourceUrl) {
       await requireModerator();
@@ -575,7 +580,7 @@ async function photo(request: Request): Promise<Response> {
   return new Response(image.stream(), { headers: { "Content-Type": allowed.mime, "X-Content-Type-Options": "nosniff", "Cache-Control": "private, no-store", "Content-Security-Policy": "default-src 'none'; sandbox", "Content-Disposition": "inline; filename=community-photo" } });
 }
 
-async function requireModerator(): Promise<VerifiedProfile> {
+export async function requireModerator(): Promise<VerifiedProfile> {
   const profile = await requireVerified();
   const config = await runtimeEnv();
   const admins = typeof config.ADMIN_USER_IDS === "string" ? config.ADMIN_USER_IDS.split(",").map((id) => id.trim()).filter(Boolean) : [];

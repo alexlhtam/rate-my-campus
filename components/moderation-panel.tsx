@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, Copy, Flag, LoaderCircle, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
+import {FreebieFacts} from './freebie-events';
+import type {EventPin} from '@/lib/freebies/view';
 import { places } from "@/lib/data";
 
-type Item = {
+type Item = Partial<EventPin> & {
   id: string; kind: "review" | "post" | "thread" | "reply";
   status: "approved" | "pending" | "hidden"; createdAt: string; moderationReason?: string;
   placeId?: string; title?: string; text?: string; description?: string;
@@ -151,7 +153,7 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
           <h3 style={{ margin: 0, fontSize: 17 }}>{item.title || place?.name || (item.kind === "reply" ? "Discussion reply" : "Student review")}</h3>
           {item.location && <p style={styles.muted}>{item.location}</p>}
           {item.rating && <span style={styles.muted}>{item.rating} / 5 · {item.term}</span>}
-          <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{item.text || item.description || "No written review supplied."}</p>
+          <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{item.text || item.description || "No written review supplied."}</p>{item.freebie&&<><FreebieFacts pin={item as EventPin} expanded/>{item.sourceUrl&&<a className="source-link" href={item.sourceUrl} target="_blank" rel="noreferrer">Original Union listing</a>}</>}
           {item.tags?.length ? <p style={styles.muted}>{item.tags.join(" · ")}</p> : null}
           {item.photoUrl && <a href={item.photoUrl} target="_blank" rel="noreferrer"><img src={item.photoUrl} alt="Photo awaiting moderation" style={{ width: "100%", maxHeight: 280, objectFit: "contain", background: "#f6f6f1", borderRadius: 10 }} /></a>}
           {item.moderationReason && <p style={styles.note}><strong>Review note:</strong> {item.moderationReason}</p>}

@@ -18,10 +18,12 @@ test("environment files are ignored and the example contains every supported ser
   }
   const template = await readFile(path.join(root, ".env.example"), "utf8");
   const settings = Object.fromEntries([...template.matchAll(/^([A-Z_]+)=(.*)$/gm)].map((match) => [match[1], match[2].trim()]));
-  assert.deepEqual(Object.keys(settings).sort(), ["ADMIN_USER_IDS", "ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "ANTHROPIC_WORKSPACE_ID", "GOOGLE_MAPS_API_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_URL", "POSTGRES_URL", "SUPABASE_SERVICE_ROLE_KEY", "UNION_IMPORT_ENABLED"].sort());
+  assert.deepEqual(Object.keys(settings).sort(), ["ADMIN_USER_IDS", "ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "ANTHROPIC_WORKSPACE_ID", "CRON_SECRET", "FREEBIE_CLAUDE_MODEL", "FREEBIE_DAILY_IMPORT_ENABLED", "FREEBIE_JEV_SCREENING", "FREEBIE_WORKER_URL", "JEV_API_KEY", "JEV_MODEL", "JEV_THRESHOLD", "GOOGLE_MAPS_API_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_URL", "POSTGRES_URL", "SUPABASE_SERVICE_ROLE_KEY", "UNION_IMPORT_ENABLED"].sort());
+  assert.equal(settings.FREEBIE_DAILY_IMPORT_ENABLED, "false");
+  assert.equal(settings.FREEBIE_JEV_SCREENING, "false");
   for (const [name, value] of Object.entries(settings)) {
     if (/^(VITE_|NEXT_PUBLIC_)/.test(name)) assert.ok(PUBLIC_SETTINGS.includes(name), `${name} would be exposed to browsers`);
-    if (!["ANTHROPIC_MODEL", "UNION_IMPORT_ENABLED"].includes(name)) assert.equal(value, "");
+    if (!["ANTHROPIC_MODEL", "UNION_IMPORT_ENABLED", "FREEBIE_DAILY_IMPORT_ENABLED", "FREEBIE_JEV_SCREENING", "JEV_MODEL", "JEV_THRESHOLD"].includes(name)) assert.equal(value, "");
   }
 });
 

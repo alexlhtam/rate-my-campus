@@ -98,12 +98,13 @@ export function reviewInput(body: Record<string, unknown>, category?: keyof type
   };
 }
 
-export function postInput(body: Record<string, unknown>, now = Date.now()) {
+export function postInput(body: Record<string, unknown>, now = Date.now(), trusted: {unionImport?:boolean} = {}) {
   const type = textField(body.type, "Type", 1, 10);
   if (!["food", "deal", "freebie"].includes(type)) throw new HttpError(400, "Choose a food alert, deal or freebie.");
   const expiresAt = typeof body.expiresAt === "number" ? body.expiresAt : Date.parse(String(body.expiresAt));
-  const max = type === "food" ? 6 * 3600000 : 7 * 86400000;
-  if (!Number.isFinite(expiresAt) || expiresAt <= now || expiresAt > now + max) throw new HttpError(400, type === "food" ? "Food alerts must expire within six hours." : "Posts must expire within seven days.");
+  const union = trusted.unionImport === true && type === "freebie" && !!body.sourceUrl;
+  const max = type === "food" ? 6 * 3600000 : (union ? 14 : 7) * 86400000;
+  if (!Number.isFinite(expiresAt) || expiresAt <= now || expiresAt > now + max) throw new HttpError(400, type === "food" ? "Food alerts must expire within six hours." : union ? "Union events must expire within fourteen days." : "Posts must expire within seven days.");
   const startsAt = body.startsAt == null || body.startsAt === "" ? null : typeof body.startsAt === "number" ? body.startsAt : Date.parse(String(body.startsAt));
   if (startsAt !== null && (!Number.isFinite(startsAt) || startsAt >= expiresAt)) throw new HttpError(400, "The start time must be before the expiry time.");
   let sourceUrl: string | null = null;

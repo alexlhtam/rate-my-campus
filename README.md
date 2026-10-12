@@ -4,6 +4,10 @@ A mobile-first UCL campus map with category-specific place reviews, society free
 
 The canonical project repository is [alexlhtam/rate-my-campus](https://github.com/alexlhtam/rate-my-campus).
 
+## Society freebies
+
+Moderators can import the next 14 days of live Union listings. Claude checks explicit free items, publishes clear findings and holds uncertain ones for review. Students get Today/Now/week/fortnight filters, event cards and venue pins. Background progress, cached venue matching, optional daily imports (off by default) and deployment settings are documented in [docs/freebies.md](docs/freebies.md).
+
 ## Run locally
 
 Requires Node.js 22.13 or newer. Install with `npm ci`, link the Vercel project (`vercel link`), pull its environment with `vercel env pull .env.local`, then run `npm run dev`. Without Supabase variables the app still runs in demo mode and live routes answer "not connected yet".

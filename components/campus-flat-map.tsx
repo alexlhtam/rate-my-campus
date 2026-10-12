@@ -6,7 +6,7 @@ import CampusBuildings from './campus-buildings';
 
 export type MapPosition = { lat: number; lng: number };
 export type MapProvider = 'google' | 'openstreetmap' | 'unavailable';
-export type MapItem = MapPosition & { id: string; name?: string; title?: string; type?: string; score?: string };
+export type MapItem = MapPosition & { id: string; name?: string; title?: string; type?: string; timeLabel?:string;eventState?:string;locationProvider?:string;score?: string };
 type Props = {
   items: MapItem[]; onSelect: (id: string) => void; selected?: string; confirm?: boolean;
   initialPosition?: MapPosition; requireGoogle?: boolean;
@@ -177,12 +177,12 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     {activeProvider === 'unavailable' && <div role="status" className="map-provider-message" style={{ position: 'absolute', top: '45%', left: '12%', right: '12%', zIndex: 4, padding: 16, borderRadius: 14, background: '#fffdf8', textAlign: 'center', fontSize: 13 }}>
       {waiting ? 'Loading the map…' : 'Google Maps is unavailable. This matched location needs a Google map. Try again later, or reset to a manual campus location.'}
     </div>}
-    {!confirm && activeProvider !== 'unavailable' && items.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng)).map(item => {
+    {!confirm && activeProvider !== 'unavailable' && items.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng)&&(item.locationProvider!=='google'||activeProvider==='google')).map(item => {
       const position = project(item.lat, item.lng, zoom), Icon = icons[item.type || 'rated'] || Star;
-      return <button type="button" key={item.id} className={`map-pin ${item.type || 'rated'} ${selected === item.id ? 'selected' : ''}`} style={{ left: position.x - left, top: position.y - top }}
+      return <button type="button" key={item.id} className={`map-pin ${item.type || 'rated'} ${item.eventState||''} ${selected === item.id ? 'selected' : ''}`} style={{ left: position.x - left, top: position.y - top }}
         onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); onSelect(item.id); }}
         aria-pressed={selected === item.id} aria-label={`View ${item.name || item.title}`}>
-        <Icon size={14} fill={item.type ? 'none' : 'currentColor'} />{!item.type && <b>{item.score || '—'}</b>}<span className="pin-tooltip">{item.name || item.title}</span>
+        <Icon size={14} fill={item.type ? 'none' : 'currentColor'} />{item.timeLabel&&<span className="freebie-pin-time">{item.timeLabel}</span>}{!item.type && <b>{item.score || '—'}</b>}<span className="pin-tooltip">{item.name || item.title}</span>
       </button>;
     })}
     {confirm ? activeProvider !== 'unavailable' && <div className="confirm-cross" aria-hidden="true"><MapPin fill="#e96548" size={42} /></div> : !directoryOverlay && <>
