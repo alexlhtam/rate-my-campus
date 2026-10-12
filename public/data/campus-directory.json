@@ -40,6 +40,14 @@
     {
       "title": "UCL Estates inclusive facilities building list (updated August 2026)",
       "url": "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl"
+    },
+    {
+      "title": "UCL 2026/27 accommodation fees and contract dates",
+      "url": "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+    },
+    {
+      "title": "UCL halls",
+      "url": "https://www.ucl.ac.uk/study/accommodation/halls"
     }
   ],
   "buildings": [
@@ -74,7 +82,21 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Aberdeen Mansions (residence)"
+      "sourceName": "Aberdeen Mansions (residence)",
+      "accommodation": {
+        "current": false,
+        "academicYear": "2026/27",
+        "listingName": null,
+        "operator": null,
+        "contractProvider": null,
+        "relationship": "estates-listed-only",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ],
+        "note": "Not a separately named hall in the current 2026/27 accommodation list; retained as an Estates record, not counted as an additional current hall."
+      }
     },
     {
       "id": "ucl-alexandra-house",
@@ -198,13 +220,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Ann Stephenson House"
+      "sourceName": "Ann Stephenson House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Ann Stephenson House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-institute-of-archaeology",
@@ -267,7 +303,8 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
@@ -276,7 +313,20 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Arthur Tattersall House"
+      "sourceName": "Arthur Tattersall House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Arthur Tattersall House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-astor-college",
@@ -301,13 +351,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Astor College"
+      "sourceName": "Astor College",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Astor College",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-bedford-way-26",
@@ -439,13 +503,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Bernard Johnson House"
+      "sourceName": "Bernard Johnson House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Bernard Johnson House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-bernard-katz-building",
@@ -647,7 +725,21 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Bungalows, 109 Camden Road"
+      "sourceName": "Bungalows, 109 Camden Road",
+      "accommodation": {
+        "current": false,
+        "academicYear": "2026/27",
+        "listingName": null,
+        "operator": null,
+        "contractProvider": null,
+        "relationship": "estates-listed-only",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ],
+        "note": "Not a separately named hall in the current 2026/27 accommodation list; retained as an Estates record, not counted as an additional current hall."
+      }
     },
     {
       "id": "ucl-camley-street",
@@ -704,13 +796,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Campbell House East"
+      "sourceName": "Campbell House East",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Campbell House East",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-campbell-house-west",
@@ -735,7 +841,8 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
@@ -743,7 +850,20 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Campbell House West"
+      "sourceName": "Campbell House West",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Campbell House West",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-canada-square-1-l38-and-l50",
@@ -790,7 +910,10 @@
       "name": "Garden Halls",
       "aliases": [
         "Cartwright Gardens - Garden Halls",
-        "Garden Halls"
+        "Garden Halls",
+        "Garden Hall",
+        "The Garden Halls",
+        "Cartwright Gardens"
       ],
       "address": "Cartwright Gardens, Kings Cross, London WC1H 9EF",
       "sourceAddress": "1 Cartwright Gardens, London, WC1H 9EN",
@@ -802,11 +925,13 @@
       "membership": {
         "status": "ucl-partner",
         "scope": "shared-site",
-        "evidence": "UCL Accommodation explicitly identifies Garden Halls as run by the University of London."
+        "evidence": "UCL’s 2026/27 hall page confirms UCL nomination; University of London manages and contracts the accommodation."
       },
       "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/garden-halls",
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
@@ -815,7 +940,20 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Cartwright Gardens - Garden Halls"
+      "sourceName": "Cartwright Gardens - Garden Halls",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Garden Halls",
+        "operator": "University of London",
+        "contractProvider": "University of London",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-cave-clean-active-ventilation-envir",
@@ -1330,7 +1468,21 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Denys Holland House"
+      "sourceName": "Denys Holland House",
+      "accommodation": {
+        "current": false,
+        "academicYear": "2026/27",
+        "listingName": null,
+        "operator": null,
+        "contractProvider": null,
+        "relationship": "estates-listed-only",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ],
+        "note": "Not a separately named hall in the current 2026/27 accommodation list; retained as an Estates record, not counted as an additional current hall."
+      }
     },
     {
       "id": "ucl-dms-watson-building",
@@ -1547,34 +1699,45 @@
     },
     {
       "id": "ucl-egyptology",
-      "officialBuildingId": null,
+      "officialBuildingId": "41",
       "officialMapUrl": null,
       "officialName": "Egptology",
-      "name": "Egyptology",
+      "name": "Petrie Museum of Egyptian and Sudanese Archaeology",
       "aliases": [
         "Egptology",
-        "Egyptology"
+        "Egyptology",
+        "Petrie Museum",
+        "Petrie Museum of Egyptian and Sudanese Archaeology",
+        "Petrie Museum of Egyptian Archaeology"
       ],
-      "address": "Gower Street, London WC1E 6BT",
+      "address": "Malet Place, London WC1E 6BT",
       "sourceAddress": "Gower Street, London WC1E 6BT",
       "campus": "bloomsbury",
       "neighborhood": "Central Bloomsbury",
       "facilitiesArea": "Central Bloomsbury",
-      "type": "facility",
-      "use": "UCL space listed in the Estates facilities directory.",
+      "type": "museum",
+      "use": "UCL museum of Egyptian and Sudanese archaeology, with public visiting and research access.",
       "membership": {
         "status": "ucl-used",
-        "scope": "facility",
-        "evidence": "Listed in UCL Estates' public area facilities management directory; this establishes an association, not ownership of the whole footprint."
+        "scope": "building",
+        "evidence": "Current UCL Estates lists the Petrie Museum as building 41; an Estates FM map identifies the legacy Egyptology entry as 041. Current UCL visitor information confirms the Malet Place museum."
       },
       "officialSourceUrls": [
+        "https://www.ucl.ac.uk/engage/museums-collections/petrie-museum-egyptian-and-sudanese-archaeology/visit-petrie-museum",
+        "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
+        "https://www.ucl.ac.uk/estates/sites/estates/files/ucl_-_fm_zone_-_group_b.pdf",
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management"
       ],
       "coordinates": null,
-      "reviewNotes": [],
+      "reviewNotes": [
+        "Legacy Estates spelling Egptology is preserved in officialName. Official number 41 links that entry to the current Petrie Museum. The separate 1–4 Malet Place record is building 46 and must not reuse this entire footprint."
+      ],
       "geometryMatch": null,
-      "officialBuildingIds": [],
-      "sourceName": "Egptology"
+      "officialBuildingIds": [
+        "41"
+      ],
+      "sourceName": "Egptology",
+      "officialIdSourceUrl": "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl"
     },
     {
       "id": "ucl-endsleigh-gardens-9-11",
@@ -1584,7 +1747,8 @@
       "name": "Endsleigh Gardens, 9-11",
       "aliases": [
         "Endsleigh Gardens, 9-11",
-        "9-11 Endsleigh Gardens"
+        "9-11 Endsleigh Gardens",
+        "Endsleigh Gardens"
       ],
       "address": "9–11 Endsleigh Gardens, London WC1H 0ED",
       "sourceAddress": "9-11 Endsleigh Gardens, London, WC1H 0EH",
@@ -1601,7 +1765,8 @@
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
         "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
@@ -1612,7 +1777,20 @@
         "84"
       ],
       "sourceName": "Endsleigh Gardens, 9-11",
-      "officialIdSourceUrl": "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl"
+      "officialIdSourceUrl": "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Endsleigh Gardens",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-endsleigh-street-14",
@@ -1806,13 +1984,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Frances Gardner House"
+      "sourceName": "Frances Gardner House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Frances Gardner House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-front-lodges",
@@ -1851,7 +2043,8 @@
       "officialName": "Goldsmid House (Wilton Plaza)",
       "name": "Goldsmid House (Wilton Plaza)",
       "aliases": [
-        "Goldsmid House (Wilton Plaza)"
+        "Goldsmid House (Wilton Plaza)",
+        "Goldsmid House"
       ],
       "address": "34-36 Gillingham Street, London, SW1V 1HU",
       "sourceAddress": "34-36 Gillingham Street, London, SW1V 1HU",
@@ -1867,13 +2060,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Goldsmid House (Wilton Plaza)"
+      "sourceName": "Goldsmid House (Wilton Plaza)",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Goldsmid House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-gordon-house",
@@ -2421,7 +2628,21 @@
       ],
       "sourceName": "Gower Street, 115-117",
       "officialIdSourceUrl": "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
-      "relatedBuildingId": "ucl-arthur-tattersall-house"
+      "relatedBuildingId": "ucl-arthur-tattersall-house",
+      "accommodation": {
+        "current": false,
+        "academicYear": "2026/27",
+        "listingName": null,
+        "operator": null,
+        "contractProvider": null,
+        "relationship": "estates-listed-only",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ],
+        "note": "Not a separately named hall in the current 2026/27 accommodation list; retained as an Estates record, not counted as an additional current hall."
+      }
     },
     {
       "id": "ucl-lewis-building",
@@ -2659,7 +2880,8 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
@@ -2667,7 +2889,20 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Ian Baker House"
+      "sourceName": "Ian Baker House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Ian Baker House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-ifor-evans-hall",
@@ -2692,13 +2927,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Ifor Evans Hall"
+      "sourceName": "Ifor Evans Hall",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Ifor Evans Hall",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-inst-archaeology-27-eastways",
@@ -3453,7 +3702,8 @@
       "officialName": "James Lighthill House & Lodge",
       "name": "James Lighthill House & Lodge",
       "aliases": [
-        "James Lighthill House & Lodge"
+        "James Lighthill House & Lodge",
+        "James Lighthill House"
       ],
       "address": "3 Penton Rise, London, WC1X 9EN",
       "sourceAddress": "3 Penton Rise, London, WC1X 9EN",
@@ -3469,13 +3719,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "James Lighthill House & Lodge"
+      "sourceName": "James Lighthill House & Lodge",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "James Lighthill House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-john-adams-hall",
@@ -3495,18 +3759,38 @@
       "use": "Student accommodation listed by UCL Estates.",
       "membership": {
         "status": "ucl-used",
-        "scope": "building",
-        "evidence": "UCL Estates lists this student accommodation; this does not assert freehold ownership."
+        "scope": "part-of-building",
+        "evidence": "Current UCL residence address covers 15–23 Endsleigh Street, within the larger 13–23 listed terrace. Precise occupation must not be extended to the entire terrace."
       },
       "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/john-adams-hall",
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
-      "reviewNotes": [],
+      "reviewNotes": [
+        "Historic England list 1078299 distinguishes John Adams Hall at 15–23 from the wider 13–23 terrace. Current UCL address corroborates 15–23; the complete footprint allocation remains unverified."
+      ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "John Adams Hall"
+      "sourceName": "John Adams Hall",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "John Adams Hall",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      },
+      "supplementarySourceUrls": [
+        "https://historicengland.org.uk/listing/the-list/list-entry/1078299"
+      ]
     },
     {
       "id": "ucl-john-dodgson-house",
@@ -3531,13 +3815,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "John Dodgson House"
+      "sourceName": "John Dodgson House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "John Dodgson House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-john-tovell-house",
@@ -3562,7 +3860,8 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
@@ -3570,7 +3869,20 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "John Tovell House"
+      "sourceName": "John Tovell House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "John Tovell House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-kathleen-lonsdale-building",
@@ -3631,13 +3943,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Langton Close"
+      "sourceName": "Langton Close",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Langton Close",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-london-centre-for-nanotechnology",
@@ -3839,13 +4165,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Max Rayne House"
+      "sourceName": "Max Rayne House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Max Rayne House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-medawar-building",
@@ -3941,10 +4281,13 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl"
+        "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
+        "https://www.ucl.ac.uk/medical-sciences/divisions/medical-school/information-current-mbbs-students-and-staff/policies-and-faqs"
       ],
       "coordinates": null,
-      "reviewNotes": [],
+      "reviewNotes": [
+        "Current medical-school guidance distinguishes Huntley Street offices from Rockefeller offices. Older sources sometimes use Rockefeller as a wider label; building 374 and Rockefeller 201 must not be given the same entire footprint without verified allocation."
+      ],
       "geometryMatch": null,
       "officialBuildingIds": [
         "374"
@@ -4225,13 +4568,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Neil Sharp House"
+      "sourceName": "Neil Sharp House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Neil Sharp House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-new-hall",
@@ -4256,13 +4613,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "New Hall"
+      "sourceName": "New Hall",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "New Hall",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-north-west-wing",
@@ -4324,7 +4695,9 @@
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
         "https://www.ucl.ac.uk/engage/ucl-east/about-ucl-east/visit-us",
-        "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl"
+        "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
@@ -4333,7 +4706,20 @@
         "444"
       ],
       "sourceName": "One Pool Street",
-      "officialIdSourceUrl": "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl"
+      "officialIdSourceUrl": "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "One Pool Street",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-ormond-house",
@@ -4531,13 +4917,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Prankerd House"
+      "sourceName": "Prankerd House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Prankerd House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-ramsay-hall",
@@ -4562,7 +4962,8 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
@@ -4570,7 +4971,20 @@
       ],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Ramsay Hall"
+      "sourceName": "Ramsay Hall",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Ramsay Hall",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-rayne-institute",
@@ -4936,13 +5350,27 @@
       },
       "officialSourceUrls": [
         "https://www.ucl.ac.uk/estates/our-services/area-facilities-management",
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [],
       "geometryMatch": null,
       "officialBuildingIds": [],
-      "sourceName": "Schafer House"
+      "sourceName": "Schafer House",
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Schafer House",
+        "operator": "UCL",
+        "contractProvider": "UCL",
+        "relationship": "ucl-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-school-of-pharmacy",
@@ -6004,13 +6432,28 @@
         "evidence": "UCL Accommodation explicitly identifies the hall as run by University of London."
       },
       "officialSourceUrls": [
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/college-hall",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
         "Partner residence; do not label the whole building as UCL-owned or UCL-operated."
       ],
-      "geometryMatch": null
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "College Hall",
+        "operator": "University of London",
+        "contractProvider": "University of London",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-connaught-hall",
@@ -6036,13 +6479,28 @@
         "evidence": "UCL Accommodation explicitly identifies the hall as run by University of London."
       },
       "officialSourceUrls": [
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/connaught-hall",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
         "Partner residence; do not label the whole building as UCL-owned or UCL-operated."
       ],
-      "geometryMatch": null
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Connaught Hall",
+        "operator": "University of London",
+        "contractProvider": "University of London",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-handel-mansions",
@@ -6068,13 +6526,27 @@
         "evidence": "UCL Accommodation explicitly identifies the hall as run by University of London."
       },
       "officialSourceUrls": [
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
         "Partner residence; do not label the whole building as UCL-owned or UCL-operated."
       ],
-      "geometryMatch": null
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Handel Mansions",
+        "operator": "University of London",
+        "contractProvider": "University of London",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     },
     {
       "id": "ucl-international-hall",
@@ -6100,13 +6572,370 @@
         "evidence": "UCL Accommodation explicitly identifies the hall as run by University of London."
       },
       "officialSourceUrls": [
-        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation"
+        "https://www.ucl.ac.uk/study/international-hall",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
       ],
       "coordinates": null,
       "reviewNotes": [
         "Partner residence; do not label the whole building as UCL-owned or UCL-operated."
       ],
-      "geometryMatch": null
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "International Hall",
+        "operator": "University of London",
+        "contractProvider": "University of London",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
+    },
+    {
+      "id": "ucl-eleanor-rosa-house",
+      "officialBuildingId": null,
+      "officialBuildingIds": [],
+      "officialMapUrl": null,
+      "officialName": "Eleanor Rosa House",
+      "sourceName": "Eleanor Rosa House",
+      "name": "Eleanor Rosa House",
+      "aliases": [
+        "Eleanor Rosa House"
+      ],
+      "address": "2 Lett Road, London E15 2RA",
+      "sourceAddress": "2 Lett Road, London E15 2RA",
+      "campus": "other",
+      "neighborhood": "Stratford",
+      "facilitiesArea": null,
+      "type": "residence",
+      "use": "Intercollegiate postgraduate residence offered through UCL nomination.",
+      "membership": {
+        "status": "ucl-partner",
+        "scope": "shared-site",
+        "evidence": "Listed in UCL’s current accommodation directory and 2026/27 fees schedule. Managed by University of London; this does not establish UCL ownership or exclusive occupation."
+      },
+      "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/eleanor-rosa-house",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+      ],
+      "coordinates": null,
+      "reviewNotes": [
+        "Partner-managed accommodation. Academic-year listing does not guarantee current room availability."
+      ],
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Eleanor Rosa House",
+        "operator": "University of London",
+        "contractProvider": "University of London",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
+    },
+    {
+      "id": "ucl-unite-st-pancras-way",
+      "officialBuildingId": null,
+      "officialBuildingIds": [],
+      "officialMapUrl": null,
+      "officialName": "Unite St Pancras Way",
+      "sourceName": "Unite St Pancras Way",
+      "name": "Unite St Pancras Way",
+      "aliases": [
+        "Unite St Pancras Way"
+      ],
+      "address": "11–13 St Pancras Way, London NW1 0PT",
+      "sourceAddress": "11–13 St Pancras Way, London NW1 0PT",
+      "campus": "other",
+      "neighborhood": "St Pancras",
+      "facilitiesArea": null,
+      "type": "residence",
+      "use": "Student residence offered through UCL nomination and managed by Unite Students.",
+      "membership": {
+        "status": "ucl-partner",
+        "scope": "shared-site",
+        "evidence": "Listed in UCL’s current accommodation directory and 2026/27 fees schedule. Managed by Unite Students; this does not establish UCL ownership or exclusive occupation."
+      },
+      "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/unite-st-pancras-way",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+      ],
+      "coordinates": null,
+      "reviewNotes": [
+        "Partner-managed accommodation. Academic-year listing does not guarantee current room availability."
+      ],
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Unite St Pancras Way",
+        "operator": "Unite Students",
+        "contractProvider": "Unite Students",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
+    },
+    {
+      "id": "ucl-urbanest-canary-wharf",
+      "officialBuildingId": null,
+      "officialBuildingIds": [],
+      "officialMapUrl": null,
+      "officialName": "urbanest Canary Wharf",
+      "sourceName": "urbanest Canary Wharf",
+      "name": "urbanest Canary Wharf",
+      "aliases": [
+        "urbanest Canary Wharf"
+      ],
+      "address": "2 Trafalgar Way, London E14 5SP",
+      "sourceAddress": "2 Trafalgar Way, London E14 5SP",
+      "campus": "other",
+      "neighborhood": "Canary Wharf",
+      "facilitiesArea": null,
+      "type": "residence",
+      "use": "Student accommodation managed by urbanest, with UCL accommodation contracts.",
+      "membership": {
+        "status": "ucl-partner",
+        "scope": "shared-site",
+        "evidence": "Listed in UCL’s current accommodation directory and 2026/27 fees schedule. Managed by urbanest; this does not establish UCL ownership or exclusive occupation."
+      },
+      "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/urbanest-canary-wharf",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+      ],
+      "coordinates": null,
+      "reviewNotes": [
+        "Partner-managed accommodation. Academic-year listing does not guarantee current room availability."
+      ],
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "urbanest Canary Wharf",
+        "operator": "urbanest",
+        "contractProvider": "UCL",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
+    },
+    {
+      "id": "ucl-urbanest-kings-cross",
+      "officialBuildingId": null,
+      "officialBuildingIds": [],
+      "officialMapUrl": null,
+      "officialName": "urbanest Kings Cross",
+      "sourceName": "urbanest Kings Cross",
+      "name": "urbanest Kings Cross",
+      "aliases": [
+        "urbanest Kings Cross"
+      ],
+      "address": "Canal Reach, York Way, London N1C 4BD",
+      "sourceAddress": "Canal Reach, York Way, London N1C 4BD",
+      "campus": "other",
+      "neighborhood": "King’s Cross",
+      "facilitiesArea": null,
+      "type": "residence",
+      "use": "Postgraduate accommodation managed by urbanest, with UCL accommodation contracts.",
+      "membership": {
+        "status": "ucl-partner",
+        "scope": "shared-site",
+        "evidence": "Listed in UCL’s current accommodation directory and 2026/27 fees schedule. Managed by urbanest; this does not establish UCL ownership or exclusive occupation."
+      },
+      "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/urbanest-kings-cross",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+      ],
+      "coordinates": null,
+      "reviewNotes": [
+        "Partner-managed accommodation. Academic-year listing does not guarantee current room availability."
+      ],
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "urbanest Kings Cross",
+        "operator": "urbanest",
+        "contractProvider": "UCL",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
+    },
+    {
+      "id": "ucl-urbanest-st-pancras",
+      "officialBuildingId": null,
+      "officialBuildingIds": [],
+      "officialMapUrl": null,
+      "officialName": "urbanest St Pancras",
+      "sourceName": "urbanest St Pancras",
+      "name": "urbanest St Pancras",
+      "aliases": [
+        "urbanest St Pancras"
+      ],
+      "address": "103B Camley Street, London N1C 4BN",
+      "sourceAddress": "103B Camley Street, London N1C 4BN",
+      "campus": "other",
+      "neighborhood": "St Pancras",
+      "facilitiesArea": null,
+      "type": "residence",
+      "use": "Postgraduate accommodation managed by urbanest, with UCL accommodation contracts.",
+      "membership": {
+        "status": "ucl-partner",
+        "scope": "shared-site",
+        "evidence": "Listed in UCL’s current accommodation directory and 2026/27 fees schedule. Managed by urbanest; this does not establish UCL ownership or exclusive occupation."
+      },
+      "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/urbanest-st-pancras",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+      ],
+      "coordinates": null,
+      "reviewNotes": [
+        "Partner-managed accommodation. Academic-year listing does not guarantee current room availability."
+      ],
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "urbanest St Pancras",
+        "operator": "urbanest",
+        "contractProvider": "UCL",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
+    },
+    {
+      "id": "ucl-venti-house",
+      "officialBuildingId": null,
+      "officialBuildingIds": [],
+      "officialMapUrl": null,
+      "officialName": "Venti House",
+      "sourceName": "Venti House",
+      "name": "Venti House",
+      "aliases": [
+        "Venti House"
+      ],
+      "address": "8 Grove Crescent Road, London E15 1NZ",
+      "sourceAddress": "8 Grove Crescent Road, London E15 1NZ",
+      "campus": "other",
+      "neighborhood": "Stratford",
+      "facilitiesArea": null,
+      "type": "residence",
+      "use": "Undergraduate residence offered through UCL accommodation and managed by Fresh.",
+      "membership": {
+        "status": "ucl-partner",
+        "scope": "shared-site",
+        "evidence": "Listed in UCL’s current accommodation directory and 2026/27 fees schedule. Managed by Fresh; this does not establish UCL ownership or exclusive occupation."
+      },
+      "officialSourceUrls": [
+        "https://www.ucl.ac.uk/study/venti-house",
+        "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+        "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+      ],
+      "coordinates": null,
+      "reviewNotes": [
+        "Partner-managed accommodation. Academic-year listing does not guarantee current room availability."
+      ],
+      "geometryMatch": null,
+      "accommodation": {
+        "current": true,
+        "academicYear": "2026/27",
+        "listingName": "Venti House",
+        "operator": "Fresh",
+        "contractProvider": "Fresh",
+        "relationship": "partner-managed",
+        "checkedOn": "2026-10-12",
+        "sourceUrls": [
+          "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+          "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27"
+        ]
+      }
     }
-  ]
+  ],
+  "accommodationAudit": {
+    "checkedOn": "2026-10-12",
+    "academicYear": "2026/27",
+    "scope": "Distinct halls named in UCL’s public 2026/27 fees schedule and current accommodation contact list, including nominated and partner-managed halls.",
+    "sourceUrls": [
+      "https://www.ucl.ac.uk/study/accommodation/fees-guidance-and-payment/fees-and-contract-dates-2026-27",
+      "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
+      "https://www.ucl.ac.uk/study/accommodation/halls",
+      "https://www.ucl.ac.uk/study/accommodation/halls/undergraduate-accommodation",
+      "https://www.ucl.ac.uk/study/accommodation/halls/postgraduate-accommodation",
+      "https://www.ucl.ac.uk/study/accommodation/halls/family-and-couples-accommodation",
+      "https://www.ucl.ac.uk/study/accommodation/halls/intercollegiate-halls"
+    ],
+    "expectedHallCount": 34,
+    "cataloguedHallCount": 34,
+    "missingNames": [],
+    "uclManagedHallCount": 23,
+    "partnerManagedHallCount": 11,
+    "buildingIds": [
+      "ucl-ann-stephenson-house",
+      "ucl-neil-sharp-house",
+      "ucl-arthur-tattersall-house",
+      "ucl-astor-college",
+      "ucl-bernard-johnson-house",
+      "ucl-campbell-house-east",
+      "ucl-campbell-house-west",
+      "ucl-college-hall",
+      "ucl-connaught-hall",
+      "ucl-eleanor-rosa-house",
+      "ucl-endsleigh-gardens-9-11",
+      "ucl-frances-gardner-house",
+      "ucl-garden-halls",
+      "ucl-goldsmid-house-wilton-plaza",
+      "ucl-handel-mansions",
+      "ucl-ian-baker-house",
+      "ucl-ifor-evans-hall",
+      "ucl-international-hall",
+      "ucl-james-lighthill-house-and-lodge",
+      "ucl-john-adams-hall",
+      "ucl-john-dodgson-house",
+      "ucl-john-tovell-house",
+      "ucl-langton-close",
+      "ucl-max-rayne-house",
+      "ucl-new-hall",
+      "ucl-one-pool-street",
+      "ucl-prankerd-house",
+      "ucl-ramsay-hall",
+      "ucl-schafer-house",
+      "ucl-unite-st-pancras-way",
+      "ucl-urbanest-canary-wharf",
+      "ucl-urbanest-kings-cross",
+      "ucl-urbanest-st-pancras",
+      "ucl-venti-house"
+    ],
+    "limitations": [
+      "This establishes coverage of the named current accommodation offering, not every building in UCL’s estate.",
+      "One hall may span several buildings or occupy part of a larger site; a directory record does not guarantee a matched map outline.",
+      "Academic-year listing does not imply rooms are currently available."
+    ]
+  }
 }

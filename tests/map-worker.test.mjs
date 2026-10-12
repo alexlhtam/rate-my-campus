@@ -17,7 +17,8 @@ test("the published MapLibre worker and its notices are copied byte for byte und
   const fixture = await mkdtemp(path.join(os.tmpdir(), "map-worker-"));
   try {
     await writeFile(path.join(fixture, "package.json"), "{}");
-    await symlink(path.join(root, "node_modules"), path.join(fixture, "node_modules"), "dir");
+    // Directory junctions do not require Windows' symbolic-link privilege.
+    await symlink(path.join(root, "node_modules"), path.join(fixture, "node_modules"), process.platform === "win32" ? "junction" : "dir");
     const [worker, license] = await copyMapWorker(fixture);
     assert.equal(worker, path.join(fixture, "public", "vendor", `maplibre-worker-${version}.mjs`));
     assert.deepEqual(await readFile(worker), await readFile(path.join(path.dirname(packagePath), "dist/maplibre-gl-worker.mjs")));

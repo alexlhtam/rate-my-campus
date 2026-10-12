@@ -1961,6 +1961,1160 @@
         "basis": "Official UCL current inclusive-facilities directory (August2026, building410) and September2026 update establish continued use; OSM named UCL South Quad Pop Up Learning Hub footprint.",
         "notAnEntrance": true
       }
+    },
+    {
+      "buildingId": "ucl-aberdeen-mansions-residence",
+      "name": "Aberdeen Mansions (residence)",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.5253206,
+        "lng": -0.124794825,
+        "sourceUrl": "https://www.openstreetmap.org/way/1394960086",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1394960086"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1394960086"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-alexandra-house",
+      "name": "Alexandra House",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52211737142857,
+        "lng": -0.12341365714285714,
+        "sourceUrl": "https://www.openstreetmap.org/way/27445198",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-27445198"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/27445198"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-arthur-tattersall-house",
+      "name": "Arthur Tattersall House",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.523399083870984,
+        "lng": -0.13401336129032257,
+        "sourceUrl": "https://www.openstreetmap.org/way/48161698",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-48161698"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/48161698"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-chenies-mews",
+      "name": "Chenies Mews",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52302969,
+        "lng": -0.13380542,
+        "sourceUrl": "https://www.openstreetmap.org/way/748992329",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-748992329"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/748992329"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-courtauld-building",
+      "name": "Courtauld Building",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.519996,
+        "lng": -0.1383221,
+        "sourceUrl": "https://www.openstreetmap.org/way/40836223",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-40836223"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/40836223"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-endsleigh-gardens-9-11",
+      "name": "Endsleigh Gardens, 9-11",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52629835,
+        "lng": -0.13155706363636363,
+        "sourceUrl": "https://www.openstreetmap.org/way/1050325492",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1050325492"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1050325492"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-euston-road-222",
+      "name": "Euston Road, 222",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52593206,
+        "lng": -0.13567988,
+        "sourceUrl": "https://www.openstreetmap.org/way/95023723",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-95023723"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/95023723"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-front-lodges",
+      "name": "Front Lodges",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52437972,
+        "lng": -0.13448658,
+        "sourceUrl": "https://www.openstreetmap.org/way/90021958",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-90021958",
+          "way-90021966"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/90021958",
+          "https://www.openstreetmap.org/way/90021966"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-gower-place-3",
+      "name": "3 Gower Place",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52559175,
+        "lng": -0.1336897,
+        "sourceUrl": "https://www.openstreetmap.org/way/847530475",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-847530475"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/847530475"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-hatter-institute",
+      "name": "Hatter Institute",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52280377777779,
+        "lng": -0.13409490000000002,
+        "sourceUrl": "https://www.openstreetmap.org/way/748992328",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-748992328",
+          "way-1392117018"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/748992328",
+          "https://www.openstreetmap.org/way/1392117018"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-12-queen-square",
+      "name": "Institute of Neurology - 12 Queen Square",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52181094285714,
+        "lng": -0.12332982142857142,
+        "sourceUrl": "https://www.openstreetmap.org/way/28226924",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-28226924"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/28226924"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-23-queen-square",
+      "name": "Institute of Neurology - 23 Queen Square",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52245981666666,
+        "lng": -0.12307676666666667,
+        "sourceUrl": "https://www.openstreetmap.org/way/804688241",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-804688241"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/804688241"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-33-queen-square",
+      "name": "Institute of Neurology - 33 Queen Square",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52180076250001,
+        "lng": -0.12167381249999999,
+        "sourceUrl": "https://www.openstreetmap.org/way/804688239",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-804688239"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/804688239"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-8-11-queen-square",
+      "name": "Institute of Neurology - 8-11 Queen Square",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52168314000001,
+        "lng": -0.12295914000000001,
+        "sourceUrl": "https://www.openstreetmap.org/way/125297704",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-125297704"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/125297704"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-ioe-emerald-street-23-29",
+      "name": "IOE - Emerald Street, 23-29",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52157012,
+        "lng": -0.11777149999999999,
+        "sourceUrl": "https://www.openstreetmap.org/way/807373762",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-807373762"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/807373762"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-ioe-woburn-square-10",
+      "name": "IOE - Woburn Square, 10",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52327989999999,
+        "lng": -0.1289726,
+        "sourceUrl": "https://www.openstreetmap.org/way/557814890",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-557814890"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/557814890"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-james-lighthill-house-and-lodge",
+      "name": "James Lighthill House & Lodge",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.53079120833333,
+        "lng": -0.11438634166666665,
+        "sourceUrl": "https://www.openstreetmap.org/way/99166486",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-99166486"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/99166486"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-langton-close",
+      "name": "Langton Close",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52604032666667,
+        "lng": -0.11583786666666665,
+        "sourceUrl": "https://www.openstreetmap.org/way/136629917",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-136629917",
+          "way-329182078"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/136629917",
+          "https://www.openstreetmap.org/way/329182078"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-montague-street-11",
+      "name": "Montague Street, 11",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.520280785714284,
+        "lng": -0.12642807142857143,
+        "sourceUrl": "https://www.openstreetmap.org/way/800183923",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-800183923",
+          "way-800183924"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/800183923",
+          "https://www.openstreetmap.org/way/800183924"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-ormond-house",
+      "name": "Ormond House",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52101585,
+        "lng": -0.121112,
+        "sourceUrl": "https://www.openstreetmap.org/way/172577743",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-172577743"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/172577743"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-prankerd-house",
+      "name": "Prankerd House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.526491642857145,
+        "lng": -0.13723874285714285,
+        "sourceUrl": "https://www.openstreetmap.org/way/116815549",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-116815549"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/116815549"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-tavistock-square",
+      "name": "Tavistock Square",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.5248895,
+        "lng": -0.12985057500000002,
+        "sourceUrl": "https://www.openstreetmap.org/way/1361142037",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1361142037"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1361142037"
+        ],
+        "basis": "OSM node5254251534 explicitly identifies Development Planning Unit,UCL at34 Tavistock Square inside named university footprint way1361142037; address agrees with official grouped entry31,34&35.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-tottenham-court-road-90",
+      "name": "90 Tottenham Court Road",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52192457857143,
+        "lng": -0.13595601428571427,
+        "sourceUrl": "https://www.openstreetmap.org/way/148588630",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-148588630"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/148588630"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-ucl-gosich-wolfson-centre",
+      "name": "Institute of Child Health — Wolfson Centre",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52508492222221,
+        "lng": -0.11938130000000001,
+        "sourceUrl": "https://www.openstreetmap.org/way/32882967",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-32882967"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/32882967"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-zayed-centre-for-research",
+      "name": "Zayed Centre for Research",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52348104285714,
+        "lng": -0.11871815714285715,
+        "sourceUrl": "https://www.openstreetmap.org/way/81405890",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-81405890"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/81405890"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-55-56-russell-square",
+      "name": "55–56 Russell Square",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.521058724999996,
+        "lng": -0.12460022500000001,
+        "sourceUrl": "https://www.openstreetmap.org/way/800176334",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-800176334",
+          "way-800176335"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/800176334",
+          "https://www.openstreetmap.org/way/800176335"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-college-hall",
+      "name": "College Hall",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52211161818183,
+        "lng": -0.13143576363636364,
+        "sourceUrl": "https://www.openstreetmap.org/relation/11814819",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "relation-11814819"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/relation/11814819"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-connaught-hall",
+      "name": "Connaught Hall",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.524365684615375,
+        "lng": -0.12951227692307687,
+        "sourceUrl": "https://www.openstreetmap.org/way/40269407",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-40269407"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/40269407"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-handel-mansions",
+      "name": "Handel Mansions",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.525489118181824,
+        "lng": -0.12248134545454546,
+        "sourceUrl": "https://www.openstreetmap.org/way/132163064",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-132163064"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/132163064"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-international-hall",
+      "name": "International Hall",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.523592881818175,
+        "lng": -0.12148176363636363,
+        "sourceUrl": "https://www.openstreetmap.org/relation/6963760",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "relation-6963760"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/relation/6963760"
+        ],
+        "basis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-garden-halls",
+      "name": "Garden Halls",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.52702073636363,
+        "lng": -0.12634782727272728,
+        "sourceUrl": "https://www.openstreetmap.org/way/800107578",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-800107578",
+          "way-800107579",
+          "way-800107580",
+          "way-800107581",
+          "way-800107582",
+          "way-800107583",
+          "way-800107584",
+          "way-800107585"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/800107578",
+          "https://www.openstreetmap.org/way/800107579",
+          "https://www.openstreetmap.org/way/800107580",
+          "https://www.openstreetmap.org/way/800107581",
+          "https://www.openstreetmap.org/way/800107582",
+          "https://www.openstreetmap.org/way/800107583",
+          "https://www.openstreetmap.org/way/800107584",
+          "https://www.openstreetmap.org/way/800107585"
+        ],
+        "basis": "Official UCL Accommodation identifies Garden Halls as a University of London partner hall. Current OSM landuse way1368856792 names and bounds Garden Halls with operatorUniversity of London; these eight real dormitory/building-part polygons lie within that verified site. The residential landuse boundary is never extruded.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-ucl-gosich-camelia-botnar-building",
+      "name": "Camelia Botnar Building",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.522910975,
+        "lng": -0.119447575,
+        "sourceUrl": "https://www.openstreetmap.org/way/34019128",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-34019128"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/34019128"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-slade-school-of-fine-art-woburn-square",
+      "name": "Slade School Of Fine Art - Woburn Square",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.5233010763158,
+        "lng": -0.13039668157894738,
+        "sourceUrl": "https://www.openstreetmap.org/way/1107194844",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1107194844"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1107194844"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-egyptology",
+      "name": "Petrie Museum of Egyptian and Sudanese Archaeology",
+      "campus": "bloomsbury",
+      "coordinates": {
+        "lat": 51.523588033333326,
+        "lng": -0.132962,
+        "sourceUrl": "https://www.openstreetmap.org/way/27703085",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-27703085"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/27703085"
+        ],
+        "basis": "Official UCL Estates FM zone B PDF identifies041.Egyptology; August2026 UCL facilities directory identifies PetrieMuseum[41]. This establishes the same official building identity as OSM way27703085, named Petrie Museum of Egyptian Archeology atMaletPlace. 1-4MaletPlace is distinct official building46 and is not duplicated.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-ann-stephenson-house",
+      "name": "Ann Stephenson House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.54447502592592,
+        "lng": -0.13568892592592596,
+        "sourceUrl": "https://www.openstreetmap.org/way/846370365",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-846370365"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/846370365"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-bernard-johnson-house",
+      "name": "Bernard Johnson House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.5906228,
+        "lng": -0.158170825,
+        "sourceUrl": "https://www.openstreetmap.org/way/834330200",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-834330200"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/834330200"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-goldsmid-house-wilton-plaza",
+      "name": "Goldsmid House (Wilton Plaza)",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.493566125,
+        "lng": -0.142586625,
+        "sourceUrl": "https://www.openstreetmap.org/way/540411092",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-540411092",
+          "way-540411093"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/540411092",
+          "https://www.openstreetmap.org/way/540411093"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-ifor-evans-hall",
+      "name": "Ifor Evans Hall",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.544961413698616,
+        "lng": -0.13620183013698633,
+        "sourceUrl": "https://www.openstreetmap.org/relation/11606852",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "relation-11606852"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/relation/11606852"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-max-rayne-house",
+      "name": "Max Rayne House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.54516166249999,
+        "lng": -0.1369473875,
+        "sourceUrl": "https://www.openstreetmap.org/way/706191602",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-706191602"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/706191602"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-neil-sharp-house",
+      "name": "Neil Sharp House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.54460611481481,
+        "lng": -0.13596752592592593,
+        "sourceUrl": "https://www.openstreetmap.org/way/846370367",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-846370367"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/846370367"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-new-hall",
+      "name": "New Hall",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.54795215,
+        "lng": -0.11834278,
+        "sourceUrl": "https://www.openstreetmap.org/relation/17498853",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "relation-17498853"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/relation/17498853"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-eleanor-rosa-house",
+      "name": "Eleanor Rosa House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.538002509090916,
+        "lng": -0.002692575757575758,
+        "sourceUrl": "https://www.openstreetmap.org/way/1355051584",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1355051584",
+          "way-1355120938",
+          "way-1355265205",
+          "way-1355265206",
+          "way-1355265207",
+          "way-1355265208",
+          "way-1355265209",
+          "way-1355265210",
+          "way-1355265211"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1355051584",
+          "https://www.openstreetmap.org/way/1355120938",
+          "https://www.openstreetmap.org/way/1355265205",
+          "https://www.openstreetmap.org/way/1355265206",
+          "https://www.openstreetmap.org/way/1355265207",
+          "https://www.openstreetmap.org/way/1355265208",
+          "https://www.openstreetmap.org/way/1355265209",
+          "https://www.openstreetmap.org/way/1355265210",
+          "https://www.openstreetmap.org/way/1355265211"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-unite-st-pancras-way",
+      "name": "Unite St Pancras Way",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.537171822222234,
+        "lng": -0.1331389388888889,
+        "sourceUrl": "https://www.openstreetmap.org/way/1009110338",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1009110338"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1009110338"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-urbanest-canary-wharf",
+      "name": "urbanest Canary Wharf",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.50705812266666,
+        "lng": -0.009616701333333335,
+        "sourceUrl": "https://www.openstreetmap.org/way/1565220978",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1565220978",
+          "way-1190475489",
+          "way-1190475490",
+          "way-1190475491"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1565220978",
+          "https://www.openstreetmap.org/way/1190475489",
+          "https://www.openstreetmap.org/way/1190475490",
+          "https://www.openstreetmap.org/way/1190475491"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-urbanest-kings-cross",
+      "name": "urbanest Kings Cross",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.5394438,
+        "lng": -0.12545310555555558,
+        "sourceUrl": "https://www.openstreetmap.org/way/222031889",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-222031889"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/222031889"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-urbanest-st-pancras",
+      "name": "urbanest St Pancras",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.53801365806452,
+        "lng": -0.1309039258064516,
+        "sourceUrl": "https://www.openstreetmap.org/way/53368756",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-53368756"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/53368756"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-venti-house",
+      "name": "Venti House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.544882475,
+        "lng": 0.003789765,
+        "sourceUrl": "https://www.openstreetmap.org/way/1212592719",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-1212592719",
+          "way-1290205808",
+          "way-1290205809",
+          "way-1290205810",
+          "way-1290205811",
+          "way-1290205812",
+          "way-1290205813",
+          "way-1290205814",
+          "way-1290205815",
+          "way-1290205816",
+          "way-1492935656",
+          "way-1492935657",
+          "way-1492935658",
+          "way-1492935659",
+          "way-1493728100"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/1212592719",
+          "https://www.openstreetmap.org/way/1290205808",
+          "https://www.openstreetmap.org/way/1290205809",
+          "https://www.openstreetmap.org/way/1290205810",
+          "https://www.openstreetmap.org/way/1290205811",
+          "https://www.openstreetmap.org/way/1290205812",
+          "https://www.openstreetmap.org/way/1290205813",
+          "https://www.openstreetmap.org/way/1290205814",
+          "https://www.openstreetmap.org/way/1290205815",
+          "https://www.openstreetmap.org/way/1290205816",
+          "https://www.openstreetmap.org/way/1492935656",
+          "https://www.openstreetmap.org/way/1492935657",
+          "https://www.openstreetmap.org/way/1492935658",
+          "https://www.openstreetmap.org/way/1492935659",
+          "https://www.openstreetmap.org/way/1493728100"
+        ],
+        "basis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-denys-holland-house",
+      "name": "Denys Holland House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.54479829310345,
+        "lng": -0.13527612758620688,
+        "sourceUrl": "https://www.openstreetmap.org/way/846370372",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-846370372"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/846370372"
+        ],
+        "basis": "Official UCL directory name and address matched to named OSM building geometry in the bounded hall-area extracts.",
+        "notAnEntrance": true
+      }
+    },
+    {
+      "buildingId": "ucl-solar-house",
+      "name": "Solar House",
+      "campus": "other",
+      "coordinates": {
+        "lat": 51.54237140625001,
+        "lng": 0.00543065625,
+        "sourceUrl": "https://www.openstreetmap.org/way/466092958",
+        "kind": "footprint-label-point"
+      },
+      "geometryMatch": {
+        "status": "reviewed",
+        "featureIds": [
+          "way-466092958"
+        ],
+        "sourceUrls": [
+          "https://www.openstreetmap.org/way/466092958"
+        ],
+        "basis": "Official UCL directory name and address matched to named OSM building geometry in the bounded hall-area extracts.",
+        "notAnEntrance": true
+      }
     }
   ]
 }

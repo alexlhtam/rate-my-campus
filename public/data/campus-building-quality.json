@@ -27,21 +27,69 @@
       "sha256": "598266482f85199588a150b295ab450d63535f91b293494a34fb0de4a826217e",
       "osmBase": null,
       "retrievedAt": "2026-10-12T14:21:15.073817+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.142,51.532,-0.121,51.55",
+      "file": "north-halls.osm",
+      "sha256": "d385a1f7f8d226d7c432797f55635e2566b44bdfdbeb6e136bf80f5fd8e43cf9",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T15:08:53.675681+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.124,51.542,-0.111,51.554",
+      "file": "caledonian-hall.osm",
+      "sha256": "81af4c66276ff32643e0cca09958ac0abcda5034e1004a7b54292e005781480a",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T15:08:56.523882+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.012,51.542,0.01,51.552",
+      "file": "stratford-halls.osm",
+      "sha256": "294dbea2406c7a36080cc04b3161825daa39fbb439a573d05af54973f5172205",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T15:09:04.947828+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.147,51.492,-0.138,51.5",
+      "file": "victoria-hall.osm",
+      "sha256": "4aea04b2f54f3c820ec47a1ded1c9c2c0bff52053f8d05918077b0a7170c85e7",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T15:09:07.278701+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.014,51.504,0.002,51.515",
+      "file": "canary-wharf-hall.osm",
+      "sha256": "51213cd9a1e79f95b6e07ef49f1ad30c9622373a540a1061a095da6a70bdb3ff",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T15:09:10.916557+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.168,51.588,-0.153,51.596",
+      "file": "fortis-green-hall.osm",
+      "sha256": "5951420c5ccf03a99c309078e782e44866f0b9dd77f419823ecdf8b5557d0ff7",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T15:09:13.549704+00:00"
     }
   ],
   "statistics": {
-    "directoryBuildings": 175,
-    "matchedBuildings": 77,
-    "features": 210,
-    "renderedFeatures": 202,
-    "outlineFeatures": 8,
+    "directoryBuildings": 181,
+    "matchedBuildings": 126,
+    "features": 297,
+    "renderedFeatures": 287,
+    "outlineFeatures": 10,
     "taggedMetricHeights": 4,
     "campuses": {
-      "bloomsbury": 74,
+      "bloomsbury": 107,
       "east": 2,
-      "other": 1
+      "other": 17
     },
-    "interiorRings": 6
+    "interiorRings": 12,
+    "currentHallsTotal": 34,
+    "currentHallsMapped": 32,
+    "affiliations": {
+      "ucl-used": 115,
+      "ucl-partner": 11
+    }
   },
   "heightConflicts": [
     {
@@ -66,592 +114,499 @@
   ],
   "unmatchedBuildings": [
     {
-      "buildingId": "ucl-aberdeen-mansions-residence",
-      "name": "Aberdeen Mansions (residence)",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-alexandra-house",
-      "name": "Alexandra House",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
       "buildingId": "ucl-anechoic-room",
       "name": "Anechoic Room",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-ann-stephenson-house",
-      "name": "Ann Stephenson House",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-arthur-tattersall-house",
-      "name": "Arthur Tattersall House",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Rear of 21 Gordon Square, University College London, WC1E 6BT",
+      "currentHall": false,
+      "reasonCode": "internal-facility",
+      "reason": "The listing identifies a room behind 21 Gordon Square, but a separate building footprint has not been confirmed. Confirm the occupied structure before adding it."
     },
     {
       "buildingId": "ucl-belnor-house",
       "name": "Belnor House",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-bernard-johnson-house",
-      "name": "Bernard Johnson House",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Fulmar Way, Wickford Business Park, SS11 8YW",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Fulmar Way, Wickford Business Park, SS11 8YW. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-bernard-street-40",
       "name": "40 Bernard Street",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "40 Bernard Street, London, WC1N 1LG",
+      "currentHall": false,
+      "reasonCode": "shared-address-ambiguous",
+      "reason": "40 Bernard Street is a shared commercial address with several mapped businesses. Its precise UCL-occupied building envelope needs confirmation."
     },
     {
       "buildingId": "ucl-blakeney-point",
       "name": "Blakeney Point",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Old Lifeboat Station, Blakeney Holt, Norfolk, NR25 7AA",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Old Lifeboat Station, Blakeney Holt, Norfolk, NR25 7AA. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-bungalows-109-camden-road",
       "name": "Bungalows, 109 Camden Road",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Ifor Evans Site, 109 Camden Road, London, NW1 9HZ",
+      "currentHall": false,
+      "reasonCode": "within-mapped-complex",
+      "reason": "The Ifor Evans site is mapped, but its separately listed bungalows are not individually identified in the public geometry. Confirm which small buildings belong to this entry."
     },
     {
       "buildingId": "ucl-camley-street",
       "name": "Camley Street",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "103C Camley Street, London, N1C 4PF",
+      "currentHall": false,
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The exact 103C Camley Street premises are not identified confidently. The nearby 103B Urbanest hall is a different address and is not reused."
     },
     {
       "buildingId": "ucl-canada-square-1-l38-and-l50",
       "name": "Canada Square, 1 - L38 & L50",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-garden-halls",
-      "name": "Garden Halls",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "1 Canada Square, Canary Wharf, London, E14 5AB",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 1 Canada Square, Canary Wharf, London, E14 5AB. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-cave-clean-active-ventilation-envir",
       "name": "CAVE (Clean Active Ventilation Envir)",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Yew Tree Avenue, Dagenham RM10 7FN",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Yew Tree Avenue, Dagenham RM10 7FN. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-central-bsu",
       "name": "Central BSU",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Gower Street, London, WC1E 6BT",
+      "currentHall": false,
+      "reasonCode": "internal-facility",
+      "reason": "This is a campus facility with a general Gower Street address. Its exact host building or independent footprint needs confirmation."
     },
     {
       "buildingId": "ucl-chapel-place",
       "name": "Chapel Place",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-chenies-mews",
-      "name": "Chenies Mews",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "1-2 Chapel Place, Portslade, Brighton, BN41 1DR",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 1-2 Chapel Place, Portslade, Brighton, BN41 1DR. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-clare-hall",
       "name": "Clare Hall",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "5 Blanche Lane, South Mimms, Potters Bar, EN6 3NY",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 5 Blanche Lane, South Mimms, Potters Bar, EN6 3NY. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-contemplation-room",
       "name": "Contemplation Room",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-courtauld-building",
-      "name": "Courtauld Building",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-denys-holland-house",
-      "name": "Denys Holland House",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Gower Street, London, WC1E 6BT",
+      "currentHall": false,
+      "reasonCode": "internal-facility",
+      "reason": "This is a room rather than a separately identified building. Confirm its host building before assigning map geometry."
     },
     {
       "buildingId": "ucl-ear-institute-grays-inn-rd-332",
       "name": "Ear Institute - Grays Inn Rd, 332",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "332 Grays Inn Road, London, WC1X 8EE",
+      "currentHall": false,
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "The Ear Institute address is within the former hospital complex on Grays Inn Road. Its precise UCL-occupied envelope needs confirming rather than assigning the entire hospital."
     },
     {
       "buildingId": "ucl-ear-institute-grays-inn-rd-334-336",
       "name": "Ear Institute - Grays Inn Rd, 334-336",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "332 Grays Inn Road, London, WC1X 8EE",
+      "currentHall": false,
+      "reasonCode": "conflicting-address",
+      "reason": "This directory entry names 334–336 Grays Inn Road but its current address field gives 332. Resolve that address difference before assigning a building footprint."
     },
     {
       "buildingId": "ucl-ear-institute-wicklow-street-75",
       "name": "Ear Institute - Wicklow Street, 75",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-egyptology",
-      "name": "Egyptology",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-endsleigh-gardens-9-11",
-      "name": "Endsleigh Gardens, 9-11",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "75 Wicklow Street, London, WC1X 9JY",
+      "currentHall": false,
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "75 Wicklow Street is in the imported area, but the precise UCL-occupied building is not explicitly identified. Confirm its numbered envelope."
     },
     {
       "buildingId": "ucl-endsleigh-street-14",
       "name": "Endsleigh Street, 14",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-euston-road-222",
-      "name": "Euston Road, 222",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-front-lodges",
-      "name": "Front Lodges",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-goldsmid-house-wilton-plaza",
-      "name": "Goldsmid House (Wilton Plaza)",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "14 Endsleigh Street, London, WC1H 0DH",
+      "currentHall": false,
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "The address is within a terrace that the public map does not identify house by house. Confirm the number 14 envelope before highlighting it."
     },
     {
       "buildingId": "ucl-gordon-square-36-38",
       "name": "Gordon Square, 36-38",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "36-38 Gordon Square, London, WC1H 0PD",
+      "currentHall": false,
+      "reasonCode": "address-group-ambiguous",
+      "reason": "The directory groups 36–38 Gordon Square. The imported public map has no unambiguous complete footprint for that exact group; confirm the building division."
     },
     {
       "buildingId": "ucl-gospel-oak-store-unit",
       "name": "Gospel Oak - Store Unit",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-gower-place-3",
-      "name": "3 Gower Place",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Lismore Circus, London, NW5",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Lismore Circus, London, NW5. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-gower-place-23",
       "name": "23 Gower Place",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "23 Gower Place, London, WC1E 6BN",
+      "currentHall": false,
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The public map has no explicitly identified 23 Gower Place footprint. Confirm its outline independently before adding a position."
     },
     {
       "buildingId": "ucl-gower-street-91",
       "name": "Gower Street, 91",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "91 Gower Street, London, WC1E 6AA",
+      "currentHall": false,
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "The public map groups this address within a larger 87–127 Gower Street terrace. Number 91 cannot be isolated reliably from that shared outline."
     },
     {
       "buildingId": "ucl-gower-street-115-117",
       "name": "Gower Street, 115-117",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "115-117 Gower Street, London, WC1E 6AP",
+      "currentHall": false,
+      "reasonCode": "within-mapped-complex",
+      "reason": "115–117 Gower Street is part of the mapped Arthur Tattersall House terrace. Its separate subdivision needs confirmation; duplicating the entire terrace would overstate this address."
     },
     {
       "buildingId": "ucl-hampstead-road-62-64",
       "name": "Hampstead Road, 62-64",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-hatter-institute",
-      "name": "Hatter Institute",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "62-64 Hampstead Road, London, NW1 2NU",
+      "currentHall": false,
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The exact 62–64 Hampstead Road envelope is not identified in the imported map. Adjacent mapped addresses are insufficient to allocate the whole building."
     },
     {
       "buildingId": "ucl-ucl-at-here-east",
       "name": "UCL at Here East",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Queen Elizabeth Olympic Park, London, E20 2S",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Queen Elizabeth Olympic Park, London, E20 2S. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-high-holborn",
       "name": "High Holborn",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-ifor-evans-hall",
-      "name": "Ifor Evans Hall",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "90 High Holborn, WC1V 6LJ",
+      "currentHall": false,
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "90 High Holborn is a shared commercial address near the edge of the imported area. Confirm the occupied premises and complete host-building outline."
     },
     {
       "buildingId": "ucl-inst-archaeology-27-eastways",
       "name": "Inst Archaeology - 27 Eastways",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "27 Eastways, Whitham, Essex CM8 3YQ",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 27 Eastways, Whitham, Essex CM8 3YQ. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-institute-of-neurology-1-wakefield-st",
       "name": "Institute of Neurology - 1 Wakefield St",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-institute-of-neurology-12-queen-square",
-      "name": "Institute of Neurology - 12 Queen Square",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-institute-of-neurology-23-queen-square",
-      "name": "Institute of Neurology - 23 Queen Square",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-institute-of-neurology-33-queen-square",
-      "name": "Institute of Neurology - 33 Queen Square",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-institute-of-neurology-8-11-queen-square",
-      "name": "Institute of Neurology - 8-11 Queen Square",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "1 Wakefield Street, London, WC1N 1PJ",
+      "currentHall": false,
+      "reasonCode": "allocation-unconfirmed",
+      "reason": "An Institute of Neurology building is mapped near Wakefield Street, but its identity as the exact 1 Wakefield Street allocation is not confirmed. Check the numbered entrance or official site plan."
     },
     {
       "buildingId": "ucl-inst-of-ophthalmology-ashton-building",
       "name": "Institute of Ophthalmology — Ashton Building",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "11-43 Bath Street, London EC1V 9EL",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-inst-of-ophthalmology-cayton-17-25",
       "name": "Institute of Ophthalmology — 17–25 Cayton Street",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "17-25 Cayton Street, London EC1V 9EH",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 17-25 Cayton Street, London EC1V 9EH. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-inst-of-ophthalmology-lecture-cabin",
       "name": "Inst of Ophthalmology - Lecture Cabin",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "11-43 Bath Street, London EC1V 9EL",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-inst-of-ophthalmology-phase-6a-bath-st",
       "name": "Inst of Ophthalmology - Phase 6A Bath St",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "11-43 Bath Street, London EC1V 9EL",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-inst-of-ophthalmology-phase-6b-bath-st",
       "name": "Inst of Ophthalmology - Phase 6B Bath St",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "11-43 Bath Street, London EC1V 9EL",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-inst-of-ophthalmology-wolfson-building",
       "name": "Institute of Ophthalmology — Wolfson Building",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "27-29 Cayton Street, London EC1V 9EJ",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 27-29 Cayton Street, London EC1V 9EJ. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-institute-of-orthopaedics-and-musculoskeletal-science-ioms",
       "name": "Institute of Orthopaedics & Musculoskeletal Science (IOMS)",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-ioe-emerald-street-23-29",
-      "name": "IOE - Emerald Street, 23-29",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-ioe-woburn-square-10",
-      "name": "IOE - Woburn Square, 10",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-james-lighthill-house-and-lodge",
-      "name": "James Lighthill House & Lodge",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Brockley Hill, Stanmore, Middlesex, HA7 4LP",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Brockley Hill, Stanmore, Middlesex, HA7 4LP. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-john-adams-hall",
       "name": "John Adams Hall",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "15-23 Endsleigh Street, London, WC1H 0DP",
+      "currentHall": true,
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "UCL occupies 15–23 Endsleigh Street within the larger listed 13–23 terrace. The public footprint does not separate that allocation reliably, so the whole terrace is not assigned to the hall."
     },
     {
       "buildingId": "ucl-john-tovell-house",
       "name": "John Tovell House",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-langton-close",
-      "name": "Langton Close",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "89 and 93–97 Gower Street, London WC1E 6AP",
+      "currentHall": true,
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "The hall occupies 89 and 93–97 Gower Street. The public map combines these with other addresses in a larger terrace; the separate hall portions still need confirmation."
     },
     {
       "buildingId": "ucl-malet-place-1-4",
       "name": "Malet Place, 1-4",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-max-rayne-house",
-      "name": "Max Rayne House",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "1-4 Malet Place, London, WC1E 7JG",
+      "currentHall": false,
+      "reasonCode": "distinct-building-unconfirmed",
+      "reason": "Official building 46 is distinct from the nearby Petrie Museum, building 41. A complete footprint for 1–4 Malet Place has not been verified, so the museum outline is not reused."
     },
     {
       "buildingId": "ucl-medical-school-building",
       "name": "Medical School Building",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "74 Huntley Street, London, WC1E 6AU",
+      "currentHall": false,
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "UCL identifies the Huntley Street Medical School and Rockefeller Building separately. The precise Medical School envelope or shared subdivision needs confirmation before reusing the Rockefeller outline."
     },
     {
       "buildingId": "ucl-mill-hill-fry-radcliffe-and-wilson-observatories",
       "name": "Mill Hill - Fry, Radcliffe and Wilson Observatories",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-montague-street-11",
-      "name": "Montague Street, 11",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "553 Watford Way, Mill Hill, London, NW7 2QS",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 553 Watford Way, Mill Hill, London, NW7 2QS. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-moorfields-eye-hospital",
       "name": "Moorfields Eye Hospital",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "162 City Road, London, EC1V 2PD",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 162 City Road, London, EC1V 2PD. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-mortimer-market-centre",
       "name": "Mortimer Market Centre",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Mortimer Market, London, WC1E 6AU",
+      "currentHall": false,
+      "reasonCode": "site-boundary-only",
+      "reason": "The named public map feature is a clinic site boundary, not a verified building outline. Confirm the occupied building footprint before raising it on the map."
     },
     {
       "buildingId": "ucl-mssl-holmbury-st-mary",
       "name": "MSSL Holmbury St Mary",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Holmbury St Mary, Dorking, RH5 6NT",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Holmbury St Mary, Dorking, RH5 6NT. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-n-and-s-transit-houses",
       "name": "N & S Transit Houses",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-neil-sharp-house",
-      "name": "Neil Sharp House",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-new-hall",
-      "name": "New Hall",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-ormond-house",
-      "name": "Ormond House",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Gower Street, London, WC1E 6BT",
+      "currentHall": false,
+      "reasonCode": "internal-facility",
+      "reason": "The listing groups two campus facilities under a general Gower Street address. Their individual building outlines need confirmation."
     },
     {
       "buildingId": "ucl-pearl",
       "name": "PEARL",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Yew Tree Avenue, Dagenham, RM10 7FN",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Yew Tree Avenue, Dagenham, RM10 7FN. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-pears-building",
       "name": "PEARS Building",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-prankerd-house",
-      "name": "Prankerd House",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Pond Street, London, NW3 2PP",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Pond Street, London, NW3 2PP. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-royal-free-hospital",
       "name": "Royal Free Hospital",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Rowland Hill Street, Hampstead, London, NW3 2PF",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Rowland Hill Street, Hampstead, London, NW3 2PF. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-royal-institution-the-9-rooms",
       "name": "Royal Institution, The (9 Rooms)",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "21 Abermarle Street, London, W1S 4BS",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 21 Abermarle Street, London, W1S 4BS. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-russell-square-house",
       "name": "Russell Square House",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "10-12 Russell Square, London, WC1B 5EH",
+      "currentHall": false,
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The exact 10–12 Russell Square building envelope has not been matched confidently. Confirm the named property and its numbered street frontage."
     },
     {
       "buildingId": "ucl-rutherford-appleton-lab-harwell",
       "name": "Rutherford Appleton Lab (Harwell)",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-slade-school-of-fine-art-woburn-square",
-      "name": "Slade School Of Fine Art - Woburn Square",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-solar-house",
-      "name": "Solar House",
-      "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Harwell Campus, Didcot, Oxfordshire, OX11 0QX",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Harwell Campus, Didcot, Oxfordshire, OX11 0QX. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-tavistock-house",
       "name": "Tavistock House",
       "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-tavistock-square",
-      "name": "Tavistock Square",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-tottenham-court-road-90",
-      "name": "90 Tottenham Court Road",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "13 Tavistock Square, London, WC1H 9JP",
+      "currentHall": false,
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "The directory lists 13 Tavistock Square within the larger Tavistock House complex. Confirm the UCL-occupied building or subdivision before assigning a footprint."
     },
     {
       "buildingId": "ucl-tufnell-park-national-research-centre",
       "name": "Tufnell Park - National Research Centre",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Unit 1, Station Road, Tufnell Park, N19 5UN",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Unit 1, Station Road, Tufnell Park, N19 5UN. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-ucl-crystal-growth-laboratory",
       "name": "UCL Crystal Growth Laboratory",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-ucl-gosich-camelia-botnar-building",
-      "name": "Camelia Botnar Building",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-ucl-gosich-wolfson-centre",
-      "name": "Institute of Child Health — Wolfson Centre",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "Harwell Campus, Didcot, OX11 0QX",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Harwell Campus, Didcot, OX11 0QX. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-whittington-hospital-main-site-and-highgate-wing",
       "name": "Whittington Hospital - Main Site & Highgate Wing",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "The Whittington hospital, Magdala Avenue, London, N19 5NF",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: The Whittington hospital, Magdala Avenue, London, N19 5NF. Fetch its local building data and verify the occupied building or part before adding a footprint."
     },
     {
       "buildingId": "ucl-wicklow-street-44",
       "name": "Wicklow Street, 44",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "44 Wicklow Street, London, WC1X 9HL",
+      "currentHall": false,
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "44 Wicklow Street is in the imported area, but its exact building envelope has not been identified confidently. Confirm the numbered frontage before mapping it."
     },
     {
       "buildingId": "ucl-wicklow-street-77",
       "name": "Wicklow Street, 77",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "77 Wicklow Street, London, WC1X 9JY",
+      "currentHall": false,
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "77 Wicklow Street is in the imported area, but the precise UCL-occupied building is not explicitly identified. Confirm its numbered envelope."
     },
     {
       "buildingId": "ucl-wilson-street",
       "name": "Wilson Street",
       "campus": "other",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-zayed-centre-for-research",
-      "name": "Zayed Centre for Research",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-55-56-russell-square",
-      "name": "55–56 Russell Square",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-college-hall",
-      "name": "College Hall",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-connaught-hall",
-      "name": "Connaught Hall",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-handel-mansions",
-      "name": "Handel Mansions",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
-    },
-    {
-      "buildingId": "ucl-international-hall",
-      "name": "International Hall",
-      "campus": "bloomsbury",
-      "reason": "No manually verified complete OSM footprint match in this import"
+      "address": "69 Wilson Street, London, EC2A 2BB",
+      "currentHall": false,
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 69 Wilson Street, London, EC2A 2BB. Fetch its local building data and verify the occupied building or part before adding a footprint."
     }
   ]
 }

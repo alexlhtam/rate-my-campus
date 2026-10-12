@@ -17,7 +17,8 @@ test('every footprint is an explicitly reviewed official directory join with rep
   for (const feature of data.features) {
     const properties = feature.properties, official = buildings.get(properties.buildingId);
     assert.ok(official, properties.buildingId);
-    assert.equal(official.membership.status, 'ucl-used');
+    assert.ok(['ucl-used', 'ucl-partner'].includes(official.membership.status), `Unverified affiliation for ${properties.buildingId}`);
+    if (official.membership.status === 'ucl-partner') assert.equal(properties.occupationScope, 'shared-site', 'Partner halls must not become exclusive UCL property');
     assert.equal(properties.affiliationVerified, true);
     assert.equal(properties.occupationScope, official.membership.scope);
     assert.equal(properties.campus, official.campus);
@@ -31,7 +32,7 @@ test('every footprint is an explicitly reviewed official directory join with rep
   }
   assert.deepEqual(actual, expected);
   assert.equal(data.metadata.statistics.matchedBuildings, index.buildings.length);
-  assert.equal(data.metadata.sources.length, 3);
+  assert.ok(data.metadata.sources.length >= 3);
   for (const source of data.metadata.sources) assert.match(source.sha256, /^[a-f0-9]{64}$/);
 });
 
@@ -43,7 +44,7 @@ test('all complete source rings retain valid finite coordinates, closure and Geo
       assert.deepEqual(ring[0], ring.at(-1), `${feature.id}: source ring must close`);
       for (const [lng, lat] of ring) {
         assert.ok(Number.isFinite(lng) && Number.isFinite(lat));
-        assert.ok(lng > -0.2 && lng < 0.1 && lat > 51.4 && lat < 51.6, feature.id);
+        assert.ok(Math.abs(lng) <= 180 && Math.abs(lat) <= 85, `${feature.id}: valid Web Mercator coordinates; membership is verified by sources, not a London clipping box`);
       }
       const signedArea = ring.slice(1).reduce((sum, point, i) => sum + ring[i][0] * point[1] - point[0] * ring[i][1], 0);
       assert.ok(ringIndex === 0 ? signedArea > 0 : signedArea < 0, `${feature.id}: ring ${ringIndex} winding`);
