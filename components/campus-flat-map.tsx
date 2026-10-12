@@ -10,6 +10,9 @@ export type MapItem = MapPosition & { id: string; name?: string; title?: string;
 type Props = {
   items: MapItem[]; onSelect: (id: string) => void; selected?: string; confirm?: boolean;
   initialPosition?: MapPosition; requireGoogle?: boolean;
+  focusView?: {position: MapPosition; zoom: number};
+  directoryOverlay?: boolean;
+  onRecenter?: () => void;
   onPosition?: (position: MapPosition) => void;
   onProviderChange?: (provider: MapProvider) => void;
 };
@@ -32,7 +35,7 @@ async function readJSON<T>(url: string, signal?: AbortSignal): Promise<T> {
   return await response.json() as T;
 }
 
-export default function CampusFlatMap({ items, onSelect, selected, confirm, initialPosition, requireGoogle = false, onPosition, onProviderChange }: Props) {
+export default function CampusFlatMap({ items, onSelect, selected, confirm, initialPosition, requireGoogle = false, onPosition, onProviderChange, focusView, directoryOverlay = false, onRecenter }: Props) {
   const container = useRef<HTMLDivElement>(null), drag = useRef<Drag | null>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [center, setCenter] = useState<MapPosition>(() => validPosition(initialPosition));
@@ -55,6 +58,11 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     const next = validPosition(initialPosition);
     setCenter(previous => Math.abs(previous.lat - next.lat) < 0.0000001 && Math.abs(previous.lng - next.lng) < 0.0000001 ? previous : next);
   }, [initialPosition?.lat, initialPosition?.lng]);
+  useEffect(() => {
+    if (!focusView) return;
+    setCenter(validPosition(focusView.position));
+    setZoom(Math.max(10, Math.min(19, Math.round(focusView.zoom))));
+  }, [focusView]);
   useEffect(() => {
     const controller = new AbortController();
     let current = true;
@@ -123,6 +131,7 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     if (confirm && current.moved) onPosition?.(current.last);
   }
   function recenter() {
+    if (!confirm && onRecenter) { onRecenter(); return; }
     setCenter(campus); setZoom(confirm ? 16 : 17);
     if (confirm && activeProvider !== 'unavailable') onPosition?.(campus);
   }
@@ -176,17 +185,17 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
         <Icon size={14} fill={item.type ? 'none' : 'currentColor'} />{!item.type && <b>{item.score || '—'}</b>}<span className="pin-tooltip">{item.name || item.title}</span>
       </button>;
     })}
-    {confirm ? activeProvider !== 'unavailable' && <div className="confirm-cross" aria-hidden="true"><MapPin fill="#e96548" size={42} /></div> : <>
+    {confirm ? activeProvider !== 'unavailable' && <div className="confirm-cross" aria-hidden="true"><MapPin fill="#e96548" size={42} /></div> : !directoryOverlay && <>
       <div className="map-location"><span className="location-symbol"><MapPin size={17} /></span><span>Bloomsbury, London<small>Your UCL neighbourhood</small></span><span className="location-dot" /></div>
       <div className="map-status"><i /> Explore the neighbourhood</div>
       <div className="campus-label" style={{ left: project(51.5246, -0.134, zoom).x - left, top: project(51.5246, -0.134, zoom).y - top }}>UCL<span>YOU&apos;RE IN GOOD COMPANY</span></div>
     </>}
     <div className="map-controls">
       <button type="button" title="Zoom in" aria-label="Zoom in" disabled={zoom >= 19} onClick={() => setZoom(value => Math.min(value + 1, 19))}><Plus size={20} /></button>
-      <button type="button" title="Zoom out" aria-label="Zoom out" disabled={zoom <= 13} onClick={() => setZoom(value => Math.max(value - 1, 13))}><Minus size={20} /></button>
+      <button type="button" title="Zoom out" aria-label="Zoom out" disabled={zoom <= 10} onClick={() => setZoom(value => Math.max(value - 1, 10))}><Minus size={20} /></button>
       <button type="button" title="Back to UCL" aria-label="Back to UCL" onClick={recenter}><LocateFixed size={20} /></button>
     </div>
-    {!confirm && <div className="map-note"><Navigation size={17} /><span>A little local knowledge goes a long way.</span><span className="note-star">✳</span></div>}
+    {!confirm && !directoryOverlay && <div className="map-note"><Navigation size={17} /><span>A little local knowledge goes a long way.</span><span className="note-star">✳</span></div>}
     {activeProvider !== 'unavailable' && <div className="map-attribution">
       {activeProvider === 'google' ? <b aria-label="Google Maps">Google Maps · </b> : <span title={notice}>OpenStreetMap · </span>}
       <a href={activeProvider === 'google' ? 'https://maps.google.com' : 'https://www.openstreetmap.org/copyright'} target="_blank" rel="noreferrer">{attribution}</a>

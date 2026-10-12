@@ -24,6 +24,12 @@ SOURCES = {
     'bloomsbury-wide': '-0.143,51.517,-0.123,51.532',
     'bloomsbury-east': '-0.1235,51.517,-0.113,51.531',
     'ucl-east': '-0.02,51.534,0.002,51.543',
+    'north-halls': '-0.142,51.532,-0.121,51.55',
+    'caledonian-hall': '-0.124,51.542,-0.111,51.554',
+    'stratford-halls': '-0.012,51.542,0.01,51.552',
+    'victoria-hall': '-0.147,51.492,-0.138,51.5',
+    'canary-wharf-hall': '-0.014,51.504,0.002,51.515',
+    'fortis-green-hall': '-0.168,51.588,-0.153,51.596',
 }
 
 
@@ -147,7 +153,7 @@ def build(refresh=False):
     seen = set()
     for match in manifest['matches']:
         building = directory[match['buildingId']]
-        if building['membership']['status'] != 'ucl-used':
+        if building['membership']['status'] not in ('ucl-used', 'ucl-partner'):
             raise ValueError(f"Unverified affiliation: {building['id']}")
         source_urls, outlines, matched_features = [], [], []
         for selected in match['features']:
@@ -191,6 +197,7 @@ def build(refresh=False):
                 'osmType': kind, 'osmId': osm_id, 'osmVersion': int(element.get('version')),
                 'geometrySourceDate': element.get('timestamp'), 'geometryRetrievedDate': max(s['retrievedAt'] for s in source_records)[:10],
                 'sourceRelation': selected.get('relation'), 'geometryMatchBasis': match['matchBasis'],
+                'geometryContextSourceUrls': match.get('contextSourceUrls', []),
                 'height': height, 'heightStatus': height_status, 'heightSource': 'OSM height tag' if height is not None else None,
                 'minHeight': base, 'min_height': base, 'minHeightStatus': 'osm-tagged' if base is not None else 'unknown',
                 'levels': levels, 'roofLevels': roof_levels, 'minLevels': min_levels,
@@ -230,6 +237,11 @@ def build(refresh=False):
              'taggedMetricHeights': sum(f['properties']['height'] is not None for f in features),
              'campuses': {campus: sum(i['campus'] == campus for i in index) for campus in ('bloomsbury', 'east', 'other')},
              'interiorRings': sum(sum(len(p)-1 for p in (f['geometry']['coordinates'] if f['geometry']['type'] == 'MultiPolygon' else [f['geometry']['coordinates']])) for f in features)}
+    matched_ids = {item['buildingId'] for item in index}
+    current_halls = [building for building in directory.values() if building.get('accommodation', {}).get('current')]
+    stats['currentHallsTotal'] = len(current_halls)
+    stats['currentHallsMapped'] = sum(building['id'] in matched_ids for building in current_halls)
+    stats['affiliations'] = {status: sum(directory[item['buildingId']]['membership']['status'] == status for item in index) for status in ('ucl-used', 'ucl-partner')}
     meta = {'schemaVersion': 2, 'auditDate': manifest['auditDate'], 'snapshotDate': max(s['retrievedAt'] for s in source_records)[:10], 'attribution': '© OpenStreetMap contributors',
             'license': 'ODbL-1.0', 'licenseUrl': 'https://www.openstreetmap.org/copyright',
             'method': 'Explicit reviewed identity join of official UCL directory and unmodified OSM way/relation geometry. Geometry is never clipped to a campus rectangle.',
@@ -246,9 +258,18 @@ def build(refresh=False):
                 'Ambiguous elevated-part level tags are preserved and flagged; the visual interpretation keeps estimated tops above bases without claiming a metric survey.',
                 'Part geometry is used for Cruciform and UCL East. Non-extruded outlines are kept separately for selection; renderer must filter role=outline from 3D extrusion.'
             ]}
-    geojson = {'type': 'FeatureCollection', 'name': 'Verified UCL-used building footprints', 'metadata': meta, 'features': features}
+    geojson = {'type': 'FeatureCollection', 'name': 'Verified UCL-associated building footprints', 'metadata': meta, 'features': features}
     index_data = {'schemaVersion': 1, 'auditDate': manifest['auditDate'], 'buildings': index}
-    quality = {**meta, 'unmatchedBuildings': [{'buildingId': b['id'], 'name': b['name'], 'campus': b['campus'], 'reason': 'No manually verified complete OSM footprint match in this import'} for b in directory.values() if b['id'] not in {i['buildingId'] for i in index}]}
+    audited_unmatched = {item['buildingId']: item for item in manifest.get('unmatched', [])}
+    missing_audits = set(directory) - matched_ids - set(audited_unmatched)
+    if missing_audits:
+        raise ValueError(f'New unmatched directory entries need a specific coverage audit: {sorted(missing_audits)}')
+    quality = {**meta, 'unmatchedBuildings': [
+        {'buildingId': building['id'], 'name': building['name'], 'campus': building['campus'],
+         'address': building['address'], 'currentHall': bool(building.get('accommodation', {}).get('current')),
+         'reasonCode': audited_unmatched[building['id']]['reasonCode'], 'reason': audited_unmatched[building['id']]['reason']}
+        for building in directory.values() if building['id'] not in matched_ids
+    ]}
     for filename, content in [('campus-buildings.geojson', geojson), ('campus-footprint-index.json', index_data), ('campus-building-quality.json', quality)]:
         (DATA / filename).write_text(json.dumps(content, ensure_ascii=False, indent=2) + '\n', encoding='utf8')
     print(json.dumps(stats))

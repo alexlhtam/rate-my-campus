@@ -5,8 +5,9 @@ ownership or exclusive occupation. `public/data/campus-directory.json` is the
 independent, officially sourced directory. The import manifest is the manually
 reviewed join between that directory and OpenStreetMap geometry.
 
-Run `python scripts/import-campus-buildings.py --refresh` to download three bounded
-public OSM API extracts. Subsequent `python scripts/import-campus-buildings.py`
+Run `python scripts/import-campus-buildings.py --refresh` to download bounded
+public OSM API extracts for Bloomsbury, UCL East and the current halls in the
+wider London area. Subsequent `python scripts/import-campus-buildings.py`
 runs reproduce the output from the ignored `work/campus-footprints/audit/` cache.
 The script uses Python's standard library. It records source URLs, SHA-256 hashes,
 retrieval dates and OSM object versions. A fresh geometry download does not renew
@@ -27,6 +28,24 @@ uses way 863409196 as an outline, not its upper-storey shape. The true cross-sha
 upper part is way 27432119 (121 vertices); ways 863409197–863409202 supply six lower
 podium parts. Extruding the outline as a five-storey block loses the actual shape.
 The manifest now preserves the relation's complete parts.
+
+The coverage audit also fixes the Garden Halls omission. Its name is attached to
+OSM residential landuse way 1368856792, while its actual building polygons have
+mostly unnamed part tags. That named site provides affiliation context; eight
+actual building polygons, including Hughes Parry Tower, provide the geometry.
+The site boundary is never extruded and the spaces between buildings stay open.
+Verified `ucl-partner` halls are accepted alongside `ucl-used` buildings, retaining
+their operator and shared occupation status. College, Connaught, International,
+Handel and Garden Halls are University of London partners, not exclusively UCL
+owned buildings.
+
+Current halls outside the initial campus area are checked with additional
+bounded extracts, including Camden, Caledonian Road, Victoria, Fortis Green,
+Stratford and Canary Wharf. The quality report records exact current coverage
+counts. John Adams and John Tovell remain unresolved terrace allocations: their
+documented room/address ranges do not establish separate whole-building outlines.
+Every remaining directory entry has an audited reason and reason code in the
+manifest. New unmatched entries fail import until an explicit reason is supplied.
 
 `role: outline` is for selection or flat footprints and **must not be extruded**.
 Senate House and Bedford Way courtyard holes must also survive rendering. This is

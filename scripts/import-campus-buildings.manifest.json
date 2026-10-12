@@ -1387,6 +1387,995 @@
           "id": 848060317
         }
       ]
+    },
+    {
+      "buildingId": "ucl-aberdeen-mansions-residence",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1394960086
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-alexandra-house",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 27445198
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-arthur-tattersall-house",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 48161698
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-chenies-mews",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 748992329
+        }
+      ],
+      "notes": [
+        "Only the explicitly addressed86-96 Chenies Mews footprint is matched. The separately listed96A-98 allocation remains unverified."
+      ]
+    },
+    {
+      "buildingId": "ucl-courtauld-building",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40836223
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-endsleigh-gardens-9-11",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1050325492
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-euston-road-222",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 95023723
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-front-lodges",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 90021958
+        },
+        {
+          "type": "way",
+          "id": 90021966
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-gower-place-3",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 847530475
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-hatter-institute",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 748992328
+        },
+        {
+          "type": "way",
+          "id": 1392117018
+        }
+      ],
+      "notes": [
+        "Two explicitly addressed mapped buildings at51 and67 Chenies Mews are included. Unmapped intermediate address allocations are not invented."
+      ]
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-12-queen-square",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 28226924
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-23-queen-square",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 804688241
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-33-queen-square",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 804688239
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-8-11-queen-square",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 125297704
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ioe-emerald-street-23-29",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 807373762
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ioe-woburn-square-10",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 557814890
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-james-lighthill-house-and-lodge",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 99166486
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-langton-close",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 136629917
+        },
+        {
+          "type": "way",
+          "id": 329182078
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-montague-street-11",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 800183923
+        },
+        {
+          "type": "way",
+          "id": 800183924
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ormond-house",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 172577743
+        }
+      ],
+      "notes": [
+        "Official directory identifies only the first floor. Geometry represents the enclosing physical building, not exclusive UCL occupation."
+      ]
+    },
+    {
+      "buildingId": "ucl-prankerd-house",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 116815549
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-tavistock-square",
+      "matchBasis": "OSM node5254251534 explicitly identifies Development Planning Unit,UCL at34 Tavistock Square inside named university footprint way1361142037; address agrees with official grouped entry31,34&35.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1361142037
+        }
+      ],
+      "notes": [
+        "Only34 Tavistock Square is unambiguously matched;31 and35 in this grouped directory entry remain unverified."
+      ]
+    },
+    {
+      "buildingId": "ucl-tottenham-court-road-90",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 148588630
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ucl-gosich-wolfson-centre",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 32882967
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-zayed-centre-for-research",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 81405890
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-55-56-russell-square",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 800176334
+        },
+        {
+          "type": "way",
+          "id": 800176335
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-college-hall",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "relation",
+          "id": 11814819
+        }
+      ],
+      "notes": [
+        "University of London hall with UCL accommodation allocations: partner affiliation, not exclusive UCL ownership."
+      ]
+    },
+    {
+      "buildingId": "ucl-connaught-hall",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 40269407
+        }
+      ],
+      "notes": [
+        "University of London hall with UCL accommodation allocations: partner affiliation, not exclusive UCL ownership."
+      ]
+    },
+    {
+      "buildingId": "ucl-handel-mansions",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "way",
+          "id": 132163064
+        }
+      ],
+      "notes": [
+        "University of London hall with UCL accommodation allocations: partner affiliation, not exclusive UCL ownership."
+      ]
+    },
+    {
+      "buildingId": "ucl-international-hall",
+      "matchBasis": "Official UCL directory name or street-number address agrees with an explicitly named/addressed OSM building or complete multipolygon; reviewed in the local coverage audit2026-10-12.",
+      "features": [
+        {
+          "type": "relation",
+          "id": 6963760
+        }
+      ],
+      "notes": [
+        "University of London hall with UCL accommodation allocations: partner affiliation, not exclusive UCL ownership."
+      ]
+    },
+    {
+      "buildingId": "ucl-garden-halls",
+      "matchBasis": "Official UCL Accommodation identifies Garden Halls as a University of London partner hall. Current OSM landuse way1368856792 names and bounds Garden Halls with operatorUniversity of London; these eight real dormitory/building-part polygons lie within that verified site. The residential landuse boundary is never extruded.",
+      "contextSourceUrls": [
+        "https://www.openstreetmap.org/way/1368856792",
+        "https://www.london.ac.uk/about/services/halls/garden-halls"
+      ],
+      "notes": [
+        "UCL partner hall run by University of London; no exclusive UCL ownership claim.",
+        "All included polygons are actual OSM building geometry. The named Garden Halls site boundary is affiliation context only and is not used as a building footprint.",
+        "Hughes Parry Tower is an explicitly named15-level dormitory. Most lower parts have no metric height or floor count, so their display heights remain illustrative."
+      ],
+      "features": [
+        {
+          "id": 800107578,
+          "role": "part",
+          "name": "Garden Halls building part"
+        },
+        {
+          "id": 800107579,
+          "role": "part",
+          "name": "Garden Halls building part"
+        },
+        {
+          "id": 800107580,
+          "role": "part",
+          "name": "Garden Halls building part"
+        },
+        {
+          "id": 800107581,
+          "role": "part",
+          "name": "Garden Halls building part"
+        },
+        {
+          "id": 800107582,
+          "role": "building",
+          "name": "Hughes Parry Tower"
+        },
+        {
+          "id": 800107583,
+          "role": "part",
+          "name": "Garden Halls building part"
+        },
+        {
+          "id": 800107584,
+          "role": "part",
+          "name": "Garden Halls building part"
+        },
+        {
+          "id": 800107585,
+          "role": "part",
+          "name": "Garden Halls building part"
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ucl-gosich-camelia-botnar-building",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 34019128
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-slade-school-of-fine-art-woburn-square",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1107194844
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-egyptology",
+      "matchBasis": "Official UCL Estates FM zone B PDF identifies041.Egyptology; August2026 UCL facilities directory identifies PetrieMuseum[41]. This establishes the same official building identity as OSM way27703085, named Petrie Museum of Egyptian Archeology atMaletPlace. 1-4MaletPlace is distinct official building46 and is not duplicated.",
+      "features": [
+        {
+          "type": "way",
+          "id": 27703085
+        }
+      ],
+      "contextSourceUrls": [
+        "https://www.ucl.ac.uk/estates/sites/estates/files/ucl_-_fm_zone_-_group_b.pdf",
+        "https://www.ucl.ac.uk/estates/our-work/inclusive-environments/inclusive-facilities-ucl/toilets-ucl",
+        "https://www.ucl.ac.uk/engage/museums-collections/petrie-museum-egyptian-and-sudanese-archaeology/visit-petrie-museum"
+      ]
+    },
+    {
+      "buildingId": "ucl-ann-stephenson-house",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 846370365
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-bernard-johnson-house",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 834330200
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-goldsmid-house-wilton-plaza",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 540411092
+        },
+        {
+          "type": "way",
+          "id": 540411093
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-ifor-evans-hall",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "relation",
+          "id": 11606852
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-max-rayne-house",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 706191602
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-neil-sharp-house",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 846370367
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-new-hall",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "relation",
+          "id": 17498853
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-eleanor-rosa-house",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1355051584,
+          "role": "outline"
+        },
+        {
+          "id": 1355120938,
+          "role": "part"
+        },
+        {
+          "id": 1355265205,
+          "role": "part"
+        },
+        {
+          "id": 1355265206,
+          "role": "part"
+        },
+        {
+          "id": 1355265207,
+          "role": "part"
+        },
+        {
+          "id": 1355265208,
+          "role": "part"
+        },
+        {
+          "id": 1355265209,
+          "role": "part"
+        },
+        {
+          "id": 1355265210,
+          "role": "part"
+        },
+        {
+          "id": 1355265211,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "The whole-building outline remains flat; the actual mapped building parts supply the individual lower wings and taller sections. No part geometry is invented or clipped."
+      ]
+    },
+    {
+      "buildingId": "ucl-unite-st-pancras-way",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1009110338
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-urbanest-canary-wharf",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1565220978
+        },
+        {
+          "id": 1190475489,
+          "role": "building",
+          "name": "Tower 3"
+        },
+        {
+          "id": 1190475490,
+          "role": "building",
+          "name": "Tower 2"
+        },
+        {
+          "id": 1190475491,
+          "role": "building",
+          "name": "Tower 1"
+        }
+      ],
+      "contextSourceUrls": [
+        "https://www.urbanest.info/urbanest-canary-wharf-opens-to-residents/",
+        "https://www.apt.london/project/2-trafalgar-way"
+      ],
+      "notes": [
+        "The operator and architect identify three towers joined by a four-storey podium. The three named OSM hall-of-residence tower footprints are included with the explicitly addressed podium.",
+        "OSM tower ele tags are elevations, not building heights. They are preserved as source tags and deliberately not converted into claimed physical heights. Exact individual tower heights remain unknown; the published scheme has28,36 and46 storeys but its source does not explicitly assign those counts to OSM tower IDs."
+      ]
+    },
+    {
+      "buildingId": "ucl-urbanest-kings-cross",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 222031889
+        }
+      ],
+      "notes": [
+        "OSM and the current UCL listing differ in postcode but agree on building name and street address. Footprint match uses the named building, not a postcode centroid."
+      ]
+    },
+    {
+      "buildingId": "ucl-urbanest-st-pancras",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 53368756
+        }
+      ],
+      "notes": [
+        "OSM and the current UCL listing differ in postcode but agree on building name and street address. Footprint match uses the named building, not a postcode centroid."
+      ]
+    },
+    {
+      "buildingId": "ucl-venti-house",
+      "matchBasis": "Official current UCL directory or2026/27 accommodation listing matched to explicitly named OSM building geometry and address. Outside-core halls were checked with bounded public OSM extracts, not guessed postal centroids.",
+      "features": [
+        {
+          "type": "way",
+          "id": 1212592719,
+          "role": "outline"
+        },
+        {
+          "id": 1290205808,
+          "role": "part"
+        },
+        {
+          "id": 1290205809,
+          "role": "part"
+        },
+        {
+          "id": 1290205810,
+          "role": "part"
+        },
+        {
+          "id": 1290205811,
+          "role": "part"
+        },
+        {
+          "id": 1290205812,
+          "role": "part"
+        },
+        {
+          "id": 1290205813,
+          "role": "part"
+        },
+        {
+          "id": 1290205814,
+          "role": "part"
+        },
+        {
+          "id": 1290205815,
+          "role": "part"
+        },
+        {
+          "id": 1290205816,
+          "role": "part"
+        },
+        {
+          "id": 1492935656,
+          "role": "part"
+        },
+        {
+          "id": 1492935657,
+          "role": "part"
+        },
+        {
+          "id": 1492935658,
+          "role": "part"
+        },
+        {
+          "id": 1492935659,
+          "role": "part"
+        },
+        {
+          "id": 1493728100,
+          "role": "part"
+        }
+      ],
+      "notes": [
+        "Current UCL2026/27 accommodation listing establishes student use. OSM geometry retains construction=dormitory and building=construction despite an opening_date of2026-09-01; this status discrepancy is preserved rather than silently rewritten.",
+        "The whole-building outline remains flat; the actual mapped building parts supply the individual lower wings and taller sections. No part geometry is invented or clipped."
+      ]
+    },
+    {
+      "buildingId": "ucl-denys-holland-house",
+      "matchBasis": "Official UCL directory name and address matched to named OSM building geometry in the bounded hall-area extracts.",
+      "features": [
+        {
+          "id": 846370372
+        }
+      ]
+    },
+    {
+      "buildingId": "ucl-solar-house",
+      "matchBasis": "Official UCL directory name and address matched to named OSM building geometry in the bounded hall-area extracts.",
+      "features": [
+        {
+          "id": 466092958
+        }
+      ]
+    }
+  ],
+  "unmatched": [
+    {
+      "buildingId": "ucl-anechoic-room",
+      "reasonCode": "internal-facility",
+      "reason": "The listing identifies a room behind 21 Gordon Square, but a separate building footprint has not been confirmed. Confirm the occupied structure before adding it."
+    },
+    {
+      "buildingId": "ucl-belnor-house",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Fulmar Way, Wickford Business Park, SS11 8YW. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-bernard-street-40",
+      "reasonCode": "shared-address-ambiguous",
+      "reason": "40 Bernard Street is a shared commercial address with several mapped businesses. Its precise UCL-occupied building envelope needs confirmation."
+    },
+    {
+      "buildingId": "ucl-blakeney-point",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Old Lifeboat Station, Blakeney Holt, Norfolk, NR25 7AA. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-bungalows-109-camden-road",
+      "reasonCode": "within-mapped-complex",
+      "reason": "The Ifor Evans site is mapped, but its separately listed bungalows are not individually identified in the public geometry. Confirm which small buildings belong to this entry."
+    },
+    {
+      "buildingId": "ucl-camley-street",
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The exact 103C Camley Street premises are not identified confidently. The nearby 103B Urbanest hall is a different address and is not reused."
+    },
+    {
+      "buildingId": "ucl-canada-square-1-l38-and-l50",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 1 Canada Square, Canary Wharf, London, E14 5AB. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-cave-clean-active-ventilation-envir",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Yew Tree Avenue, Dagenham RM10 7FN. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-central-bsu",
+      "reasonCode": "internal-facility",
+      "reason": "This is a campus facility with a general Gower Street address. Its exact host building or independent footprint needs confirmation."
+    },
+    {
+      "buildingId": "ucl-chapel-place",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 1-2 Chapel Place, Portslade, Brighton, BN41 1DR. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-clare-hall",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 5 Blanche Lane, South Mimms, Potters Bar, EN6 3NY. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-contemplation-room",
+      "reasonCode": "internal-facility",
+      "reason": "This is a room rather than a separately identified building. Confirm its host building before assigning map geometry."
+    },
+    {
+      "buildingId": "ucl-ear-institute-grays-inn-rd-332",
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "The Ear Institute address is within the former hospital complex on Grays Inn Road. Its precise UCL-occupied envelope needs confirming rather than assigning the entire hospital."
+    },
+    {
+      "buildingId": "ucl-ear-institute-grays-inn-rd-334-336",
+      "reasonCode": "conflicting-address",
+      "reason": "This directory entry names 334–336 Grays Inn Road but its current address field gives 332. Resolve that address difference before assigning a building footprint."
+    },
+    {
+      "buildingId": "ucl-ear-institute-wicklow-street-75",
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "75 Wicklow Street is in the imported area, but the precise UCL-occupied building is not explicitly identified. Confirm its numbered envelope."
+    },
+    {
+      "buildingId": "ucl-endsleigh-street-14",
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "The address is within a terrace that the public map does not identify house by house. Confirm the number 14 envelope before highlighting it."
+    },
+    {
+      "buildingId": "ucl-gordon-square-36-38",
+      "reasonCode": "address-group-ambiguous",
+      "reason": "The directory groups 36–38 Gordon Square. The imported public map has no unambiguous complete footprint for that exact group; confirm the building division."
+    },
+    {
+      "buildingId": "ucl-gospel-oak-store-unit",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Lismore Circus, London, NW5. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-gower-place-23",
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The public map has no explicitly identified 23 Gower Place footprint. Confirm its outline independently before adding a position."
+    },
+    {
+      "buildingId": "ucl-gower-street-91",
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "The public map groups this address within a larger 87–127 Gower Street terrace. Number 91 cannot be isolated reliably from that shared outline."
+    },
+    {
+      "buildingId": "ucl-gower-street-115-117",
+      "reasonCode": "within-mapped-complex",
+      "reason": "115–117 Gower Street is part of the mapped Arthur Tattersall House terrace. Its separate subdivision needs confirmation; duplicating the entire terrace would overstate this address."
+    },
+    {
+      "buildingId": "ucl-hampstead-road-62-64",
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The exact 62–64 Hampstead Road envelope is not identified in the imported map. Adjacent mapped addresses are insufficient to allocate the whole building."
+    },
+    {
+      "buildingId": "ucl-ucl-at-here-east",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Queen Elizabeth Olympic Park, London, E20 2S. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-high-holborn",
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "90 High Holborn is a shared commercial address near the edge of the imported area. Confirm the occupied premises and complete host-building outline."
+    },
+    {
+      "buildingId": "ucl-inst-archaeology-27-eastways",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 27 Eastways, Whitham, Essex CM8 3YQ. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-1-wakefield-st",
+      "reasonCode": "allocation-unconfirmed",
+      "reason": "An Institute of Neurology building is mapped near Wakefield Street, but its identity as the exact 1 Wakefield Street allocation is not confirmed. Check the numbered entrance or official site plan."
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-ashton-building",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-cayton-17-25",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 17-25 Cayton Street, London EC1V 9EH. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-lecture-cabin",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-phase-6a-bath-st",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-phase-6b-bath-st",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 11-43 Bath Street, London EC1V 9EL. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-wolfson-building",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 27-29 Cayton Street, London EC1V 9EJ. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-institute-of-orthopaedics-and-musculoskeletal-science-ioms",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Brockley Hill, Stanmore, Middlesex, HA7 4LP. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-john-adams-hall",
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "UCL occupies 15–23 Endsleigh Street within the larger listed 13–23 terrace. The public footprint does not separate that allocation reliably, so the whole terrace is not assigned to the hall."
+    },
+    {
+      "buildingId": "ucl-john-tovell-house",
+      "reasonCode": "terrace-allocation-ambiguous",
+      "reason": "The hall occupies 89 and 93–97 Gower Street. The public map combines these with other addresses in a larger terrace; the separate hall portions still need confirmation."
+    },
+    {
+      "buildingId": "ucl-malet-place-1-4",
+      "reasonCode": "distinct-building-unconfirmed",
+      "reason": "Official building 46 is distinct from the nearby Petrie Museum, building 41. A complete footprint for 1–4 Malet Place has not been verified, so the museum outline is not reused."
+    },
+    {
+      "buildingId": "ucl-medical-school-building",
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "UCL identifies the Huntley Street Medical School and Rockefeller Building separately. The precise Medical School envelope or shared subdivision needs confirmation before reusing the Rockefeller outline."
+    },
+    {
+      "buildingId": "ucl-mill-hill-fry-radcliffe-and-wilson-observatories",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 553 Watford Way, Mill Hill, London, NW7 2QS. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-moorfields-eye-hospital",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 162 City Road, London, EC1V 2PD. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-mortimer-market-centre",
+      "reasonCode": "site-boundary-only",
+      "reason": "The named public map feature is a clinic site boundary, not a verified building outline. Confirm the occupied building footprint before raising it on the map."
+    },
+    {
+      "buildingId": "ucl-mssl-holmbury-st-mary",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Holmbury St Mary, Dorking, RH5 6NT. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-n-and-s-transit-houses",
+      "reasonCode": "internal-facility",
+      "reason": "The listing groups two campus facilities under a general Gower Street address. Their individual building outlines need confirmation."
+    },
+    {
+      "buildingId": "ucl-pearl",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Yew Tree Avenue, Dagenham, RM10 7FN. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-pears-building",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Pond Street, London, NW3 2PP. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-royal-free-hospital",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Rowland Hill Street, Hampstead, London, NW3 2PF. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-royal-institution-the-9-rooms",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 21 Abermarle Street, London, W1S 4BS. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-russell-square-house",
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "The exact 10–12 Russell Square building envelope has not been matched confidently. Confirm the named property and its numbered street frontage."
+    },
+    {
+      "buildingId": "ucl-rutherford-appleton-lab-harwell",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Harwell Campus, Didcot, Oxfordshire, OX11 0QX. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-tavistock-house",
+      "reasonCode": "shared-envelope-unconfirmed",
+      "reason": "The directory lists 13 Tavistock Square within the larger Tavistock House complex. Confirm the UCL-occupied building or subdivision before assigning a footprint."
+    },
+    {
+      "buildingId": "ucl-tufnell-park-national-research-centre",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Unit 1, Station Road, Tufnell Park, N19 5UN. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-ucl-crystal-growth-laboratory",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: Harwell Campus, Didcot, OX11 0QX. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-whittington-hospital-main-site-and-highgate-wing",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: The Whittington hospital, Magdala Avenue, London, N19 5NF. Fetch its local building data and verify the occupied building or part before adding a footprint."
+    },
+    {
+      "buildingId": "ucl-wicklow-street-44",
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "44 Wicklow Street is in the imported area, but its exact building envelope has not been identified confidently. Confirm the numbered frontage before mapping it."
+    },
+    {
+      "buildingId": "ucl-wicklow-street-77",
+      "reasonCode": "address-outline-unconfirmed",
+      "reason": "77 Wicklow Street is in the imported area, but the precise UCL-occupied building is not explicitly identified. Confirm its numbered envelope."
+    },
+    {
+      "buildingId": "ucl-wilson-street",
+      "reasonCode": "outside-imported-areas",
+      "reason": "This satellite address is outside the imported map areas: 69 Wilson Street, London, EC2A 2BB. Fetch its local building data and verify the occupied building or part before adding a footprint."
     }
   ]
 }

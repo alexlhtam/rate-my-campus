@@ -13,6 +13,7 @@ export type CampusBuilding = {
   campus: string; type?: string; use?: string; officialSourceUrls?: string[];
   coordinates?: {lat: number; lng: number; sourceUrl?: string} | null;
   membership?: {status?: string; scope?: string; evidence?: unknown};
+  accommodation?: {current: boolean; academicYear?: string; operator?: string | null; relationship?: string};
 };
 export type CampusDirectory = {datasetDate: string; buildings: CampusBuilding[]; primaryReferences?: unknown[]};
 export type CampusFootprintIndex = {buildings: {buildingId: string; coordinates?: CampusBuilding['coordinates']}[]};
