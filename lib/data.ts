@@ -2,19 +2,32 @@
  * Demo community content is deliberately synthetic. Never import these records
  * into a production ratings aggregate or present them as verified submissions.
  * Matched coordinates are representative footprint points, not room entrances.
- * Unmatched public places and fictional area pins retain approximate positions.
+ * Unmatched public places remain unlocated; only the fictional rental uses an area pin.
  */
-export type PlaceCategory = "study" | "lecture" | "halls" | "rental";
+import campusDirectory from '../public/data/campus-directory.json';
+import footprintIndex from '../public/data/campus-footprint-index.json';
+import type { CampusBuilding } from './campus-map-model';
+
+export type PlaceCategory = "study" | "lecture" | "halls" | "rental" | "building";
 export type PinType = "freebie" | "food" | "deal";
 
 export interface Place {
   id: string;
   /** Stable official-directory join; multiple reviewed rooms may share a building. */
   campusBuildingId?: string;
+  /** Rooms and libraries have a separate review target from their building. */
+  parentPlaceId?: string;
+  aliases?: string[];
+  campus?: string;
+  locationStatus?: 'footprint' | 'official' | 'unlocated' | 'demo-area';
+  membershipNote?: string;
+  currentAccommodation?: boolean;
+  /** Verified arrival guidance, never a generated route or inferred entrance point. */
+  visitGuide?: {text: string; sourceUrl: string; checkedAt: string}[];
   name: string;
   category: PlaceCategory;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   address: string;
   description: string;
   image: string;
@@ -74,10 +87,11 @@ export interface Thread {
 }
 
 export const categoryLabels: Record<PlaceCategory, string> = {
-  study: "Study spaces", lecture: "Lecture halls", halls: "Student halls", rental: "Rentals",
+  study: "Study spaces", lecture: "Lecture halls", halls: "Student halls", rental: "Rentals", building: "Campus buildings",
 };
 
 export const categoryCriteria: Record<PlaceCategory, string[]> = {
+  building: ["Comfort", "Wi-Fi", "Accessibility"],
   study: ["Comfort", "Plug sockets", "Wi-Fi", "Noise", "Accessibility"],
   lecture: ["Comfort", "Plug sockets", "Wi-Fi", "Noise", "Accessibility"],
   halls: ["Value", "Cleanliness", "Social life", "Staff", "Location"],
@@ -86,6 +100,7 @@ export const categoryCriteria: Record<PlaceCategory, string[]> = {
 
 /** Stable API/form keys; keep presentation labels in categoryCriteria. */
 export const categoryCriterionKeys: Record<PlaceCategory, string[]> = {
+  building: ["comfort", "wifi", "accessibility"],
   study: ["comfort", "plugs", "wifi", "noise", "accessibility"],
   lecture: ["comfort", "plugs", "wifi", "noise", "accessibility"],
   halls: ["value", "cleanliness", "social", "staff", "location"],
@@ -95,13 +110,13 @@ export const categoryCriterionKeys: Record<PlaceCategory, string[]> = {
 export const demoNotice = "Illustrative demo: ratings, reviews, alerts and deals are fictional. Places are real unless labelled otherwise.";
 export const campusCenter = { lat: 51.5246, lng: -0.1331 };
 
-export const places: Place[] = [
+const originalPlaces: Place[] = [
   {
     id: "student-centre", campusBuildingId: "ucl-student-centre", name: "UCL Student Centre", category: "study",
     lat: 51.5247529, lng: -0.1326144, address: "27–28 Gordon Square, Bloomsbury",
     description: "A light-filled home for individual study and group work, right in the heart of campus. Bring your UCL ID and check whether your preferred space needs booking.",
     image: "/images/student-centre.jpg", imageCredit: "student-centre",
-    tags: ["Group study", "Individual study", "UCL ID required"], openLabel: "UCL ID required", distance: "2 min",
+    tags: ["Group study", "Individual study", "Quiet areas", "UCL ID required"], openLabel: "UCL ID required", distance: "2 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/student-centre",
   },
@@ -110,9 +125,10 @@ export const places: Place[] = [
     lat: 51.5246607, lng: -0.1338349, address: "Wilkins Building, Gower Street",
     description: "The historic library in the Wilkins Building, with collections and study spaces at the centre of UCL's Bloomsbury campus.",
     image: "/images/main-quad.jpg", imageCredit: "main-quad",
-    tags: ["Library", "Main campus", "UCL ID required"], openLabel: "Check opening hours", distance: "1 min",
+    tags: ["Library", "Quiet study", "Main campus", "UCL ID required"], openLabel: "Check opening hours", distance: "1 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/main-library",
+    visitGuide: [{text: "The library is on the first floor of the Wilkins Building. A lift is near the library entrance, but some collection areas have access restrictions; check the library's accessibility information before visiting.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/main-library", checkedAt: "2026-10-12"}],
   },
   {
     id: "senate-house", campusBuildingId: "ucl-senate-house", name: "Senate House Library", category: "study",
@@ -130,14 +146,16 @@ export const places: Place[] = [
     image: "", tags: ["Library", "Main campus", "UCL ID required"], openLabel: "Check opening hours", distance: "3 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/science-library",
+    visitGuide: [{text: "The library is in the DMS Watson Building. UCL recommends approaching Malet Place from Torrington Place: the building is on the left before the archway.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/science-library", checkedAt: "2026-10-12"}],
   },
   {
     id: "ssees-library", campusBuildingId: "ucl-school-of-slavonic-and-east-european-studies", name: "SSEES Library", category: "study",
     lat: 51.5252813, lng: -0.1317938, address: "16 Taviton Street",
     description: "UCL's School of Slavonic and East European Studies library, a short walk from the main quad on Taviton Street.",
-    image: "", tags: ["Library", "Specialist collections", "UCL ID required"], openLabel: "Check opening hours", distance: "4 min",
+    image: "", tags: ["Library", "Plug sockets", "Specialist collections", "UCL ID required"], openLabel: "Check opening hours", distance: "4 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/ssees-library",
+    visitGuide: [{text: "The library entrance and help desk are on the ground floor at 16 Taviton Street. The official guide describes an entrance ramp and a lift within the library.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/ssees-library", checkedAt: "2026-10-12"}],
   },
   {
     id: "ioe-library", campusBuildingId: "ucl-20-bedford-way", name: "IOE Library", category: "study",
@@ -146,6 +164,10 @@ export const places: Place[] = [
     image: "", tags: ["Library", "Education", "UCL ID required"], openLabel: "Check opening hours", distance: "6 min",
     criteria: categoryCriteria.study,
     sourceUrl: "https://www.ucl.ac.uk/ioe/student-helpdesk/student-support/ucl-and-ioe-library-services",
+    visitGuide: [
+      {text: "Enter the library on level 4 of the IOE building at 20 Bedford Way; this is described as the ground floor in the library guide.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/ioe-library", checkedAt: "2026-10-12"},
+      {text: "UCL currently limits access for people who cannot use stairs to library levels 4 and 5: level 3 has no safe evacuation route for them. Ask staff for help collecting books. The nearest accessible toilets are outside the library in Core B on level 4. Check the official guide for changes.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/ioe-library", checkedAt: "2026-10-12"},
+    ],
   },
   {
     id: "cruciform-lt1", campusBuildingId: "ucl-cruciform-building", name: "Cruciform Lecture Theatre 1", category: "lecture",
@@ -183,7 +205,7 @@ export const places: Place[] = [
   {
     id: "ramsay-hall", campusBuildingId: "ucl-ramsay-hall", name: "Ramsay Hall", category: "halls",
     lat: 51.5224791, lng: -0.1383567, address: "20 Maple Street",
-    description: "UCL student accommodation on Maple Street. Ratings shown in this demo are fictional examples, not residents' experiences.",
+    description: "UCL student accommodation on Maple Street. Share a firsthand account of your stay and the term you lived here.",
     image: "", tags: ["UCL accommodation", "Fitzrovia"], openLabel: "Residents only", distance: "7 min",
     criteria: categoryCriteria.halls,
     sourceUrl: "https://www.ucl.ac.uk/study/accommodation/contact-ucl-accommodation",
@@ -191,7 +213,7 @@ export const places: Place[] = [
   {
     id: "astor-college", campusBuildingId: "ucl-astor-college", name: "Astor College", category: "halls",
     lat: 51.5208379, lng: -0.1375345, address: "99 Charlotte Street",
-    description: "UCL student accommodation on Charlotte Street. Explore the review format using illustrative ratings and discussions.",
+    description: "UCL student accommodation on Charlotte Street. Compare residents' experiences and share a firsthand review of your stay.",
     image: "", tags: ["UCL accommodation", "Fitzrovia"], openLabel: "Residents only", distance: "8 min",
     criteria: categoryCriteria.halls,
     sourceUrl: "https://www.ucl.ac.uk/study/astor-college",
@@ -199,7 +221,7 @@ export const places: Place[] = [
   {
     id: "john-adams-hall", campusBuildingId: "ucl-john-adams-hall", name: "John Adams Hall", category: "halls",
     lat: 51.52656, lng: -0.13135, address: "15–23 Endsleigh Street",
-    description: "UCL student accommodation close to the Bloomsbury campus. The map position is approximate. Demo reviews help you try the accommodation criteria.",
+    description: "UCL student accommodation close to the Bloomsbury campus. Its exact footprint is still being verified; reviews remain available without a map pin.",
     image: "", tags: ["UCL accommodation", "Bloomsbury"], openLabel: "Residents only", distance: "5 min",
     criteria: categoryCriteria.halls,
     sourceUrl: "https://www.ucl.ac.uk/study/john-adams-hall",
@@ -212,6 +234,62 @@ export const places: Place[] = [
     criteria: categoryCriteria.rental, demo: true,
   },
 ];
+
+const directoryBuildings = campusDirectory.buildings as CampusBuilding[];
+const buildingsById = new Map(directoryBuildings.map(building => [building.id, building]));
+const verifiedPoints = new Map(footprintIndex.buildings.map(building => [building.buildingId, building.coordinates]));
+// These existing pages already describe a whole building. Preserve their IDs and reviews.
+const wholeBuildingIds = new Map([
+  ['ucl-student-centre', 'student-centre'], ['ucl-ramsay-hall', 'ramsay-hall'],
+  ['ucl-astor-college', 'astor-college'], ['ucl-john-adams-hall', 'john-adams-hall'],
+]);
+export function buildingPlaceId(buildingId: string): string { return wholeBuildingIds.get(buildingId) || buildingId; }
+function directoryDetails(building: CampusBuilding): Partial<Place> {
+  const point = verifiedPoints.get(building.id) || building.coordinates;
+  const scope = building.membership?.scope;
+  const partner = building.membership?.status === 'ucl-partner';
+  let membershipNote = partner
+    ? `Partner residence${building.accommodation?.operator ? ` operated by ${building.accommodation.operator}` : ''}; a UCL listing does not imply UCL ownership.`
+    : scope === 'part-of-building' ? 'UCL uses part of this building; access to other areas may be restricted.'
+    : scope === 'shared-site' ? 'Shared site: UCL is one of the users.'
+    : scope === 'unconfirmed-extent' ? 'UCL use is confirmed, but the extent of occupation is not.'
+    : 'Listed by UCL. A directory listing does not imply public access or ownership.';
+  if (building.type === 'residence' && building.accommodation?.current === false) membershipNote += ' This estate listing is not confirmed as a current 2026/27 accommodation option.';
+  return {
+    lat: point?.lat, lng: point?.lng,
+    locationStatus: verifiedPoints.has(building.id) ? 'footprint' : point ? 'official' : 'unlocated',
+    aliases: [...new Set([building.officialName || '', ...(building.aliases || [])].filter(Boolean))],
+    campus: building.campus, membershipNote, currentAccommodation: building.accommodation?.current,
+  };
+}
+
+/** One reviewable target per directory entry, plus distinct existing rooms/libraries. */
+export const places: Place[] = [
+  ...originalPlaces.map(place => {
+    if (place.demo) return {...place, locationStatus: 'demo-area' as const};
+    const building = buildingsById.get(place.campusBuildingId || '');
+    if (!building) throw new Error(`Missing campus directory entry for ${place.id}`);
+    return {...place, ...directoryDetails(building), parentPlaceId: wholeBuildingIds.has(building.id) ? undefined : buildingPlaceId(building.id)};
+  }),
+  ...directoryBuildings.filter(building => !wholeBuildingIds.has(building.id)).map((building): Place => {
+    const category: PlaceCategory = building.type === 'residence' ? 'halls' : building.type === 'study' || building.type === 'library' ? 'study' : 'building';
+    const partner = building.membership?.status === 'ucl-partner';
+    return {
+      id: building.id, campusBuildingId: building.id, name: building.name, category,
+      address: building.address || 'See the official UCL listing',
+      description: building.use || 'A place listed in the UCL public building and facilities directory. Share your firsthand experience of using this location.',
+      image: '', tags: [partner ? 'Partner residence' : category === 'halls' ? 'UCL-listed accommodation' : 'UCL-listed location', building.campus === 'east' ? 'UCL East' : building.campus === 'bloomsbury' ? 'Bloomsbury' : 'Across London'],
+      openLabel: category === 'halls' ? 'Residents and authorised visitors' : 'Check access with UCL', distance: '',
+      criteria: categoryCriteria[category], sourceUrl: building.officialSourceUrls?.[0],
+      ...directoryDetails(building),
+    };
+  }),
+];
+
+export function placesInBuilding(buildingId: string): Place[] {
+  return places.filter(place => place.campusBuildingId === buildingId)
+    .sort((a, b) => Number(Boolean(a.parentPlaceId)) - Number(Boolean(b.parentPlaceId)) || a.name.localeCompare(b.name));
+}
 
 type ReviewInput = [string, number, string, string[], number[], boolean?];
 const reviewInputs: ReviewInput[] = [

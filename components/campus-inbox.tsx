@@ -1,0 +1,24 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { Bell, Check, LoaderCircle } from 'lucide-react';
+import { places } from '@/lib/data';
+
+async function request(path: string, body?: unknown) {
+  const response = await fetch(`/api/community/${path}`, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Could not update your campus inbox.'); return result;
+}
+export function FollowPlace({ placeId, enabled, onAccount }: { placeId: string; enabled: boolean; onAccount: () => void }) {
+  const [follows, setFollows] = useState<string[] | null>(null), [busy, setBusy] = useState(false), [message, setMessage] = useState('');
+  useEffect(() => { let cancelled = false; setFollows(null); setMessage(''); if (enabled) request('preferences').then(result => { if (!cancelled) setFollows(result.follows); }).catch(failure => { if (!cancelled) setMessage(failure.message); }); return () => { cancelled = true; }; }, [enabled, placeId]);
+  const following = follows?.includes(placeId);
+  return <div><button disabled={busy || enabled && !follows} className="button light small" aria-pressed={!!following} onClick={async () => {
+    if (!enabled) { onAccount(); return; } setBusy(true); setMessage('');
+    try { const latest = await request('preferences'); const result = await request('preferences', { follows: latest.follows.includes(placeId) ? latest.follows.filter((id: string) => id !== placeId) : [...latest.follows, placeId] }); setFollows(result.follows); setMessage(result.follows.includes(placeId) ? 'New reviews and discussions will appear in your inbox.' : 'No longer following this place.'); } catch (failure) { setMessage((failure as Error).message); } finally { setBusy(false); }
+  }}>{busy ? <LoaderCircle className="spin" size={13} /> : following ? <Check size={13} /> : <Bell size={13} />}{following ? 'Following' : 'Follow place'}</button>{message && <p className="fineprint" role="status">{message}</p>}</div>;
+}
+export default function CampusInbox({ signedIn, onAccount, onSelect }: { signedIn: boolean; onAccount: () => void; onSelect: (id: string, section?: 'reviews' | 'community') => void }) {
+  const [entries, setEntries] = useState<Record<string, any>[]>([]), [follows, setFollows] = useState<string[]>([]), [error, setError] = useState(''), [busy, setBusy] = useState(false);
+  async function load() { setBusy(true); setError(''); try { const [inbox, preferences] = await Promise.all([request('inbox'), request('preferences')]); setEntries(inbox.entries); setFollows(preferences.follows); } catch (failure) { setError((failure as Error).message); } finally { setBusy(false); } }
+  useEffect(() => { if (signedIn) void load(); }, [signedIn]);
+  return <section className="campus-inbox"><div className="modal-symbol"><Bell size={24} /></div><h2>Your campus inbox.</h2><p>Replies to conversations you joined, plus new reviews and discussions at places you follow. No email or push notifications.</p>{!signedIn ? <button className="button coral full" onClick={onAccount}>Sign in to use your inbox</button> : <><div className="button-row"><button disabled={busy} className="button light" onClick={load}>Refresh</button><button disabled={busy || !entries.some(row => !row.read)} className="button light" onClick={async () => { setBusy(true); try { await request('inbox/read', {}); await load(); } catch (failure) { setError((failure as Error).message); setBusy(false); } }}>Mark all read</button></div>{error && <p role="alert" className="form-error">{error}</p>}{busy && <p role="status">Loading your inbox…</p>}{!busy && !error && !entries.length && <p className="empty-copy">Nothing new yet. Follow a place from its review page or join a conversation.</p>}{entries.map(entry => <button className={`inbox-entry ${entry.read ? '' : 'unread'}`} key={entry.id} onClick={() => onSelect(entry.placeId, entry.kind === 'review' ? 'reviews' : 'community')}><small>{entry.kind === 'reply' ? 'Conversation reply' : entry.kind === 'review' ? 'New review' : 'New conversation'} · {places.find(place => place.id === entry.placeId)?.name}</small><b>{entry.title}</b><span>{entry.text}</span><time dateTime={entry.createdAt}>{new Date(entry.createdAt).toLocaleString('en-GB')}</time></button>)}<h3>Following {follows.length} places</h3><div className="following-list">{follows.map(id => <div key={id}><button onClick={() => onSelect(id)}>{places.find(place => place.id === id)?.name || id}</button><button disabled={busy} className="text-link" onClick={async () => { setBusy(true); try { const latest = await request('preferences'); await request('preferences', { follows: latest.follows.filter((value: string) => value !== id) }); await load(); } catch (failure) { setError((failure as Error).message); setBusy(false); } }}>Unfollow</button></div>)}</div></>}</section>;
+}

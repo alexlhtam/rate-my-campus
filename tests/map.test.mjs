@@ -7,17 +7,31 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 // Server rendering does not run effects, so neither the GPU renderer nor its
 // worker is loaded. Compile the real local dependencies, not a component stub.
-const names = ['model', 'buildings', 'flat', 'main', 'fallback'];
+const names = ['data', 'model', 'overlays', 'buildings', 'flat', 'main', 'fallback', 'garden', 'wilkins'];
 const modules = Object.fromEntries(names.map(name => [name, new URL(`.map-${name}-under-test-${process.pid}.mjs`, import.meta.url)]));
-const paths = { model: '../lib/campus-map-model.ts', buildings: '../components/campus-buildings.tsx', flat: '../components/campus-flat-map.tsx', main: '../components/campus-map.tsx', fallback: '../components/campus-map.tsx' };
+const paths = { data: '../lib/data.ts', model: '../lib/campus-map-model.ts', overlays: '../lib/campus-map-overlays.ts', buildings: '../components/campus-buildings.tsx', flat: '../components/campus-flat-map.tsx', main: '../components/campus-map.tsx', fallback: '../components/campus-map.tsx', garden: '../components/campus-map.tsx', wilkins: '../components/campus-map.tsx' };
 const compile = value => ts.transpileModule(value, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-let CampusMap, FlatCampusMap, FallbackCampusMap;
+let CampusMap, FlatCampusMap, FallbackCampusMap, GardenCampusMap, WilkinsCampusMap;
 try {
   for (const name of names) {
     let source = (await fs.readFile(new URL(paths[name], import.meta.url), 'utf8'))
       .replace(/from\s+(['"])\.\/campus-buildings\1/g, `from '${modules.buildings.href}'`)
       .replace(/from\s+(['"])\.\/campus-flat-map\1/g, `from '${modules.flat.href}'`)
-      .replace(/from\s+(['"])@\/lib\/campus-map-model\1/g, `from '${modules.model.href}'`);
+      .replace(/from\s+(['"])@\/lib\/campus-map-model\1/g, `from '${modules.model.href}'`)
+      .replace(/from\s+(['"])\.\/campus-map-model\1/g, `from '${modules.model.href}'`)
+      .replace(/from\s+(['"])@\/lib\/campus-map-overlays\1/g, `from '${modules.overlays.href}'`)
+      .replace(/from\s+(['"])@\/lib\/data\1/g, `from '${modules.data.href}'`);
+    if (name === 'data') {
+      // Use the real catalogue/index without asking Node to resolve TS paths.
+      source = source.replace(/from\s+(['"])\.\.\/public\/data\/([^'"]+\.json)\1/g, (_, _quote, file) => `from '${new URL(`../public/data/${file}`, import.meta.url).href}' with {type:'json'}`);
+    }
+    if (name === 'garden' || name === 'wilkins') {
+      const directory = JSON.parse(await fs.readFile(new URL('../public/data/campus-directory.json', import.meta.url), 'utf8'));
+      const building = directory.buildings.find(item => item.id === (name === 'garden' ? 'ucl-garden-halls' : 'ucl-wilkins-building'));
+      const before = 'useState<CampusBuilding|null>(null)';
+      assert.equal(source.split(before).length, 2, 'Seed the selected-building state explicitly');
+      source = source.replace(before, `useState<CampusBuilding|null>(${JSON.stringify(building)})`);
+    }
     if (name === 'fallback') {
       // Render the same component after its GPU-failure/data-load state updates.
       // SSR cannot run those effects, so seed only those hook initialisers in
@@ -42,6 +56,8 @@ try {
   CampusMap = (await import(modules.main.href)).default;
   FlatCampusMap = (await import(modules.flat.href)).default;
   FallbackCampusMap = (await import(modules.fallback.href)).default;
+  GardenCampusMap = (await import(modules.garden.href)).default;
+  WilkinsCampusMap = (await import(modules.wilkins.href)).default;
 } finally { await Promise.all(Object.values(modules).map(file => fs.unlink(file).catch(() => {}))); }
 
 test('Google-derived location stays hidden until its attributed Google map is ready', () => {
@@ -94,4 +110,16 @@ test('GPU fallback retains searchable building coverage and partner information 
   for (const label of ['Zoom in', 'Zoom out', 'Back to UCL']) assert.equal(markup.split(`aria-label="${label}"`).length - 1, 1, `One ${label} control`);
   assert.doesNotMatch(markup, /Raised campus buildings|Building labels|YOUR UCL NEIGHBOURHOOD|A little local knowledge goes a long way/);
   assert.match(markup, /OpenStreetMap contributors/);
+});
+
+test('building cards offer review pages even when every rated pin is filtered out', () => {
+  const garden = renderToStaticMarkup(React.createElement(GardenCampusMap, {items:[],onSelect(){}}));
+  assert.match(garden,/Garden Halls/);
+  assert.match(garden,/Building reviews and discussion/);
+  assert.match(garden,/Partner residence/);
+  const wilkins = renderToStaticMarkup(React.createElement(WilkinsCampusMap, {items:[],onSelect(){}}));
+  assert.match(wilkins,/Building reviews and discussion/);
+  assert.match(wilkins,/UCL Main Library/);
+  assert.match(wilkins,/Gustave Tuck Lecture Theatre/);
+  assert.equal(wilkins.split('Room or space reviews').length-1,2,'Rooms remain separate from building reviews');
 });

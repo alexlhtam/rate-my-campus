@@ -11,7 +11,8 @@ type Item = {
   location?: string; photoUrl?: string; rating?: number; tags?: string[]; term?: string;
 };
 type Report = { id: string; targetId: string; reason: string; createdAt: string };
-type Queue = { queue: Item[]; reports: Report[] };
+type CommunityRequest = { id: string; kind: "correction" | "takedown"; contact?: string; targetId: string; reason: string; evidenceUrl?: string; createdAt: string };
+type Queue = { queue: Item[]; reports: Report[]; requests?: CommunityRequest[] };
 
 const styles = {
   card: { border: "1px solid #e4e3df", borderRadius: 15, padding: 18, background: "#fff", display: "grid", gap: 12 } as const,
@@ -87,6 +88,17 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
     finally { setBusy(null); }
   }
 
+  async function resolveRequest(requestId: string) {
+    setBusy(requestId); setError(""); setNotice("");
+    try {
+      const response = await fetch("/api/community/moderation", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId, decision: "resolve-request", reason: notes[requestId] || "" }) });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "The request could not be resolved.");
+      setNotice(body.message); await load();
+    } catch (failure) { setError(failure instanceof Error ? failure.message : "Please try again."); }
+    finally { setBusy(null); }
+  }
+
   return <section aria-label="Community moderation" style={{ display: "grid", gap: 18 }}>
     <div>
       <div className="eyebrow"><ShieldCheck size={14} /> COMMUNITY CARE</div>
@@ -116,7 +128,16 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
         </label>
         <button className="button light small" disabled={loading || Boolean(busy)} onClick={() => void load()}>{loading ? <LoaderCircle size={14} className="spin" /> : <RefreshCw size={14} />} Refresh</button>
       </div>
-      {loading && data.queue.length === 0 ? <p role="status" style={styles.muted}>Loading the protected queue…</p> : visible.length === 0 && generalRequests.length === 0 && !error ? <div style={{ ...styles.card, textAlign: "center", padding: 26 }}><Check size={26} style={{ margin: "auto", color: "#3a6c4d" }} /><h3>All clear here.</h3><p style={styles.muted}>No contributions match this view.</p></div> : null}
+      {loading && data.queue.length === 0 ? <p role="status" style={styles.muted}>Loading the protected queue…</p> : visible.length === 0 && generalRequests.length === 0 && !data.requests?.length && !error ? <div style={{ ...styles.card, textAlign: "center", padding: 26 }}><Check size={26} style={{ margin: "auto", color: "#3a6c4d" }} /><h3>All clear here.</h3><p style={styles.muted}>No contributions match this view.</p></div> : null}
+      {Boolean(data.requests?.length) && <section aria-label="Private requests and map corrections" style={{ display: "grid", gap: 12 }}><h3>Private requests &amp; map corrections</h3>{data.requests!.map((request) => <article key={request.id} style={styles.card}>
+        <strong>{request.kind === "correction" ? "Map correction" : "Privacy / takedown request"}</strong><small>{request.targetId} · {new Date(request.createdAt).toLocaleDateString("en-GB")}</small>
+        <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{request.reason}</p>
+        {request.contact && <p style={{ overflowWrap: "anywhere" }}>Private follow-up contact: {request.contact}</p>}
+        {request.evidenceUrl && <a href={request.evidenceUrl} target="_blank" rel="noreferrer">View submitted evidence (external website)</a>}
+        <p style={styles.muted}>{request.kind === "correction" ? "Check the source, then make a reviewed catalogue change. Resolving this request does not change the map." : "Use the contribution reference below to hide content if needed. Resolve after handling the request."}</p>
+        <label>Resolution note<textarea minLength={4} maxLength={500} rows={2} value={notes[request.id] || ""} onChange={(event) => setNotes((current) => ({ ...current, [request.id]: event.target.value }))} style={{ width: "100%", border: "1px solid #d9ded8", borderRadius: 8, padding: 10 }} /></label>
+        <button className="button light small" disabled={Boolean(busy) || (notes[request.id] || "").trim().length < 4} onClick={() => void resolveRequest(request.id)}>Mark resolved</button>
+      </article>)}</section>}
       {generalRequests.length > 0 && <section aria-label="General privacy and takedown requests" style={{ display: "grid", gap: 12 }}><h3>Privacy &amp; takedown requests ({generalRequests.length})</h3>{generalRequests.map((report) => <article key={report.id} style={{ ...styles.card, background: "#fffbf2" }}><div style={styles.row}><Flag size={15} /><strong style={{ fontSize: 13 }}>General request</strong><time dateTime={report.createdAt} style={styles.muted}>{new Date(report.createdAt).toLocaleDateString("en-GB", { timeZone: "Europe/London" })}</time></div><p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 14, lineHeight: 1.7 }}>{report.reason}</p><p style={styles.muted}>Review the request and use the contribution controls below if removal is needed. Mark it resolved after taking the appropriate action.</p><button className="button light small" disabled={Boolean(busy)} onClick={() => void resolveGeneralRequest(report.id)}>{busy === report.id ? <LoaderCircle className="spin" size={14} /> : <Check size={14} />} Mark resolved</button></article>)}</section>}
       {visible.map((item) => {
         const reports = data.reports.filter((report) => report.targetId === item.id);

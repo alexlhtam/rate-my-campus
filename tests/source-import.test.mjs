@@ -7,7 +7,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 const source = (await fs.readFile(new URL('../components/source-import-panel.tsx', import.meta.url), 'utf8'))
   .replace(/^import CampusMap,.*$/m, 'const CampusMap = () => null;')
-  .replace("import { places } from '@/lib/data';", 'const places = [];');
+  .replace("import { places } from '@/lib/data';", 'const places = [];')
+  .replace("import { hasCoordinates } from '@/lib/place-search';", 'const hasCoordinates = place => Number.isFinite(place.lat) && Number.isFinite(place.lng);');
 const temporaryModule = new URL('.source-import-under-test.mjs', import.meta.url);
 await fs.writeFile(temporaryModule, ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText);
 const { default: SourceImportPanel, londonDateTime, londonDateTimeToISO } = await import(temporaryModule.href);
