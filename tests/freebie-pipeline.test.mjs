@@ -123,3 +123,38 @@ test('leases reject overlapping batches and recover abandoned workers',async()=>
  await pg.exec("UPDATE freebie_worker SET lock_until=9999999999999");
  assert.equal((await workFreebies(db,config,async()=>{throw Error('Must not publish')})).busy,true);
 });
+test('a fresh import discovers pages, opens the event, runs Claude and publishes without browser steps',async(t)=>{
+ await clear();const original=globalThis.fetch;t.after(()=>{globalThis.fetch=original});
+ const startSeconds=Math.floor((Date.now()+3600000)/1000),endSeconds=startSeconds+3600;
+ const eventRow={product_id:'500',variation_id:'700',title:'Example pizza',variation_url:'https://studentsunionucl.org/whats-on/clubs-societies/example',field_date_range_value:String(startSeconds),field_date_range_end_value:String(endSeconds),field_event_venue__label:'Wilkins Building'};
+ let pages=0,details=0,claude=0;
+ globalThis.fetch=async(url)=>{
+  const address=String(url);
+  if(address.startsWith('https://api.anthropic.com/')){claude++;return Response.json({model:'fixture',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(extraction)}]})}
+  if(address.includes('/whats-on/clubs-societies/')){details++;return new Response('<main><article><div class="field--name-body">Free Pizza for everyone. Wilkins Building. Tickets cost £5.</div></article></main>',{headers:{'content-type':'text/html'}})}
+  if(address.startsWith('https://studentsunionucl.org/')){pages++;return Response.json(pages===1?[eventRow,eventRow]:[])}
+  throw Error('Unexpected external request');
+ };
+ const config={jevKey:'',claudeKey:'fixture',jevModel:'j',claudeModel:'fixture',threshold:.5};
+ await actOnScan(db,config,{action:'start'});
+ const result=await workFreebies(db,config,(source,extraction)=>publishFreebie(db,source,extraction,{...deps,now:Date.now}),{sleep:async()=>{}});
+ assert.equal(result.status,'complete');assert.equal(pages,2);assert.equal(details,1);assert.equal(claude,1);
+ const rows=await db.prepare('SELECT * FROM posts').all();assert.equal(rows.results.length,1);assert.equal(rows.results[0].status,'approved');
+ assert.equal(Number(rows.results[0].expires_at),endSeconds*1000);
+});
+
+
+test('campus names take precedence over inherited room aliases without guessing different positions',()=>{
+ const building=places[0],room={...building,id:'room',name:'Lecture Room',aliases:['Wilkins Building','Wilkins'],parentPlaceId:building.id};
+ assert.equal(matchCampusVenue('Wilkins Building',[room,building]).id,building.id);
+ assert.equal(matchCampusVenue('Wilkins',[room,building]).id,building.id);
+ assert.equal(matchCampusVenue('Wilkins',[{...room,lat:51.6},building]),null);
+});
+test('confirmed venue labels survive rescans until the listing changes venue',async()=>{
+ await clear();const posted=await publishFreebie(db,source,extraction,deps);
+ await db.prepare("UPDATE posts SET location='Confirmed Hall',lat=51.55,lng=-.12,freebie_json=jsonb_set(freebie_json::jsonb,'{locationConfirmed}','true'::jsonb)::text WHERE id=?").bind(posted.id).run();
+ await publishFreebie(db,source,extraction,deps);
+ let row=await db.prepare('SELECT * FROM posts WHERE id=?').bind(posted.id).first();assert.equal(row.location,'Confirmed Hall');assert.equal(row.lat,51.55);
+ await publishFreebie(db,source,{...extraction,venue:'Different unknown venue'},deps);
+ row=await db.prepare('SELECT * FROM posts WHERE id=?').bind(posted.id).first();assert.equal(row.location,'Different unknown venue');assert.equal(row.lat,null);
+});

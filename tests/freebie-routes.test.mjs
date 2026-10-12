@@ -74,7 +74,7 @@ test('a confirmed campus venue uses a real directory position without changing p
  admin=true;
  await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES ('event','system:union','freebie','Event','Test','TBC',?,'source','{}','[]','pending',?)").bind(Date.now()+60000,Date.now()).run();
  assert.equal((await freebiesRoute(request('location',{postId:'event',placeId:'wilkins',confirmed:true}),['location'])).status,200);
- const row=await db.prepare("SELECT * FROM posts WHERE id='event'").first();assert.equal(row.status,'pending');assert.equal(row.lat,51.5246);assert.equal(JSON.parse(row.freebie_json).locationConfirmed,true);
+ const row=await db.prepare("SELECT * FROM posts WHERE id='event'").first();assert.equal(row.status,'pending');assert.equal(row.lat,51.5246);assert.equal(row.location,'Wilkins Building');assert.equal(JSON.parse(row.freebie_json).locationConfirmed,true);
 });
 test('longer expiry requires a trusted moderator import; body flags cannot grant it',()=>{
  const now=Date.now(),body={type:'freebie',title:'Test event',location:'Wilkins',lat:51.5246,lng:-.1338,expiresAt:now+10*86400000,sourceUrl:'https://studentsunionucl.org/whats-on/clubs-societies/test',unionImport:true};

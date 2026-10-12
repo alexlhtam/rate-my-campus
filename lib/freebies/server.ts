@@ -79,7 +79,7 @@ export async function freebiesRoute(request:Request,path:string[]) {
    await consumeRateLimit(profile.userId,'freebie-location',60,3600);
    const id=safeId(body.postId),place=places.find(item=>item.id===body.placeId&&!item.demo&&Number.isFinite(item.lat)&&Number.isFinite(item.lng));
    if(!place||body.confirmed!==true)throw new HttpError(400,'Choose and confirm a located campus place.');
-   const row=await db.prepare("UPDATE posts SET lat=?,lng=?,source_location_revision=source_location_revision+1,freebie_json=jsonb_set(jsonb_set(jsonb_set(freebie_json::jsonb,'{placeId}',to_jsonb(?::text)),'{locationConfirmed}','true'::jsonb),'{locationProvider}','\"campus\"'::jsonb)::text WHERE id=? AND source_event_key IS NOT NULL AND COALESCE(freebie_json::jsonb->>'attendance','') <> 'online' RETURNING id").bind(place.lat!,place.lng!,place.id,id).first();
+   const row=await db.prepare("UPDATE posts SET lat=?,lng=?,location=?,source_location_revision=source_location_revision+1,freebie_json=jsonb_set(jsonb_set(jsonb_set(freebie_json::jsonb,'{placeId}',to_jsonb(?::text)),'{locationConfirmed}','true'::jsonb),'{locationProvider}','\"campus\"'::jsonb)::text WHERE id=? AND source_event_key IS NOT NULL AND COALESCE(freebie_json::jsonb->>'attendance','') <> 'online' RETURNING id").bind(place.lat!,place.lng!,place.name,place.id,id).first();
    if(!row)throw new HttpError(404,'This source pin could not be found.');
    return json({ok:true,message:'The building position is confirmed. Event room details remain as stated by the source.'});
   }

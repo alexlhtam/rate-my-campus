@@ -3,17 +3,21 @@ import type { Extraction, SourceEvent } from './types';
 import type {VenueMatch} from './venues';
 
 export type LocatedPlace = { id: string; name: string; aliases?: string[]; lat?: number; lng?: number; demo?: boolean; parentPlaceId?: string };
-export type FreebieDetails = Extraction & { sourceEventId: string; eventStart: string; eventEnd: string | null; placeId: string | null; locationConfirmed: boolean; locationProvider?:'campus'|'google'; locationValidUntil?:number };
+export type FreebieDetails = Extraction & { sourceEventId: string; eventStart: string; eventEnd: string | null; placeId: string | null; locationConfirmed: boolean; sourceVenue?:string|null; locationProvider?:'campus'|'google'; locationValidUntil?:number };
 const normalise = (value: string) => value.normalize('NFKC').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 export function matchCampusVenue(value: string | null, places: LocatedPlace[]): LocatedPlace | null {
   if (!value) return null;
   const query=normalise(value);
   if (/\b(online|virtual|zoom|teams|tbc|tba)\b/i.test(value)) return null;
   const located=places.filter(place=>!place.demo&&Number.isFinite(place.lat)&&Number.isFinite(place.lng));
-  const exact=located.filter(place=>[place.name,...(place.aliases||[])].some(name=>normalise(name)===query));
+  const named=located.filter(place=>normalise(place.name)===query);
+  const exact=named.length?named:located.filter(place=>[place.name,...(place.aliases||[])].some(name=>normalise(name)===query));
   const candidates=exact.length?exact:located.filter(place=>[place.name,...(place.aliases||[])].some(name=>normalise(name).length>=8&&(' '+query+' ').includes(' '+normalise(name)+' ')));
-  // Several room pages can share a building point. Never pick between different places.
-  return candidates.length===1?candidates[0]:null;
+  if(candidates.length===1)return candidates[0];
+  // Shared building aliases inherited by room pages can resolve to that same
+  // building point. Distinct coordinates remain ambiguous.
+  const building=candidates.filter(place=>!place.parentPlaceId);
+  return building.length===1&&candidates.every(place=>place.lat===building[0].lat&&place.lng===building[0].lng)?building[0]:null;
 }
 async function postId(key: string) {
   const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key));
@@ -31,7 +35,7 @@ export async function publishFreebie(db: Database, source: SourceEvent, extracti
     await db.prepare("UPDATE posts SET status = 'hidden', moderation_reason = 'The source no longer supports this offer.', source_checked_at = ?, moderation_revision = moderation_revision + 1 WHERE source_event_key = ? AND status = 'approved'").bind(now,source.id).run();
     return {id:null,state:'no_freebies'};
   }
-  const existing=await db.prepare('SELECT id, status, moderation_revision, source_location_revision, freebie_json, lat, lng FROM posts WHERE source_event_key = ?').bind(source.id).first<Record<string,unknown>>();
+  const existing=await db.prepare('SELECT id, status, moderation_revision, source_location_revision, freebie_json, location, lat, lng FROM posts WHERE source_event_key = ?').bind(source.id).first<Record<string,unknown>>();
   // A community closure or moderator decision always wins over another scan.
   if(existing&&(existing.status==='hidden'||existing.status==='gone'||Number(existing.moderation_revision)>0))return {id:String(existing.id),state:'held_by_moderator'};
   const manual=await db.prepare('SELECT id FROM posts WHERE source_url = ? AND source_event_key IS NULL').bind(source.url).first<{id:string}>();
@@ -43,9 +47,9 @@ export async function publishFreebie(db: Database, source: SourceEvent, extracti
   const venue=extraction.venue||source.sourceLocation;
   const place=online?null:matchCampusVenue(venue,deps.places);
   const resolved=online?null:deps.resolve?await deps.resolve(venue):place?{lat:place.lat!,lng:place.lng!,placeId:place.id,provider:'campus' as const}:null;
-  const preserve=!online&&previous.locationConfirmed&&Number.isFinite(existing?.lat)&&Number.isFinite(existing?.lng);
-  const details: FreebieDetails={...extraction,sourceEventId:source.id,eventStart:source.start,eventEnd:source.end,placeId:preserve?previous.placeId||null:resolved?.placeId||null,locationConfirmed:!!preserve,locationProvider:preserve?'campus':resolved?.provider,locationValidUntil:preserve?undefined:resolved?.validUntil};
-  const title=source.title.slice(0,160), location=(extraction.venue||extraction.address||source.sourceLocation||'Location not stated — check the source').slice(0,300);
+  const preserve=!online&&previous.locationConfirmed&&previous.sourceVenue===venue&&Number.isFinite(existing?.lat)&&Number.isFinite(existing?.lng);
+  const details: FreebieDetails={...extraction,sourceEventId:source.id,eventStart:source.start,eventEnd:source.end,sourceVenue:venue,placeId:preserve?previous.placeId||null:resolved?.placeId||null,locationConfirmed:!!preserve,locationProvider:preserve?'campus':resolved?.provider,locationValidUntil:preserve?undefined:resolved?.validUntil};
+  const title=source.title.slice(0,160), location=preserve?String(existing!.location):(extraction.venue||extraction.address||source.sourceLocation||'Location not stated — check the source').slice(0,300);
   const text=[title,location,JSON.stringify(details)].join('\n');
   const privacy=deps.privacy(text);
   // The moderation endpoint checks 8,000 characters. Hold oversized text instead
