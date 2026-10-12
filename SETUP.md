@@ -2,6 +2,8 @@
 
 The app has server adapters for Claude, Google Maps and Resend. A configured account is not automatically connected to this deployment. Configure the following names as **server runtime secrets** through the Site's supported secrets controls; never add keys to browser code, source files, the hosting manifest or a chat message.
 
+For local use, copy `.env.example` to `.env` in the project root and fill in the blank values there; preserve any existing `.env`. The file is ignored by Git. Development/build use Cloudflare's native loader, and the built local server/LAN launcher explicitly read the root `.env` plus optional `.env.local` overrides. Restart the process after editing. Remove or migrate a legacy `.dev.vars` before relying on `.env`, because Cloudflare prioritises it during development. The LAN preview remains an isolated demo even when local credentials are present. No local credentials or environment snapshots are included in deployment output; configure hosted runtime secrets separately.
+
 | Name | Value to configure |
 |---|---|
 | `ANTHROPIC_API_KEY` | Your existing Anthropic API key |

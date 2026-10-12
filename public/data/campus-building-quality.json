@@ -1,0 +1,657 @@
+{
+  "schemaVersion": 2,
+  "auditDate": "2026-10-12",
+  "snapshotDate": "2026-10-12",
+  "attribution": "© OpenStreetMap contributors",
+  "license": "ODbL-1.0",
+  "licenseUrl": "https://www.openstreetmap.org/copyright",
+  "method": "Explicit reviewed identity join of official UCL directory and unmodified OSM way/relation geometry. Geometry is never clipped to a campus rectangle.",
+  "sources": [
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.143,51.517,-0.123,51.532",
+      "file": "bloomsbury-wide.osm",
+      "sha256": "1b9e8b991629e25189c50f018d67a983afd6e8bc0d3941c72ce6e0f4751590b1",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T14:21:06.996698+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.1235,51.517,-0.113,51.531",
+      "file": "bloomsbury-east.osm",
+      "sha256": "870a823ac383097185e71bfb2b8fdab19ccd3e2b360a2b69c5eca25637144f7a",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T14:21:10.360180+00:00"
+    },
+    {
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-0.02,51.534,0.002,51.543",
+      "file": "ucl-east.osm",
+      "sha256": "598266482f85199588a150b295ab450d63535f91b293494a34fb0de4a826217e",
+      "osmBase": null,
+      "retrievedAt": "2026-10-12T14:21:15.073817+00:00"
+    }
+  ],
+  "statistics": {
+    "directoryBuildings": 175,
+    "matchedBuildings": 77,
+    "features": 210,
+    "renderedFeatures": 202,
+    "outlineFeatures": 8,
+    "taggedMetricHeights": 4,
+    "campuses": {
+      "bloomsbury": 74,
+      "east": 2,
+      "other": 1
+    },
+    "interiorRings": 6
+  },
+  "heightConflicts": [
+    {
+      "buildingId": "ucl-marshgate",
+      "osmClaim": "Outline and some parts have building:levels=12",
+      "officialClaim": "UCL Estates describes eight floors, including double-height spaces.",
+      "officialSourceUrl": "https://www.ucl.ac.uk/estates/case-studies/2024/feb/marshgate",
+      "resolution": "No surveyed metric height is available. OSM part geometry and level-derived visual massing are retained as estimates; floor count is not asserted as fact and the discrepancy is unresolved."
+    }
+  ],
+  "limitations": [
+    "UCL affiliation confirms a listed use, not freehold ownership or exclusive occupation; occupation scope follows the official directory.",
+    "OSM geometry is community mapping, not a survey or architectural model. Source version and dates are recorded for each footprint.",
+    "Heights are unknown unless an explicit OSM metric height tag exists. Floor-derived visual heights use 3 metres per level, including roof levels, and are estimates.",
+    "Buildings without either height or levels use an explicitly illustrative 12 metre visual height. These values are not physical measurements.",
+    "Roof shapes are retained as metadata; flat roof extrusion does not reconstruct pitched roofs, facades or exact physical massing.",
+    "Shared premises show the external envelope; the dataset does not claim that UCL occupies every floor or the whole site.",
+    "Unmatched directory entries remain searchable in the official directory but receive no fabricated map footprint or postal-address coordinate.",
+    "South Quad temporary learning hub is included following the current August/September 2026 UCL facilities evidence, despite its temporary designation.",
+    "Ambiguous elevated-part level tags are preserved and flagged; the visual interpretation keeps estimated tops above bases without claiming a metric survey.",
+    "Part geometry is used for Cruciform and UCL East. Non-extruded outlines are kept separately for selection; renderer must filter role=outline from 3D extrusion."
+  ],
+  "unmatchedBuildings": [
+    {
+      "buildingId": "ucl-aberdeen-mansions-residence",
+      "name": "Aberdeen Mansions (residence)",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-alexandra-house",
+      "name": "Alexandra House",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-anechoic-room",
+      "name": "Anechoic Room",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ann-stephenson-house",
+      "name": "Ann Stephenson House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-arthur-tattersall-house",
+      "name": "Arthur Tattersall House",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-belnor-house",
+      "name": "Belnor House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-bernard-johnson-house",
+      "name": "Bernard Johnson House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-bernard-street-40",
+      "name": "40 Bernard Street",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-blakeney-point",
+      "name": "Blakeney Point",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-bungalows-109-camden-road",
+      "name": "Bungalows, 109 Camden Road",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-camley-street",
+      "name": "Camley Street",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-canada-square-1-l38-and-l50",
+      "name": "Canada Square, 1 - L38 & L50",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-garden-halls",
+      "name": "Garden Halls",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-cave-clean-active-ventilation-envir",
+      "name": "CAVE (Clean Active Ventilation Envir)",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-central-bsu",
+      "name": "Central BSU",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-chapel-place",
+      "name": "Chapel Place",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-chenies-mews",
+      "name": "Chenies Mews",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-clare-hall",
+      "name": "Clare Hall",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-contemplation-room",
+      "name": "Contemplation Room",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-courtauld-building",
+      "name": "Courtauld Building",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-denys-holland-house",
+      "name": "Denys Holland House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ear-institute-grays-inn-rd-332",
+      "name": "Ear Institute - Grays Inn Rd, 332",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ear-institute-grays-inn-rd-334-336",
+      "name": "Ear Institute - Grays Inn Rd, 334-336",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ear-institute-wicklow-street-75",
+      "name": "Ear Institute - Wicklow Street, 75",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-egyptology",
+      "name": "Egyptology",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-endsleigh-gardens-9-11",
+      "name": "Endsleigh Gardens, 9-11",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-endsleigh-street-14",
+      "name": "Endsleigh Street, 14",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-euston-road-222",
+      "name": "Euston Road, 222",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-front-lodges",
+      "name": "Front Lodges",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-goldsmid-house-wilton-plaza",
+      "name": "Goldsmid House (Wilton Plaza)",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-gordon-square-36-38",
+      "name": "Gordon Square, 36-38",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-gospel-oak-store-unit",
+      "name": "Gospel Oak - Store Unit",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-gower-place-3",
+      "name": "3 Gower Place",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-gower-place-23",
+      "name": "23 Gower Place",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-gower-street-91",
+      "name": "Gower Street, 91",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-gower-street-115-117",
+      "name": "Gower Street, 115-117",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-hampstead-road-62-64",
+      "name": "Hampstead Road, 62-64",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-hatter-institute",
+      "name": "Hatter Institute",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ucl-at-here-east",
+      "name": "UCL at Here East",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-high-holborn",
+      "name": "High Holborn",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ifor-evans-hall",
+      "name": "Ifor Evans Hall",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-inst-archaeology-27-eastways",
+      "name": "Inst Archaeology - 27 Eastways",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-1-wakefield-st",
+      "name": "Institute of Neurology - 1 Wakefield St",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-12-queen-square",
+      "name": "Institute of Neurology - 12 Queen Square",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-23-queen-square",
+      "name": "Institute of Neurology - 23 Queen Square",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-33-queen-square",
+      "name": "Institute of Neurology - 33 Queen Square",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-institute-of-neurology-8-11-queen-square",
+      "name": "Institute of Neurology - 8-11 Queen Square",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-ashton-building",
+      "name": "Institute of Ophthalmology — Ashton Building",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-cayton-17-25",
+      "name": "Institute of Ophthalmology — 17–25 Cayton Street",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-lecture-cabin",
+      "name": "Inst of Ophthalmology - Lecture Cabin",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-phase-6a-bath-st",
+      "name": "Inst of Ophthalmology - Phase 6A Bath St",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-phase-6b-bath-st",
+      "name": "Inst of Ophthalmology - Phase 6B Bath St",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-inst-of-ophthalmology-wolfson-building",
+      "name": "Institute of Ophthalmology — Wolfson Building",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-institute-of-orthopaedics-and-musculoskeletal-science-ioms",
+      "name": "Institute of Orthopaedics & Musculoskeletal Science (IOMS)",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ioe-emerald-street-23-29",
+      "name": "IOE - Emerald Street, 23-29",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ioe-woburn-square-10",
+      "name": "IOE - Woburn Square, 10",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-james-lighthill-house-and-lodge",
+      "name": "James Lighthill House & Lodge",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-john-adams-hall",
+      "name": "John Adams Hall",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-john-tovell-house",
+      "name": "John Tovell House",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-langton-close",
+      "name": "Langton Close",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-malet-place-1-4",
+      "name": "Malet Place, 1-4",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-max-rayne-house",
+      "name": "Max Rayne House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-medical-school-building",
+      "name": "Medical School Building",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-mill-hill-fry-radcliffe-and-wilson-observatories",
+      "name": "Mill Hill - Fry, Radcliffe and Wilson Observatories",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-montague-street-11",
+      "name": "Montague Street, 11",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-moorfields-eye-hospital",
+      "name": "Moorfields Eye Hospital",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-mortimer-market-centre",
+      "name": "Mortimer Market Centre",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-mssl-holmbury-st-mary",
+      "name": "MSSL Holmbury St Mary",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-n-and-s-transit-houses",
+      "name": "N & S Transit Houses",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-neil-sharp-house",
+      "name": "Neil Sharp House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-new-hall",
+      "name": "New Hall",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ormond-house",
+      "name": "Ormond House",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-pearl",
+      "name": "PEARL",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-pears-building",
+      "name": "PEARS Building",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-prankerd-house",
+      "name": "Prankerd House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-royal-free-hospital",
+      "name": "Royal Free Hospital",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-royal-institution-the-9-rooms",
+      "name": "Royal Institution, The (9 Rooms)",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-russell-square-house",
+      "name": "Russell Square House",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-rutherford-appleton-lab-harwell",
+      "name": "Rutherford Appleton Lab (Harwell)",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-slade-school-of-fine-art-woburn-square",
+      "name": "Slade School Of Fine Art - Woburn Square",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-solar-house",
+      "name": "Solar House",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-tavistock-house",
+      "name": "Tavistock House",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-tavistock-square",
+      "name": "Tavistock Square",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-tottenham-court-road-90",
+      "name": "90 Tottenham Court Road",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-tufnell-park-national-research-centre",
+      "name": "Tufnell Park - National Research Centre",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ucl-crystal-growth-laboratory",
+      "name": "UCL Crystal Growth Laboratory",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ucl-gosich-camelia-botnar-building",
+      "name": "Camelia Botnar Building",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-ucl-gosich-wolfson-centre",
+      "name": "Institute of Child Health — Wolfson Centre",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-whittington-hospital-main-site-and-highgate-wing",
+      "name": "Whittington Hospital - Main Site & Highgate Wing",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-wicklow-street-44",
+      "name": "Wicklow Street, 44",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-wicklow-street-77",
+      "name": "Wicklow Street, 77",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-wilson-street",
+      "name": "Wilson Street",
+      "campus": "other",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-zayed-centre-for-research",
+      "name": "Zayed Centre for Research",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-55-56-russell-square",
+      "name": "55–56 Russell Square",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-college-hall",
+      "name": "College Hall",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-connaught-hall",
+      "name": "Connaught Hall",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-handel-mansions",
+      "name": "Handel Mansions",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    },
+    {
+      "buildingId": "ucl-international-hall",
+      "name": "International Hall",
+      "campus": "bloomsbury",
+      "reason": "No manually verified complete OSM footprint match in this import"
+    }
+  ]
+}
