@@ -26,8 +26,8 @@ async function identity(): Promise<string> {
 
 export async function requireVerified(): Promise<VerifiedProfile> {
   const user = await currentUser();
-  if (!user) throw new HttpError(403, "Verify your @ucl.ac.uk email before contributing.");
-  // An email-code sign-in is itself the UCL verification, so the profile row records it.
+  if (!user) throw new HttpError(403, "Sign in with your @ucl.ac.uk email before contributing.");
+  // Only @ucl.ac.uk accounts can sign in, so the profile row records the UCL address.
   const now = Date.now();
   try {
     await database().prepare("INSERT INTO profiles (user_id, email, verified_at, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO NOTHING").bind(user.userId, user.email, now, now).run();
@@ -126,32 +126,36 @@ function clientAddress(request: Request): string {
   return request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
 }
 
-async function requestCode(request: Request): Promise<Response> {
-  const body = await jsonBody(request);
-  const email = uclEmail(body.email);
-  const auth = await authClient();
-  if (!auth) throw new HttpError(503, "UCL email sign-in is not connected yet. Explore the clearly labelled demo while email is configured.");
-  await consumeRateLimit(await sha256(clientAddress(request)), "email-request", 5, 3600);
-  await consumeRateLimit(await sha256(email), "email-recipient", 5, 3600);
-  // Supabase Auth emails a one-time code; the email template must include {{ .Token }}.
-  const { error } = await auth.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-  if (error) throw new HttpError(error.status === 429 ? 429 : 502, "The sign-in email could not be sent. Please try again later.");
-  return json({ ok: true, expiresIn: 600, message: "Check your UCL inbox for the sign-in code." });
+function passwordField(value: unknown): string {
+  if (typeof value !== "string" || value.length < 8 || value.length > 72) throw new HttpError(400, "Use a password of 8 to 72 characters.");
+  return value;
 }
 
-async function verifyCode(request: Request): Promise<Response> {
+/** UCL-only email and password accounts. Addresses are not verified by email (hackathon MVP). */
+async function passwordAuth(request: Request, mode: "signup" | "signin"): Promise<Response> {
   const body = await jsonBody(request);
   const email = uclEmail(body.email);
-  const code = textField(body.code, "Code", 6, 10);
-  if (!/^\d{6,10}$/.test(code)) throw new HttpError(400, "Enter the code from your email.");
+  const password = passwordField(body.password);
   const auth = await authClient();
-  if (!auth) throw new HttpError(503, "UCL email sign-in is not connected yet.");
-  await consumeRateLimit(await sha256(email), "email-verify", 15, 3600);
-  const { data, error } = await auth.auth.verifyOtp({ email, token: code, type: "email" });
-  if (error || !data.user) throw new HttpError(400, "The code is incorrect or expired. Request a new one.");
+  if (!auth) throw new HttpError(503, "UCL sign-in is not connected yet. Explore the clearly labelled demo meanwhile.");
+  await consumeRateLimit(await sha256(clientAddress(request)), `password-${mode}`, mode === "signup" ? 5 : 30, 3600);
+  await consumeRateLimit(await sha256(email), "password-email", 20, 3600);
+  if (mode === "signup") {
+    const admin = adminClient();
+    if (!admin) throw new HttpError(503, "UCL sign-in is not connected yet.");
+    // Created pre-confirmed so no email has to be delivered.
+    const { error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+    if (error) {
+      if (error.code === "email_exists" || /already/i.test(error.message)) throw new HttpError(409, "An account already exists for this email. Sign in instead.");
+      if (error.code === "weak_password") throw new HttpError(400, "Choose a stronger password.");
+      throw new HttpError(502, "The account could not be created. Please try again.");
+    }
+  }
+  const { data, error } = await auth.auth.signInWithPassword({ email, password });
+  if (error || !data.user) throw new HttpError(401, "That email and password don't match.");
   const now = Date.now();
   try {
-    await database().prepare("INSERT INTO profiles (user_id, email, verified_at, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET email = excluded.email, verified_at = excluded.verified_at")
+    await database().prepare("INSERT INTO profiles (user_id, email, verified_at, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET email = excluded.email")
       .bind(data.user.id, email, now, now).run();
   } catch (error) {
     if (isUniqueViolation(error)) throw new HttpError(409, "This UCL address is already linked to an account.");
@@ -432,8 +436,8 @@ export async function communityRoute(request: Request, path: string[]): Promise<
     }
     if (request.method === "POST" || request.method === "DELETE") assertSameOrigin(request);
     if (request.method === "POST") {
-      if (endpoint === "auth/request") return await requestCode(request);
-      if (endpoint === "auth/verify") return await verifyCode(request);
+      if (endpoint === "auth/signup") return await passwordAuth(request, "signup");
+      if (endpoint === "auth/signin") return await passwordAuth(request, "signin");
       if (endpoint === "auth/signout") return await signOut();
       if (endpoint === "action") return await action(request);
       if (endpoint === "upload") return await upload(request);
