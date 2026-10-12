@@ -1,6 +1,6 @@
 # Campus feature implementation
 
-The campus features build on the map overhaul merged in PR #2 and the password sign-in and dialog behaviour from `main`. Credentials and live-service deployment remain with Alex. The leftover-food follow-up additionally needs `20261013000000_leftover_food.sql` after the community-tools migration; see [community operations](COMMUNITY-OPERATIONS.md) and the [food handoff](LEFTOVER-FOOD.md).
+The campus features build on the map overhaul merged in PR #2 and the password sign-in and dialog behaviour from `main`. The hosted food migration was completed on 12 October 2026 for Supabase project `rate-my-campus` (`kcdyluxuibvugqararbg`), recorded as `20261012171306`; the matching repository file is `20261012171306_leftover_food.sql`. The base and community-tools migrations were already applied. Application credentials and deployment remain with Alex; see [community operations](COMMUNITY-OPERATIONS.md) and the [food handoff](LEFTOVER-FOOD.md).
 
 ## Implemented
 
@@ -9,10 +9,7 @@ The campus features build on the map overhaul merged in PR #2 and the password s
 - Open-now and open-late checks use attributed London-time schedules. Two directly verified schedules are available; other hours are unknown. Snapshots expire after 30 days. Four library pages have sourced arrival/access notes; see [place guides](PLACE-GUIDES.md).
 - Complete database rating totals, recommendation percentages, criterion averages and review-derived top tags. Paginated place reviews/discussions, review-year filtering, recent/helpful sorting and clear no-review states.
 - Shareable place and alert links with explicit demo/live mode, on-device QR codes and unavailable/expired states. Shared alert lookup is independent of the limited activity feed.
-- Two/three-place comparisons with review counts and honest missing-data states.
-- Named browser-local collections, validated import/export, share links and explicit account load/save. Account updates preserve followed places. Collection links contain only the collection name, mode and place references.
-- Local calendar-file import, upcoming lectures, exact building matches and explicit manual matching. Supports bounded daily/weekly recurrences, common timezones and date exclusions. Unsupported recurrence/timezone formats are visibly skipped. Calendar data stays in page memory and is never uploaded.
-- Official study-space availability and booking links, without claiming an unverified live-data integration.
+- Basic browser-local saved bookmarks. Campus Toolkit's comparison, named collections, timetable import and study-resource modal have been removed; place/alert sharing and QR codes remain available independently.
 - Followed places and an in-app inbox for reviews/discussions and conversation replies. No email/push delivery is enabled by this feature.
 - Own contribution status/reasons, review updates, deletion, alert closure, collection instructions and food quantities. The local demo has separate contribution controls that never write to the live service.
 - A dedicated leftover-food feed and three-step composer, conservative Claude drafts, explicit ingredient/allergen/handling claims, confirmed pickup locations, collection countdowns and owner controls. Live availability polls every 15 seconds while visible; current feedback can close a pickup, and revision checks protect quantity edits. Zero/explicit closure ends collection without reservations. The private demo keeps its food posts/photos on the device. See the [food API and lifecycle handoff](LEFTOVER-FOOD.md).
@@ -26,7 +23,7 @@ The campus features build on the map overhaul merged in PR #2 and the password s
 
 | Item | Why it remains deferred |
 | --- | --- |
-| Live busyness or available-seat figures | No supported feed or genuine check-in population is connected. The existing official resources are linked instead. |
+| Live busyness or available-seat figures | No supported feed or genuine check-in population is connected. No live availability integration is claimed. |
 | Complete facilities/entrance/room map | No complete, verified dataset. Only specific official arrival notes were added; no facilities or doors were guessed. |
 | Remaining building footprints | Exact allocation/source evidence is still missing. The directory supports reviews without placing invented pins. |
 | Real rental directory and landlord claims | No validated property dataset or onboarding/operator process was supplied. The fictional rental remains explicitly demo-only. |
@@ -39,6 +36,6 @@ The campus features build on the map overhaul merged in PR #2 and the password s
 
 ## Validation
 
-The preceding campus-features release passed 151 automated tests and its optimized production build. Those checks covered source-backed place joins, unknown coordinates, London opening times/overnight exceptions, search filters, privacy-preserving share/calendar formats, ownership checks, complete aggregates, pagination, moderation races, photos and retention. Its browser checks covered desktop/mobile layout, map movement and focus after resizing, Garden Halls, searches, comparisons, collections, contribution controls and QR sharing.
+The final suite passes **194/194 tests after Campus Toolkit removal**, and the production build passes. Earlier local demo browser checks covered posting, quantity/detail edits, persistence, closure, feedback, keyboard controls and mobile filtering. The refreshed production preview confirms Toolkit navigation is absent and place sharing and QR generation still work.
 
-For the leftover-food follow-up, the full suite passes 206 tests and the production build passes. The browser walkthrough covers posting, quantity and detail edits, persistence, closure, feedback, keyboard controls and mobile filtering. See [food validation status](LEFTOVER-FOOD.md#validation-and-release-status). Live email/Claude/Google calls and deployment are not represented as production-verified.
+Hosted checks on 12 October 2026 verified the food migration's four columns, closure constraint, two indexes, private 5 MiB JPEG/PNG/WebP photo bucket, and RLS on all 12 public-schema tables with no client policies. The [rollback-only SQL check](../scripts/verify-food-backend.sql) passed feed/metadata, ownership/revisions, fresh distinct-account feedback, quorum, idempotent closure and client-role isolation, leaving zero synthetic fixtures. See [food validation status](LEFTOVER-FOOD.md#validation-and-release-status). App authentication, actual uploads, Claude/Google calls and deployment remain unverified without live app credentials.

@@ -2,7 +2,7 @@
 import {useEffect,useState} from 'react';
 import {Check,Clock,Flag,MapPin,Navigation,Utensils} from 'lucide-react';
 import {FOOD_ALLERGENS,foodAvailability,foodQuantity,foodUpdatedLabel,readFoodDetails,type FoodDetails} from '@/lib/food';
-import {ShareCampusLink} from './campus-tools';
+import {ShareCampusLink} from './share-campus-link';
 type Row=Record<string,any>;
 export default function FoodDetail({post,demo,clock,vote,onAction,onReport}:{post:Row;demo:boolean;clock:number;vote?:string;onAction:(action:string,body:Row)=>Promise<Row|unknown>;onReport:()=>void}) {
   const status=foodAvailability(post,clock),details=readFoodDetails(post.foodDetails);
