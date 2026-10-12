@@ -24,14 +24,9 @@ For local use, copy `.env.example` to `.env.local` in the project root (or run `
 
 The server uses Google's [session-based map tiles](https://developers.google.com/maps/documentation/tile/session_tokens), with Google's supported `styles` option for a pale, minimal roadmap. It returns Google's client cache headers and does not persist tiles. The frontend must retain the [required attribution](https://developers.google.com/maps/documentation/tile/policies) and display Google tiles without colour filters. Any extruded campus-building overlay uses separately attributed open geometry, not extracted Google buildings. Google Places results are suggestions for user confirmation; do not reuse them as a permanently cached place directory. Absent a Google key, the map uses a clearly labelled OpenStreetMap fallback.
 
-**Email sign-in setup**
+**Sign-in setup**
 
-Supabase Auth sends the six-digit sign-in code; the app accepts only `@ucl.ac.uk` addresses, so signing in is the UCL verification.
-
-1. Create a [Resend account](https://resend.com/) and add a domain you control. A dedicated sending subdomain is suitable; you do not need to control `ucl.ac.uk` to send codes **to** UCL students. Add the DNS records Resend provides and wait for it to mark the domain verified. [Domain setup](https://resend.com/docs/dashboard/domains/introduction).
-2. In Supabase → Authentication → Emails → SMTP settings, enable custom SMTP with host `smtp.resend.com`, port 465, user `resend`, a Resend API key as the password, and a sender on your verified domain. Supabase's built-in mailer only delivers to your own team's addresses.
-3. Edit the *Magic Link* email template so its body shows `{{ .Token }}`, and keep the email OTP length at 6.
-4. In the app, enter your real `@ucl.ac.uk` address, request the code and check the inbox. Enter the code and confirm that posting is enabled.
+Accounts are `@ucl.ac.uk` email + password. The server creates them already confirmed through the Supabase service-role key, so no email is sent and no SMTP or templates are needed. Addresses are not verified by email; this is a hackathon MVP trade-off. To add proper verification later, configure custom SMTP in Supabase and switch back to email codes.
 
 **Claude setup**
 

@@ -63,7 +63,7 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
   const unavailable = !status ? 'Checking the import service…'
     : !status.unionImport ? 'Imports are paused until the operator confirms permission to reuse Union event listings and enables the source.'
     : !status.anthropic ? 'Connect Claude in the server settings to extract event details.'
-    : !status.signedIn || !status.verified ? 'Sign in and verify your UCL email to continue.'
+    : !status.signedIn || !status.verified ? 'Sign in with your UCL email to continue.'
     : !status.moderator ? 'Only approved community moderators can import source listings.' : '';
 
   async function importEvent(event: React.FormEvent) {
