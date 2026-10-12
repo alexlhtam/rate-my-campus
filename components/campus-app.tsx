@@ -3,6 +3,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {Star,Gift,Utensils,Tag,Search,SlidersHorizontal,ArrowUpRight,ArrowRight,MapPin,Clock,Bookmark,Plus,X,ChevronDown,ChevronRight,Sparkles,ShieldCheck,MessageCircle,ThumbsUp,ThumbsDown,Flag,Check,GraduationCap,Navigation,Camera,Mail,ArrowLeft,Map,LayoutList,Leaf,BookOpen,Building2,Home,ExternalLink,Download,Trash2,LoaderCircle} from 'lucide-react';
 import CampusMap, {type MapProvider} from './campus-map';
 import {preparePhoto} from '@/lib/client-photo';
+import {createClientId as uid} from '@/lib/client-id';
 import ModerationPanel from './moderation-panel';
 import SourceImportPanel from './source-import-panel';
 import {places,seedReviews,seedPins,seedThreads,imageCredits} from '@/lib/data';
@@ -12,7 +13,6 @@ const layerInfo=[{id:'rated',title:'Rated places',icon:Star,sub:'Find your spot'
 const categories:Record<string,string>={all:'All places',study:'Study spaces',lecture:'Lecture halls',halls:'Student halls',rental:'Rentals'};
 const criterionLabels:Record<string,string>={comfort:'Comfort',plugs:'Plug sockets',wifi:'Wi-Fi',noise:'Quietness',accessibility:'Accessibility',value:'Value',cleanliness:'Cleanliness',social:'Social life',staff:'Staff',location:'Location',landlord:'Responsiveness',deposit:'Deposit return',damp:'Damp-free'};
 const criteriaFor=(category:string)=>category==='halls'?['value','cleanliness','social','staff','location']:category==='rental'?['landlord','deposit','damp','value','noise']:['comfort','plugs','wifi','noise','accessibility'];
-const uid=()=>crypto.randomUUID();
 const distance=(a:Row)=>{const dy=(Number(a.lat)-51.5246)*111.32,dx=(Number(a.lng)+.134)*69.2;return Math.sqrt(dx*dx+dy*dy)};
 const money=(v:number)=>new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(v);
 const iconFor=(type:string)=>layerInfo.find(i=>i.id===type)?.icon||Star;

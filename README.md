@@ -2,6 +2,8 @@
 
 A mobile-first UCL campus map with category-specific place reviews, society freebies, time-limited food alerts, student deals, anonymous community discussion and UCL email verification.
 
+The canonical project repository is [alexlhtam/rate-my-campus](https://github.com/alexlhtam/rate-my-campus).
+
 ## Run locally
 
 Requires Node.js 22.13 or newer. Install with `npm ci`, then use `npm run dev`. The Sites starter supplies local preview identity; this is not a real UCL verification. Live contributions still require a real email code.
@@ -14,6 +16,12 @@ node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1
 ```
 
 Do not replay already-applied migrations. Hosted publication applies production migrations separately.
+
+### Share the demo on local Wi-Fi
+
+After `npm ci` and `npm run build`, run `npm run lan`. Open the printed IP address from another device on the same network. The launcher chooses a non-loopback IPv4 interface, preferring Wi-Fi; override it with `npm run lan -- --host YOUR_LAN_IP`. Optional `--port 3000` and `--worker-port 8787` change the listener ports. If a port is occupied, choose another or stop your own earlier launcher; existing processes are never stopped automatically. Allow the selected demo port through your private-network firewall if necessary. Network client isolation can prevent devices from reaching each other.
+
+This is a **demo on each device**, not a shared live database. Reviews, posts and votes created in demo mode stay in that browser. The LAN proxy accepts only clients on the selected interface's subnet, serves public pages/assets and fixed demo state, and blocks sign-in, live mutations, administrative routes and paid API calls. Its production Worker stays bound to `127.0.0.1`; incoming identity headers and cookies are not forwarded. No migrations or service secrets are needed for this demo. Press Ctrl+C to stop the launcher and the Worker it created. Do not expose the raw Worker or a development server to the network.
 
 ## Live service configuration
 
