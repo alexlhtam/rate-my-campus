@@ -10,7 +10,7 @@ Requires Node.js 22.13 or newer. Install with `npm ci`, link the Vercel project 
 
 ## Deploy on Vercel with Supabase
 
-The app is a standard Next.js app. Vercel runs the `/api/*` route handlers as Node.js functions in London (`lhr1`, see `vercel.json`); put the Supabase project in London (`eu-west-2`) too.
+The app is a standard Next.js app. Vercel runs the `/api/*` route handlers as Node.js functions in Dublin (`dub1`, see `vercel.json`), next to the Supabase project in `eu-west-1`.
 
 1. **Create the Supabase project.** Easiest is the Supabase integration on the Vercel Marketplace (Project → Storage → Supabase), which creates the project and sets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `POSTGRES_URL` for you. If you connect an existing project instead, add those four by hand; `POSTGRES_URL` is the **transaction pooler** string (port 6543).
 2. **Apply the schema.** `supabase link --project-ref <ref>` then `supabase db push`, or paste `supabase/migrations/*.sql` into the SQL editor. It creates the tables with row-level security on (the server connects as the owner; the public Data API sees nothing) and a private `photos` storage bucket.
