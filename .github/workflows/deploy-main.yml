@@ -1,10 +1,9 @@
 name: Deploy main to Vercel
 
-# Vercel's GitHub webhook has missed some pushes to main. This calls the
-# project's deploy hook as a backstop; the URL is a repository secret.
+# Vercel deploys main from its GitHub integration. Run this by hand (Actions →
+# Deploy main to Vercel → Run workflow) if a push is ever missed; it calls the
+# project's deploy hook, whose URL is a repository secret.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions: {}
