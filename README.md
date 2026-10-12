@@ -14,11 +14,11 @@ The app is a standard Next.js app. Vercel runs the `/api/*` route handlers as No
 
 1. **Create the Supabase project.** Easiest is the Supabase integration on the Vercel Marketplace (Project → Storage → Supabase), which creates the project and sets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `POSTGRES_URL` for you. If you connect an existing project instead, add those four by hand; `POSTGRES_URL` is the **transaction pooler** string (port 6543).
 2. **Apply the schema.** `supabase link --project-ref <ref>` then `supabase db push`, or paste `supabase/migrations/*.sql` into the SQL editor. It creates the tables with row-level security on (the server connects as the owner; the public Data API sees nothing) and a private `photos` storage bucket.
-3. **Turn on email codes.** In Supabase → Authentication → Emails, edit the *Magic Link* template so it shows `{{ .Token }}` (the six-digit code the app asks for) and keep the email OTP length at 6. Supabase's built-in mailer only reaches your own team's addresses, so add custom SMTP (Resend works: host `smtp.resend.com`, user `resend`, password = a Resend API key, sender on your verified domain). Add your production URL under Authentication → URL Configuration.
+3. **Sign-in needs no email setup.** Accounts are UCL email + password, created pre-confirmed by the server, so Supabase never has to deliver mail. Add your production URL as the Site URL under Authentication → URL Configuration.
 4. **Add the other variables** from `.env.example` in Vercel (Anthropic, Google Maps, `ADMIN_USER_IDS`). Moderator IDs are Supabase Auth user IDs; signed-in users can copy theirs from the moderation panel.
 5. **Deploy.** Push the branch for a preview deployment, or run `vercel deploy`.
 
-Sign-in is a Supabase Auth email code restricted to `@ucl.ac.uk`, so signing in is the UCL verification. Sessions are cookies set by `/api/community/auth/*`.
+Sign-in is a Supabase Auth email + password account restricted to `@ucl.ac.uk`. Addresses are not verified by email (hackathon MVP), so anyone who types a UCL address can claim it. Sessions are cookies set by `/api/community/auth/*`.
 
 ### Share the demo on local Wi-Fi
 
@@ -57,7 +57,7 @@ The Union importer accepts a single public event URL, extracts explicit food/mer
 ## Useful routes
 
 - `GET /api/community/state`: public approved records plus own private pending records and own profile.
-- `POST /api/community/auth/request`, `POST /api/community/auth/verify`, `POST /api/community/auth/signout`: UCL email-code sign-in.
+- `POST /api/community/auth/signup`, `POST /api/community/auth/signin`, `POST /api/community/auth/signout`: UCL email + password accounts.
 - `POST /api/community/action`: review, post, thread, reply, vote or report.
 - `POST /api/community/upload`: protected image upload.
 - `GET /api/community/account/export`, `DELETE /api/community/account`: account portability/deletion.
