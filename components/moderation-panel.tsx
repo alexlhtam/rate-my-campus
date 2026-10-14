@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, Copy, Flag, LoaderCircle, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
+import {FreebieFacts} from './freebie-events';
+import type {EventPin} from '@/lib/freebies/view';
 import { places } from "@/lib/data";
 import { FOOD_ALLERGENS, readFoodDetails } from "@/lib/food";
 
-type Item = {
+type Item = Partial<EventPin> & {
   id: string; kind: "review" | "post" | "thread" | "reply";
   status: "approved" | "pending" | "hidden"; createdAt: string; moderationReason?: string;
   placeId?: string; title?: string; text?: string; description?: string;
@@ -155,7 +157,7 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
           <h3 style={{ margin: 0, fontSize: 17 }}>{item.title || place?.name || (item.kind === "reply" ? "Discussion reply" : "Student review")}</h3>
           {item.location && <p style={styles.muted}>{item.location}</p>}
           {item.rating && <span style={styles.muted}>{item.rating} / 5 · {item.term}</span>}
-          <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{item.text || item.description || "No written review supplied."}</p>
+          <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{item.text || item.description || "No written review supplied."}</p>{item.freebie&&<><FreebieFacts pin={item as EventPin} expanded/>{item.sourceUrl&&<a className="source-link" href={item.sourceUrl} target="_blank" rel="noreferrer">Original Union listing</a>}</>}
           {food && <section aria-label="Food collection details" style={{ ...styles.note, display: "grid", gap: 10 }}>
             <strong>Food collection details</strong>
             <p style={styles.muted}>These are the sharer’s declarations. Moderation does not verify ingredients, allergen safety or storage conditions.</p>

@@ -94,7 +94,7 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
     setBusy('submit');
     try {
       const ends = londonDateTimeToISO(expiry), begins = start ? londonDateTimeToISO(start) : null;
-      if (Date.parse(ends) <= Date.now() || Date.parse(ends) > Date.now() + 7 * 86400000) throw new Error('Choose an expiry in the next seven days. Import later if the event is further away.');
+      if (Date.parse(ends) <= Date.now() || Date.parse(ends) > Date.now() + 14 * 86400000) throw new Error('Choose an expiry in the next fourteen days. Import later if the event is further away.');
       if (begins && Date.parse(begins) >= Date.parse(ends)) throw new Error('The event must start before this pin expires.');
       const response = await requestJSON<{ post: Record<string, unknown>; message?: string }>('/api/community/action', {
         action: 'post', type: 'freebie', title: draft.title, description: draft.description, location: draft.location,
@@ -128,7 +128,7 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
       <label>Offer and event details<textarea rows={3} maxLength={1500} value={draft.description} onChange={event => { setDraft({ ...draft, description: event.target.value }); setConfirmed(false); }} /></label>
       <div className="form-columns">
         <label>Starts at (London time)<input type="datetime-local" value={start} onChange={event => { setStart(event.target.value); setConfirmed(false); }} /></label>
-        <label>Pin expires (London time)<input type="datetime-local" required min={londonDateTime(Date.now())} max={londonDateTime(Date.now() + 7 * 86400000)} value={expiry} onChange={event => { setExpiry(event.target.value); setConfirmed(false); }} /></label>
+        <label>Pin expires (London time)<input type="datetime-local" required min={londonDateTime(Date.now())} max={londonDateTime(Date.now() + 14 * 86400000)} value={expiry} onChange={event => { setExpiry(event.target.value); setConfirmed(false); }} /></label>
       </div>
       <p className="fineprint">Unknown times stay blank. Confirm the advertised event end time; the pin expires within seven days.</p>
       <label>Meeting location<div className="input-with-button"><input required minLength={3} maxLength={150} value={draft.location || ''} onChange={event => { setDraft({ ...draft, location: event.target.value }); setConfirmed(false); setMatches([]); }} />

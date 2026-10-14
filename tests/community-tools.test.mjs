@@ -1,3 +1,5 @@
+import {loadFreebie} from './freebies/load.mjs';
+const {publicFreebie}=await loadFreebie('lib/freebies/publication.ts');
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -29,13 +31,14 @@ let moderationHook = null;
 let photoVerdict = { approved: true, reasons: [] };
 let photoChecks = 0;
 let moderationTexts = [];
-globalThis.__communityTools = { db, isUniqueViolation, validation, features, food,
+globalThis.__communityTools = { publicFreebie, db, isUniqueViolation, validation, features, food,
   currentUser: async () => user, runtimeEnv: async () => ({ ADMIN_USER_IDS: "moderator", ANTHROPIC_API_KEY: "test" }),
   moderateContent: async (text) => { moderationTexts.push(text); if (moderationHook) await moderationHook(); if (serviceFailure) throw serviceFailure; return verdict; }, moderatePhoto: async () => { photoChecks++; return photoVerdict; },
   photoStorage: () => ({ download: async () => ({ data: new Blob([new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])]) }), remove: async () => ({ error: null }) }),
   places: [{ id: "ucl-test", category: "building" }, { id: "study-test", category: "study" }],
 };
 const { communityRoute } = await loadTs("community-server", [
+  [/import .*publicFreebie.*from .*freebies\/publication.*;/, "const {publicFreebie}=globalThis.__communityTools;"],
   [/import \{[^}]+\} from "\.\/db";/, "const {db, isUniqueViolation} = globalThis.__communityTools; const getDatabase = () => db;"],
   [/import \{[^}]+\} from "\.\/integrations";/, "const {moderateContent, moderatePhoto, runtimeEnv} = globalThis.__communityTools;"],
   [/import \{([^}]+)\} from "\.\/community-validation";/, "const {$1} = globalThis.__communityTools.validation;"],

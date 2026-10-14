@@ -7,7 +7,7 @@ import {layoutOverlayGroups,type OverlayGroupLayout} from '@/lib/campus-map-over
 
 export type MapPosition = { lat: number; lng: number };
 export type MapProvider = 'google' | 'openstreetmap' | 'unavailable';
-export type MapItem = MapPosition & { id: string; name?: string; title?: string; type?: string; score?: string };
+export type MapItem = MapPosition & { id: string; name?: string; title?: string; type?: string; timeLabel?:string;eventState?:string;locationProvider?:string;score?: string };
 type Props = {
   items: MapItem[]; onSelect: (id: string) => void; selected?: string; confirm?: boolean;
   initialPosition?: MapPosition; requireGoogle?: boolean;
@@ -140,7 +140,7 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     if (confirm && activeProvider !== 'unavailable') onPosition?.(campus);
   }
   const attribution = activeProvider === 'google' ? coverage!.copyright : '© OpenStreetMap contributors';
-  const projected=items.filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)).map(item=>{const position=project(item.lat,item.lng,zoom);return {item,x:position.x-left,y:position.y-top}});
+  const projected=items.filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)&&(item.locationProvider!=='google'||activeProvider==='google')).map(item=>{const position=project(item.lat,item.lng,zoom);return {item,x:position.x-left,y:position.y-top}});
   const layout=layoutOverlayGroups(projected,groupLayoutRef.current,Boolean(drag.current),{zoom,selected});groupLayoutRef.current=layout;
 
   return <div className={'campus-map ' + (confirm ? 'confirm-map' : '')} ref={container} tabIndex={0} role="region"
@@ -186,10 +186,10 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     {!confirm && activeProvider !== 'unavailable' && layout.groups.map(group => {
       const item=group.items[0],rated=!item.type||item.type==='rated',cluster=group.items.length>1,Icon=rated&&cluster?Building2:icons[item.type||'rated']||Star;
       const description=cluster?`${group.items.length} ${rated?'places to review':`${item.type} alerts`} nearby`:item.name||item.title;
-      return <button type="button" key={group.items.map(pin=>pin.id).join('-')} className={`map-pin ${item.type || 'rated'} ${selected === item.id ? 'selected' : ''}`} data-map-layer={item.type||'rated'} style={{left:group.x,top:group.y,zIndex:selected===item.id?7:rated?4:5,transitionProperty:'background-color,box-shadow'}}
+      return <button type="button" key={group.items.map(pin=>pin.id).join('-')} className={`map-pin ${item.type || 'rated'} ${group.items.every(item=>item.eventState==='upcoming')?'upcoming':group.items.some(item=>item.eventState==='live')?'live':''} ${selected === item.id ? 'selected' : ''}`} data-map-layer={item.type||'rated'} style={{left:group.x,top:group.y,zIndex:selected===item.id?7:rated?4:5,transitionProperty:'background-color,box-shadow'}}
         onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); if(cluster)setPinGroup(group.items);else onSelect(item.id); }}
         aria-pressed={selected === item.id} aria-label={cluster?description:`View ${description}`}>
-        <Icon size={14}/>{rated&&<b>{cluster?group.items.length:item.score||'—'}</b>}{!rated&&cluster&&<span className="atlas-pin-count">{group.items.length}</span>}<span className="pin-tooltip">{description}</span>
+        <Icon size={14}/>{item.timeLabel&&!cluster&&<span className="freebie-pin-time">{item.timeLabel}</span>}{rated&&<b>{cluster?group.items.length:item.score||'—'}</b>}{!rated&&cluster&&<span className="atlas-pin-count">{group.items.length}</span>}<span className="pin-tooltip">{description}</span>
       </button>;
     })}
     {pinGroup&&!confirm&&<section className="atlas-building-card" aria-label="Places at this location"><button type="button" className="atlas-card-close" aria-label="Close places" onClick={()=>setPinGroup(null)}><X size={17}/></button><p className="atlas-eyebrow">A little closer</p><h3>{pinGroup.length} spots here</h3><button type="button" className="atlas-show-gaps" onClick={()=>{setCenter({lat:pinGroup.reduce((sum,pin)=>sum+pin.lat,0)/pinGroup.length,lng:pinGroup.reduce((sum,pin)=>sum+pin.lng,0)/pinGroup.length});setZoom(value=>Math.min(value+1,19));setPinGroup(null)}}>Zoom into these places →</button><div className="atlas-group-list">{pinGroup.map(item=><button type="button" key={item.id} onClick={()=>{setPinGroup(null);onSelect(item.id)}}><span>{item.name||item.title}</span><b>{item.score||'View'} →</b></button>)}</div></section>}
