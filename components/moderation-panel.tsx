@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, Copy, Flag, LoaderCircle, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { places } from "@/lib/data";
+import { FOOD_ALLERGENS, readFoodDetails } from "@/lib/food";
 
 type Item = {
   id: string; kind: "review" | "post" | "thread" | "reply";
   status: "approved" | "pending" | "hidden"; createdAt: string; moderationReason?: string;
   placeId?: string; title?: string; text?: string; description?: string;
   location?: string; photoUrl?: string; rating?: number; tags?: string[]; term?: string;
+  type?: string; foodDetails?: unknown; collectionInstructions?: string; portionsRemaining?: number | null;
+  dietary?: string[]; expiresAt?: string;
 };
 type Report = { id: string; targetId: string; reason: string; createdAt: string };
 type CommunityRequest = { id: string; kind: "correction" | "takedown"; contact?: string; targetId: string; reason: string; evidenceUrl?: string; createdAt: string };
@@ -143,6 +146,7 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
         const reports = data.reports.filter((report) => report.targetId === item.id);
         const place = places.find((entry) => entry.id === item.placeId);
         const working = busy === item.id;
+        const food = item.kind === "post" && item.type === "food" ? readFoodDetails(item.foodDetails) : null;
         return <article key={item.id} style={styles.card}>
           <div style={{ ...styles.row, justifyContent: "space-between" }}>
             <span style={{ fontSize: 11, letterSpacing: ".07em", textTransform: "uppercase", color: "#53705b", fontWeight: 700 }}>{item.kind} · {item.status}{reports.length ? ` · ${reports.length} report${reports.length === 1 ? "" : "s"}` : ""}</span>
@@ -152,6 +156,22 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
           {item.location && <p style={styles.muted}>{item.location}</p>}
           {item.rating && <span style={styles.muted}>{item.rating} / 5 · {item.term}</span>}
           <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{item.text || item.description || "No written review supplied."}</p>
+          {food && <section aria-label="Food collection details" style={{ ...styles.note, display: "grid", gap: 10 }}>
+            <strong>Food collection details</strong>
+            <p style={styles.muted}>These are the sharer’s declarations. Moderation does not verify ingredients, allergen safety or storage conditions.</p>
+            <dl style={{ display: "grid", gap: 10, margin: 0 }}>{[
+              ["Collection instructions", item.collectionInstructions || "Not supplied"],
+              ["Organisation or event (unverified)", food.sourceLabel || "Not supplied"],
+              ["Allergen information", food.allergenStatus === "unknown" ? "Unknown" : food.allergens.length ? food.allergens.map((id) => FOOD_ALLERGENS.find((allergen) => allergen.id === id)?.label || id).join(", ") : "See ingredient information; no individual allergens listed"],
+              ["Ingredients", food.ingredients || "Not supplied"],
+              ["Storage and handling", food.handling || "Not supplied"],
+              ["Dietary labels", item.dietary?.join(", ") || "Not supplied"],
+              ["Collection access", food.pickupAccess === "ucl" ? "UCL access required" : food.pickupAccess === "public" ? "Public access declared" : "Ask the sharer"],
+              ["Bring a container", food.bringContainer ? "Yes" : "Not requested"],
+              ["Portions remaining", item.portionsRemaining == null ? "Unknown" : String(item.portionsRemaining)],
+              ["Collection ends", item.expiresAt ? new Date(item.expiresAt).toLocaleString("en-GB", { timeZone: "Europe/London" }) : "Not supplied"],
+            ].map(([label, value]) => <div key={label}><dt style={{ fontSize: 12, fontWeight: 700 }}>{label}</dt><dd style={{ margin: "3px 0 0", whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{value}</dd></div>)}</dl>
+          </section>}
           {item.tags?.length ? <p style={styles.muted}>{item.tags.join(" · ")}</p> : null}
           {item.photoUrl && <a href={item.photoUrl} target="_blank" rel="noreferrer"><img src={item.photoUrl} alt="Photo awaiting moderation" style={{ width: "100%", maxHeight: 280, objectFit: "contain", background: "#f6f6f1", borderRadius: 10 }} /></a>}
           {item.moderationReason && <p style={styles.note}><strong>Review note:</strong> {item.moderationReason}</p>}

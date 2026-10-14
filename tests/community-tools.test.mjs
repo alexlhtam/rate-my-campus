@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import ts from "typescript";
 import { PGlite } from "@electric-sql/pglite";
-import * as validation from "../lib/community-validation.ts";
+import * as food from "../lib/food.ts";
 
 async function loadTs(name, rewrites = []) {
   const source = await fs.readFile(new URL(`../lib/${name}.ts`, import.meta.url), "utf8");
@@ -14,6 +14,7 @@ async function loadTs(name, rewrites = []) {
   try { return await import(url.href); } finally { await fs.unlink(url); }
 }
 const { createDatabase, isUniqueViolation } = await loadTs("db");
+const validation = await loadTs("community-validation", [[/from "\.\/food";/, 'from "../lib/food.ts";']]);
 const features = await loadTs("community-features");
 const pg = new PGlite();
 for (const file of (await fs.readdir(new URL("../supabase/migrations/", import.meta.url))).filter((name) => name.endsWith(".sql")).sort()) {
@@ -27,9 +28,10 @@ let serviceFailure = null;
 let moderationHook = null;
 let photoVerdict = { approved: true, reasons: [] };
 let photoChecks = 0;
-globalThis.__communityTools = { db, isUniqueViolation, validation, features,
+let moderationTexts = [];
+globalThis.__communityTools = { db, isUniqueViolation, validation, features, food,
   currentUser: async () => user, runtimeEnv: async () => ({ ADMIN_USER_IDS: "moderator", ANTHROPIC_API_KEY: "test" }),
-  moderateContent: async () => { if (moderationHook) await moderationHook(); if (serviceFailure) throw serviceFailure; return verdict; }, moderatePhoto: async () => { photoChecks++; return photoVerdict; },
+  moderateContent: async (text) => { moderationTexts.push(text); if (moderationHook) await moderationHook(); if (serviceFailure) throw serviceFailure; return verdict; }, moderatePhoto: async () => { photoChecks++; return photoVerdict; },
   photoStorage: () => ({ download: async () => ({ data: new Blob([new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])]) }), remove: async () => ({ error: null }) }),
   places: [{ id: "ucl-test", category: "building" }, { id: "study-test", category: "study" }],
 };
@@ -39,6 +41,7 @@ const { communityRoute } = await loadTs("community-server", [
   [/import \{([^}]+)\} from "\.\/community-validation";/, "const {$1} = globalThis.__communityTools.validation;"],
   [/export \{ HttpError \} from "\.\/community-validation";/, ""],
   [/import \{([^}]+)\} from "\.\/community-features";/, "const {$1} = globalThis.__communityTools.features;"],
+  [/import \{([^}]+)\} from "\.\/food";/, "const {$1} = globalThis.__communityTools.food;"],
   [/import \{ places \} from "\.\/data";/, "const {places} = globalThis.__communityTools;"],
   [/import \{[^}]+\} from "\.\/supabase";/, "const { currentUser, photoStorage } = globalThis.__communityTools; const authConfigured = () => true; const authClient = async () => null; const adminClient = () => null;"],
 ]);
@@ -58,6 +61,8 @@ async function due() {
   await db.prepare("UPDATE moderation_retries SET next_attempt_at = 0, lease_until = NULL").run();
   await db.prepare("DELETE FROM rate_limits WHERE key LIKE 'moderation-drain:%'").run();
 }
+const foodBody = (title = "Remaining food") => ({ action: "post", type: "food", title, description: "Left over from our event", location: "Public foyer", lat: 51.524, lng: -0.134, expiresAt: Date.now() + 3600000, dietary: [], collectionInstructions: "Ask the committee at the table", portionsRemaining: 10, locationConfirmed: true, foodSafetyAcknowledged: true, foodDetails: { allergenStatus: "provided", allergens: ["milk", "cereals-gluten"], ingredients: "See the package ingredient list", handling: "Kept in the original packaging", sourceLabel: "Example society", pickupAccess: "ucl", bringContainer: true } });
+const asUser = (userId) => { user = { userId, email: `${userId}@ucl.ac.uk` }; };
 
 test("community tools enforce ownership, moderation, private requests and complete aggregates", async (t) => {
   await t.test("all approved ratings contribute beyond the feed limit; pending scores stay private", async () => {
@@ -100,15 +105,15 @@ test("community tools enforce ownership, moderation, private requests and comple
   await t.test("collection text is moderated and zero portions closes an alert", async () => {
     await post("active", "alice");
     verdict = { approved: false, reasons: ["Please reword this."] };
-    const result = await call("action", { action: "update-post", targetId: "active", collectionInstructions: "Ask the committee at the desk", portionsRemaining: 4 });
+    const result = await call("action", { action: "update-post", targetId: "active", revision: 0, collectionInstructions: "Ask the committee at the desk", portionsRemaining: 4 });
     assert.equal(result.body.post.status, "pending"); assert.equal(result.body.post.portionsRemaining, 4);
     verdict = { approved: true, reasons: [] };
-    const closed = await call("action", { action: "update-post", targetId: "active", collectionInstructions: "All collected", portionsRemaining: 0 });
+    const closed = await call("action", { action: "update-post", targetId: "active", revision: 1, collectionInstructions: "All collected", portionsRemaining: 0 });
     assert.ok(Date.parse(closed.body.post.expiresAt) <= Date.now());
   });
   await t.test("active title and location duplicates are caught across accounts", async () => {
     await post("existing-active", "bob");
-    const result = await call("action", { action: "post", type: "food", title: "sandwiches", description: "Sealed", location: "quad", lat: 51.52, lng: -0.13, expiresAt: Date.now() + 60000, dietary: [] });
+    const result = await call("action", { action: "post", type: "food", title: "sandwiches", description: "Sealed", location: "quad", lat: 51.52, lng: -0.13, expiresAt: Date.now() + 60000, dietary: [], collectionInstructions: "Collect from the table", locationConfirmed: true, foodSafetyAcknowledged: true });
     assert.equal(result.status, 409);
   });
   await t.test("discussion pagination counts approved replies, and old uploads cannot race retention", async () => {
@@ -239,6 +244,164 @@ test("community tools enforce ownership, moderation, private requests and comple
     assert.equal(expired.body.post.photoUrl, null); assert.equal(expired.body.post.photoKey, null);
     assert.equal("user_id" in expired.body.post, false);
   });
+  await t.test("food creation stores all supplied details and sends every free-text field through moderation", async () => {
+    asUser("food-owner"); moderationTexts = [];
+    const body = foodBody("Food system lifecycle");
+    const submitted = await call("action", body);
+    assert.equal(submitted.status, 201, JSON.stringify(submitted.body));
+    assert.equal(submitted.body.post.portionsRemaining, 10);
+    assert.deepEqual(submitted.body.post.foodDetails, body.foodDetails);
+    assert.equal(submitted.body.post.collectionInstructions, body.collectionInstructions);
+    assert.equal(submitted.body.post.revision, 0); assert.equal(submitted.body.post.own, true);
+    for (const value of [body.collectionInstructions, body.foodDetails.ingredients, body.foodDetails.handling, body.foodDetails.sourceLabel]) assert.ok(moderationTexts[0].includes(value));
+    const pin = await call(`pin?id=${submitted.body.post.id}`);
+    assert.deepEqual(pin.body.post.foodDetails, body.foodDetails);
+    assert.ok(pin.body.post.availabilityUpdatedAt);
+  });
+  await t.test("food numeric availability is owner-only, versioned, immediate and cannot reopen a collection", async () => {
+    const own = (await call("contributions")).body.posts.find((item) => item.title === "Food system lifecycle");
+    const targetId = own.id;
+    asUser("food-stranger");
+    assert.equal((await call("action", { action: "food-availability", targetId, revision: 0, portionsRemaining: 5 })).status, 404);
+    asUser("food-owner"); serviceFailure = { status: 502 }; const checks = moderationTexts.length;
+    const update = await call("action", { action: "food-availability", targetId, revision: 0, portionsRemaining: 5 });
+    assert.equal(update.status, 200, JSON.stringify(update.body));
+    assert.equal(update.body.post.portionsRemaining, 5); assert.equal(update.body.post.revision, 1);
+    assert.equal(moderationTexts.length, checks);
+    assert.equal((await call("action", { action: "food-availability", targetId, revision: 0, portionsRemaining: 20 })).status, 409);
+    const close = await call("action", { action: "food-availability", targetId, revision: 1, portionsRemaining: 0 });
+    assert.equal(close.status, 200); assert.equal(close.body.post.closureReason, "collected"); assert.ok(close.body.post.closedAt);
+    assert.equal((await call("action", { action: "food-availability", targetId, revision: 2, portionsRemaining: 5 })).status, 409);
+    serviceFailure = null;
+  });
+  await t.test("food feedback is unique, fresh and reset by the owner's latest availability update", async () => {
+    asUser("feedback-owner");
+    const created = await call("action", foodBody("Feedback food"));
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+    const targetId = created.body.post.id;
+    assert.equal((await call("action", { action: "vote", targetId, kind: "still" })).status, 400);
+    await db.prepare("UPDATE posts SET availability_updated_at=? WHERE id=?").bind(Date.now() - 1000, targetId).run();
+    asUser("feedback-one");
+    let voted = await call("action", { action: "vote", targetId, kind: "gone" });
+    assert.equal(voted.status, 200, JSON.stringify(voted.body)); assert.equal(voted.body.post.freshGoneCount, 1);
+    voted = await call("action", { action: "vote", targetId, kind: "gone" });
+    assert.equal(voted.body.post.freshGoneCount, 1);
+    asUser("feedback-owner");
+    const renewed = await call("action", { action: "food-availability", targetId, revision: 0, portionsRemaining: 8 });
+    assert.equal(renewed.status, 200); assert.equal(renewed.body.post.freshGoneCount, 0);
+    assert.equal((await call(`pin?id=${targetId}`)).body.post.freshGoneCount, 0);
+    await db.prepare("INSERT INTO votes (id,user_id,target_id,kind,created_at) VALUES ('stale-feedback','stale-user',?,'gone',?)").bind(targetId, Date.now() - 31 * 60000).run();
+    for (const person of ["feedback-two", "feedback-three", "feedback-four"]) {
+      asUser(person); voted = await call("action", { action: "vote", targetId, kind: "gone" });
+      assert.equal(voted.status, 200, JSON.stringify(voted.body));
+    }
+    assert.equal(voted.body.post.freshGoneCount, 3); assert.equal(voted.body.post.closureReason, "community-gone");
+    assert.ok(voted.body.post.lastAvailabilityFeedbackAt); assert.ok(voted.body.post.closedAt);
+    asUser("feedback-five"); assert.equal((await call("action", { action: "vote", targetId, kind: "still" })).status, 400);
+  });
+  await t.test("food details edits are moderated and cannot overwrite a newer availability or closure", async () => {
+    asUser("food-edit-owner");
+    const created = await call("action", foodBody("Editable food"));
+    const targetId = created.body.post.id;
+    const replacement = { ...created.body.post.foodDetails, ingredients: "Updated package ingredients", handling: "Ask the sharer for handling details" };
+    verdict = { approved: false, reasons: ["Please clarify the label"] };
+    let changed = await call("action", { action: "update-post", targetId, revision: 0, collectionInstructions: "Please meet the organiser at the table", foodDetails: replacement });
+    assert.equal(changed.status, 200, JSON.stringify(changed.body)); assert.equal(changed.body.post.status, "pending"); assert.equal(changed.body.post.portionsRemaining, 10);
+    assert.deepEqual(changed.body.post.foodDetails, replacement);
+    assert.equal((await call("action", { action: "food-availability", targetId, revision: 1, portionsRemaining: 2 })).status, 409);
+    verdict = { approved: true, reasons: [] };
+    changed = await call("action", { action: "update-post", targetId, revision: 1, collectionInstructions: "Meet at the signposted foyer table", foodDetails: replacement });
+    assert.equal(changed.body.post.status, "approved"); assert.equal(changed.body.post.revision, 2);
+    moderationHook = async () => { moderationHook = null; await db.prepare("UPDATE posts SET portions_remaining=3, availability_updated_at=?, moderation_revision=moderation_revision+1 WHERE id=?").bind(Date.now(), targetId).run(); };
+    const raced = await call("action", { action: "update-post", targetId, revision: 2, collectionInstructions: "This stale edit must not overwrite", foodDetails: replacement });
+    assert.equal(raced.status, 409);
+    assert.equal((await call(`pin?id=${targetId}`)).body.post.portionsRemaining, 3);
+    moderationHook = async () => { moderationHook = null; await db.prepare("UPDATE posts SET expires_at=?, closed_at=?, closure_reason='withdrawn', moderation_revision=moderation_revision+1 WHERE id=?").bind(Date.now(), Date.now(), targetId).run(); };
+    const closedDuringCheck = await call("action", { action: "update-post", targetId, revision: 3, collectionInstructions: "Another stale edit must stay closed", foodDetails: replacement });
+    assert.equal(closedDuringCheck.status, 409);
+    assert.equal((await call(`pin?id=${targetId}`)).body.post.closureReason, "withdrawn");
+  });
+  await t.test("food owner closure is immediate during provider failure and never reopens pending, hidden or expired food", async () => {
+    asUser("food-close-owner");
+    for (const [name, status, expiry] of [["pending-food", "pending", Date.now() + 60000], ["hidden-food", "hidden", Date.now() + 60000], ["expired-food", "approved", Date.now() - 1]]) {
+      await post(name, "food-close-owner", expiry, status);
+      assert.equal((await call("action", { action: "food-availability", targetId: name, revision: 0, portionsRemaining: 2 })).status, 409);
+    }
+    serviceFailure = { status: 502 }; const checks = moderationTexts.length;
+    const closed = await call("action", { action: "close-post", targetId: "pending-food", reason: "withdrawn" });
+    assert.equal(closed.status, 200); assert.equal(closed.body.post.closureReason, "withdrawn"); assert.ok(closed.body.post.closedAt);
+    assert.equal(moderationTexts.length, checks);
+    const repeated = await call("action", { action: "close-post", targetId: "pending-food", reason: "collected" });
+    assert.equal(repeated.body.post.closureReason, "withdrawn");
+    serviceFailure = null;
+  });
+  await t.test("concurrent closure reasons preserve the first closure, quantity and revision", async () => {
+    asUser("concurrent-close-owner");
+    await post("concurrent-close-food", "concurrent-close-owner");
+    await db.prepare("UPDATE posts SET portions_remaining=7 WHERE id='concurrent-close-food'").run();
+    const prepare = db.prepare;
+    let reads = 0, release;
+    const bothRead = new Promise(resolve => { release = resolve; });
+    // Pause both requests immediately after reading the open row. Their writes
+    // then contend on real Postgres transactions using that same stale snapshot.
+    db.prepare = query => {
+      const statement = prepare(query);
+      if (query !== "SELECT * FROM posts WHERE id = ? AND user_id = ?") return statement;
+      return { ...statement, bind: (...params) => {
+        const bound = statement.bind(...params);
+        return { ...bound, first: async () => {
+          const row = await bound.first();
+          if (params[0] === "concurrent-close-food" && reads < 2) { reads++; if (reads === 2) release(); await bothRead; }
+          return row;
+        } };
+      } };
+    };
+    let responses;
+    try {
+      responses = await Promise.all(["withdrawn", "collected"].map(reason => call("action", { action: "close-post", targetId: "concurrent-close-food", reason })));
+    } finally { db.prepare = prepare; release(); }
+    assert.equal(reads, 2);
+    assert.ok(responses.every(response => response.status === 200), JSON.stringify(responses));
+    const saved = await db.prepare("SELECT * FROM posts WHERE id='concurrent-close-food'").first();
+    assert.equal(saved.moderation_revision, 1);
+    assert.equal(saved.portions_remaining, saved.closure_reason === "collected" ? 0 : 7);
+    for (const response of responses) {
+      assert.equal(response.body.post.closureReason, saved.closure_reason);
+      assert.equal(response.body.post.portionsRemaining, saved.portions_remaining);
+      assert.equal(response.body.post.revision, 1);
+      assert.equal(response.body.post.closedAt, new Date(Number(saved.closed_at)).toISOString());
+    }
+  });
+  await t.test("food feed paginates beyond the global cap and excludes unavailable and future items", async () => {
+    asUser("food-feed-owner");
+    await post("future-food", "food-feed-owner"); await db.prepare("UPDATE posts SET starts_at=? WHERE id='future-food'").bind(Date.now() + 30000).run();
+    await post("not-food", "food-feed-owner"); await db.prepare("UPDATE posts SET type='freebie' WHERE id='not-food'").run();
+    let offset = 0; const all = []; let expectedTotal;
+    do {
+      const response = await call(`food?offset=${offset}`);
+      assert.equal(response.status, 200, JSON.stringify(response.body)); assert.ok(response.body.posts.length <= 40);
+      expectedTotal ??= response.body.total;
+      assert.equal(response.body.total, expectedTotal);
+      all.push(...response.body.posts); offset = response.body.nextOffset;
+    } while (offset !== null);
+    assert.ok(expectedTotal > 300); assert.equal(all.length, expectedTotal);
+    assert.equal(new Set(all.map((item) => item.id)).size, all.length);
+    assert.ok(all.some((item) => item.id === "shared-outside-feed"));
+    for (const id of ["future-food", "not-food", "pending-food", "hidden-food", "expired-food", "shared-hidden", "shared-pending"]) assert.equal(all.some((item) => item.id === id), false);
+    assert.ok(all.every((item) => item.type === "food" && item.status === "approved" && !item.closedAt && Date.parse(item.expiresAt) > Date.now()));
+    asUser("future-voter"); assert.equal((await call("action", { action: "vote", targetId: "future-food", kind: "gone" })).status, 400);
+  });
+  await t.test("food retry includes all details and cannot publish a collection closed during the check", async () => {
+    await post("food-retry-details", "retry-food-owner", Date.now() + 60000, "pending");
+    await db.prepare("UPDATE posts SET collection_instructions=?, food_details=? WHERE id='food-retry-details'").bind("Follow the collection signs", JSON.stringify({ ...food.emptyFoodDetails(), ingredients: "Retry ingredients", handling: "Retry handling", sourceLabel: "Retry society" })).run();
+    await db.prepare("INSERT INTO moderation_retries(target_id,kind,revision,next_attempt_at) VALUES ('food-retry-details','post',0,0)").run();
+    moderationTexts = [];
+    moderationHook = async () => { moderationHook = null; await db.prepare("UPDATE posts SET expires_at=?, closed_at=?, closure_reason='withdrawn', moderation_revision=moderation_revision+1 WHERE id='food-retry-details'").bind(Date.now(), Date.now()).run(); };
+    await due(); await call("state");
+    for (const value of ["Follow the collection signs", "Retry ingredients", "Retry handling", "Retry society"]) assert.ok(moderationTexts[0].includes(value));
+    const row = await db.prepare("SELECT status,closure_reason FROM posts WHERE id='food-retry-details'").first();
+    assert.equal(row.status, "pending"); assert.equal(row.closure_reason, "withdrawn");
+  });
   await pg.close(); delete globalThis.__communityTools;
 });
 
@@ -257,4 +420,15 @@ test("request and collection validators reject unsafe links, excessive portions 
   assert.throws(() => validation.communityRequestInput({ kind: "takedown", reason: "Please review this", contact: "not-an-email" }));
   assert.throws(() => validation.collectionUpdateInput({ portionsRemaining: 1.5 }));
   assert.throws(() => validation.collectionUpdateInput({ collectionInstructions: "Call 07123 456789" }));
+});
+
+test("food intake requires confirmation, honest unknowns, supported allergens and available-now bounded quantities", () => {
+  const valid = foodBody();
+  assert.equal(validation.postInput(valid).foodDetails.allergenStatus, "provided");
+  for (const patch of [{ foodSafetyAcknowledged: false }, { locationConfirmed: false }, { collectionInstructions: "" }, { portionsRemaining: 0 }, { portionsRemaining: 1.5 }, { portionsRemaining: "5" }, { portionsRemaining: 10001 }, { startsAt: Date.now() + 10000 }, { foodDetails: { allergenStatus: "unknown", allergens: ["milk"] } }, { foodDetails: { allergenStatus: "provided", allergens: ["safe"] } }, { foodDetails: { sourceLabel: "person@example.com" } }]) assert.throws(() => validation.postInput({ ...valid, ...patch }));
+  const unknown = validation.postInput({ ...valid, portionsRemaining: null, foodDetails: undefined });
+  assert.equal(unknown.portionsRemaining, null); assert.deepEqual(unknown.foodDetails, food.emptyFoodDetails());
+  for (const ingredients of [undefined, "", "   "]) assert.throws(() => validation.foodDetailsInput({ allergenStatus: "provided", allergens: [], ingredients }), /List the declared allergens/);
+  assert.equal(validation.foodDetailsInput({ allergenStatus: "provided", allergens: [], ingredients: "Flour, butter and sugar" }).allergenStatus, "provided");
+  assert.deepEqual(validation.foodDetailsInput({ allergenStatus: "provided", allergens: ["milk"], ingredients: "" }).allergens, ["milk"]);
 });

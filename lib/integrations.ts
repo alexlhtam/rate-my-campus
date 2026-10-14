@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FOOD_ALLERGENS, FOOD_DIETARY, type FoodAllergen } from "./food";
 import { canonicalSearchTag } from "./campus-search";
 
 // Server module: import only from server routes or other server modules.
@@ -57,10 +58,12 @@ async function claudeJSON<T>(instruction: string, input: unknown, validator: z.Z
     });
   } catch { throw new IntegrationError(504, "Claude took too long to respond. Please try again."); }
   if (!response.ok) throw new IntegrationError(response.status === 429 ? 429 : 502, "Claude is temporarily unavailable. Please try again later.");
-  const payload = await response.json() as { content?: { type: string; text?: string }[]; stop_reason?: string };
+  let payload: { content?: { type: string; text?: string }[]; stop_reason?: string | null };
+  try { payload = z.object({ content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional(), stop_reason: z.string().nullable().optional() }).parse(await response.json()); }
+  catch { throw new IntegrationError(502, "Claude returned an incomplete result. Please check the details manually."); }
   if (payload.stop_reason === "max_tokens") throw new IntegrationError(502, "Claude's response was incomplete. Please try a shorter description.");
-  const output = payload.content?.filter(block => block.type === "text").map(block => block.text || "").join("") || "";
   try {
+    const output = payload.content?.filter(block => block.type === "text").map(block => block.text || "").join("") || "";
     const json = JSON.parse(output.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, ""));
     return validator.parse(json);
   } catch { throw new IntegrationError(502, "Claude returned an incomplete result. Please check the details manually."); }
@@ -121,6 +124,77 @@ export async function extractPin(text: string, image?: ExtractionImage) {
   const discountPercent = pin.price !== null && pin.originalPrice !== null && pin.originalPrice > pin.price
     ? Math.round((1 - pin.price / pin.originalPrice) * 100) : null;
   return { ...pin, discountPercent, requiresConfirmation: true };
+}
+
+const foodAllergenIds = FOOD_ALLERGENS.map(item => item.id) as [FoodAllergen, ...FoodAllergen[]];
+const foodEvidenceFields = ["location", "startsAt", "expiresAt", "dietary", "portionsRemaining", "collectionInstructions", "allergens", "ingredients", "handling", "sourceLabel", "pickupAccess", "bringContainer"] as const;
+const foodEvidenceSchema = z.object({ source: z.enum(["text", "label"]), quote: z.string().trim().min(1).max(500) }).strict();
+const foodExtractionSchema = z.object({
+  layer: z.literal("food").default("food"),
+  title: z.string().trim().min(1).max(100), description: z.string().max(1500).default(""),
+  location: z.string().trim().min(1).max(180).nullable().default(null),
+  startsAt: z.string().datetime({ offset: true }).nullable().default(null),
+  expiresAt: z.string().datetime({ offset: true }).nullable().default(null),
+  dietary: z.array(z.enum(FOOD_DIETARY)).max(FOOD_DIETARY.length).default([]),
+  confidence: z.enum(["high", "medium", "low"]).default("low"),
+  warnings: z.array(z.string().trim().min(1).max(200)).max(5).default([]),
+  portionsRemaining: z.number().int().min(1).max(10_000).nullable().default(null),
+  collectionInstructions: z.string().trim().min(1).max(500).nullable().default(null),
+  foodDetails: z.object({
+    allergenStatus: z.enum(["unknown", "provided"]).default("unknown"),
+    allergens: z.array(z.enum(foodAllergenIds)).max(14).default([]),
+    ingredients: z.string().max(500).default(""), handling: z.string().max(300).default(""),
+    sourceLabel: z.string().max(100).default(""),
+    pickupAccess: z.enum(["ucl", "public", "ask"]).default("ask"),
+    bringContainer: z.boolean().default(false),
+  }).strict().default({}),
+  // Internal source evidence is checked before returning the public draft.
+  evidence: z.record(z.enum(foodEvidenceFields), foodEvidenceSchema).default({}),
+}).strict();
+
+/** Draft only: facts need explicit source words, followed by sharer confirmation. */
+export async function extractFood(text: string, image?: ExtractionImage) {
+  if (!text.trim() && !image) throw new IntegrationError(400, "Add a description or a label photo first.");
+  const inputText = text.slice(0, 8000);
+  const result = await claudeJSON(
+    `Extract a LEFTOVER FOOD draft only. Return this strict schema, with no additional keys: {"layer":"food","title":string,"description":string,"location":string|null,"startsAt":ISO8601|null,"expiresAt":ISO8601|null,"dietary":${JSON.stringify(FOOD_DIETARY)} subset array,"confidence":"high"|"medium"|"low","warnings":string[],"portionsRemaining":integer 1..10000|null,"collectionInstructions":string|null,"foodDetails":{"allergenStatus":"unknown"|"provided","allergens":${JSON.stringify(foodAllergenIds)} subset array,"ingredients":string,"handling":string,"sourceLabel":string,"pickupAccess":"ucl"|"public"|"ask","bringContainer":boolean},"evidence":{field:{"source":"text"|"label","quote":string}}}. Evidence fields allowed: ${foodEvidenceFields.join(", ")}. For every nonempty extracted factual field in that list, include a short exact quote from the supplied text or an explicitly legible written label in the image. Label means written words, not visual appearance. Never infer allergens, ingredients, dietary suitability, freshness, safety, quantity, storage history, locations or access from appearance, a dish name, packaging style or general knowledge. Never count pictured items as portions. If the label cannot be read, leave its fields unknown. Dietary tags require an explicit positive claim, not a negative statement, ingredient deduction or inference from another tag (vegan does not imply dairy-free). Allergens require explicit contains/may-contain information or a named ingredient, never a dish-name guess. Preserve may-contain wording in ingredients or handling. Do not interpret a free-from claim as evidence that other allergens are absent. Unknown allergen information must be allergenStatus unknown with allergens []; provided requires at least one explicitly named allergen. Never give a free-from or safe-to-eat guarantee; any explicit dietary claims are reported claims only. Title <=100 and description <=1500 must paraphrase supplied words only; with an unlabelled photo use title Food to share and description empty. Ingredients <=500, handling <=300, sourceLabel <=100 are stated information only; sourceLabel is a public organisation or event, never a private person's name. Collection instructions <=500. Missing strings in foodDetails are empty; missing pickupAccess is ask; bringContainer is false unless explicitly requested. Missing quantity, location and times are null. Interpret explicit relative collection times in Europe/London using now; expiresAt is a COLLECTION deadline, never a food-safety estimate or automatically derived from use-by/best-before dates. Warn about unknown collection expiry, location and pickup instructions. If times are ambiguous leave null. Do not invent coordinates, safety claims or information to complete the draft. Confidence describes extraction confidence, not food safety. This never publishes a post.`,
+    { text: inputText, now: new Date().toISOString(), timezone: "Europe/London" }, foodExtractionSchema, image,
+  );
+  const { evidence, ...pin } = result;
+  const normalize = (value: string) => value.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+  const sourceText = normalize(inputText);
+  const supported = (field: typeof foodEvidenceFields[number]) => {
+    const proof = evidence[field];
+    return Boolean(proof && (proof.source === "label" ? image : sourceText.includes(normalize(proof.quote))));
+  };
+  const warnings = new Set<string>();
+  let discarded = false;
+  for (const field of ["location", "startsAt", "expiresAt", "portionsRemaining", "collectionInstructions"] as const) {
+    if (pin[field] !== null && !supported(field)) { Object.assign(pin, { [field]: null }); discarded = true; }
+  }
+  if (pin.dietary.length && !supported("dietary")) { pin.dietary = []; discarded = true; }
+  pin.dietary = [...new Set(pin.dietary)];
+  const details = pin.foodDetails;
+  if (details.allergenStatus !== "provided" || !details.allergens.length || !supported("allergens")) {
+    if (details.allergens.length || details.allergenStatus === "provided") discarded = true;
+    details.allergenStatus = "unknown"; details.allergens = [];
+  } else details.allergens = [...new Set(details.allergens)];
+  for (const field of ["ingredients", "handling", "sourceLabel"] as const) {
+    if (details[field] && !supported(field)) { details[field] = ""; discarded = true; }
+  }
+  if (details.pickupAccess !== "ask" && !supported("pickupAccess")) { details.pickupAccess = "ask"; discarded = true; }
+  if (details.bringContainer && !supported("bringContainer")) { details.bringContainer = false; discarded = true; }
+  if (pin.startsAt && pin.expiresAt && Date.parse(pin.expiresAt) <= Date.parse(pin.startsAt)) {
+    pin.expiresAt = null; warnings.add("The collection times conflict. Confirm the collection deadline."); discarded = true;
+  }
+  if (!pin.location) warnings.add("Confirm the pickup location on the map.");
+  if (!pin.expiresAt) warnings.add("Add a collection deadline; this is not a food-safety expiry.");
+  if (!pin.collectionInstructions) warnings.add("Add pickup instructions so people know where to collect.");
+  if (details.allergenStatus === "unknown") warnings.add("Allergen information is unknown. Ask the sharer and check the label.");
+  if (discarded) { warnings.add("Unsupported details were left blank. Check the original message or label."); pin.confidence = "low"; }
+  if (image) warnings.add("Check any text read from the photo against the original label.");
+  for (const warning of pin.warnings) warnings.add(warning);
+  return { ...pin, warnings: [...warnings].slice(0, 10), requiresConfirmation: true as const };
 }
 
 const moderationInstruction = 'Assess community content before publication. Schema: {"approved":boolean,"reasons":string[]}. Reject targeted abuse, slurs, threats, harassment, private contact details, names of private individuals, exact private home flat/room numbers, unsubstantiated criminal accusations, self-declared fake reviews and promotional spam. Public campus room identifiers and names of organisations are allowed. Critical first-person experience (for example "my deposit took three months" or "there was damp in winter") is allowed. Reviews may discuss landlords without naming private people. For photos also inspect visible text and imagery for abusive material, exposed personal information, private names, exact home flat numbers, sexual content and graphic violence. You cannot establish truth; do not approve by claiming facts were verified. If ambiguous, set approved false and a brief constructive reason. Empty optional review text may be approved. Give at most four short reasons.';

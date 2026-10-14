@@ -1,9 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {
+import fs from "node:fs/promises";
+import ts from "typescript";
+const source = await fs.readFile(new URL("../lib/community-validation.ts", import.meta.url), "utf8");
+const temporary = new URL(".community-security-validation.mjs", import.meta.url);
+await fs.writeFile(temporary, ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText.replace('from "./food";', 'from "../lib/food.ts";'));
+const {
   HttpError, assertSameOrigin, imageType, postInput, privateInformationReason,
   readLimitedBody, reviewInput, safeId, stripImageMetadata, uclEmail,
-} from "../lib/community-validation.ts";
+} = await import(temporary.href);
+await fs.unlink(temporary);
 
 test("only the exact UCL email domain is eligible", () => {
   assert.equal(uclEmail(" Student@UCL.AC.UK "), "student@ucl.ac.uk");
@@ -35,7 +41,7 @@ test("review scores and category criteria are bounded", () => {
 
 test("food alerts cannot live longer than six hours or leave the campus area", () => {
   const now = Date.parse("2026-10-12T12:00:00Z");
-  const food = { type: "food", title: "Sandwiches", description: "Labelled ingredients on the table.", location: "Wilkins foyer", lat: 51.524, lng: -0.133, expiresAt: now + 60000, dietary: ["vegetarian"] };
+  const food = { type: "food", title: "Sandwiches", description: "Labelled ingredients on the table.", location: "Wilkins foyer", lat: 51.524, lng: -0.133, expiresAt: now + 60000, dietary: ["vegetarian"], collectionInstructions: "Collect from the table", locationConfirmed: true, foodSafetyAcknowledged: true };
   assert.equal(postInput(food, now).type, "food");
   for (const expiresAt of [now, now - 1, now + 6 * 3600000 + 1, "invalid", Infinity]) assert.throws(() => postInput({ ...food, expiresAt }, now), HttpError);
   assert.throws(() => postInput({ ...food, lat: 40.7 }, now), HttpError);

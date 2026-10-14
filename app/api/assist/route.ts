@@ -2,12 +2,12 @@ import { z } from "zod";
 import { currentUser } from "@/lib/supabase";
 import { consumeRateLimit, requireVerified } from "@/lib/community-server";
 import { assertSameOrigin } from "@/lib/community-validation";
-import { extractPin, importUnionEvent, integrationErrorResponse, IntegrationError, integrationStatus, locatePlace, readLimitedText, runtimeEnv, searchWithClaude, summarizeReviews } from "@/lib/integrations";
+import { extractFood, extractPin, importUnionEvent, integrationErrorResponse, IntegrationError, integrationStatus, locatePlace, readLimitedText, runtimeEnv, searchWithClaude, summarizeReviews } from "@/lib/integrations";
 
 export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
-  action: z.enum(["search", "extract", "locate", "summary", "import-event"]),
+  action: z.enum(["search", "extract", "extract-food", "locate", "summary", "import-event"]),
   text: z.string().max(8000).optional(),
   image: z.object({ mediaType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]), data: z.string().max(2_800_000) }).optional(),
   reviews: z.array(z.string().max(2500)).max(30).optional(),
@@ -44,6 +44,10 @@ export async function POST(request: Request) {
       return Response.json({ provider: "anthropic", summary: await summarizeReviews(body.reviews) }, { headers: { "Cache-Control": "no-store" } });
     }
     await requireVerified();
+    if (body.action === "extract-food") {
+      if (!body.text?.trim() && !body.image) throw new IntegrationError(400, "Add a description or a label photo first.");
+      return Response.json({ provider: "anthropic", pin: await extractFood(body.text || "", body.image) }, { headers: { "Cache-Control": "no-store" } });
+    }
     if (body.action === "extract") {
       if (!body.text?.trim() && !body.image) throw new IntegrationError(400, "Add a description or a photo first.");
       return Response.json({ provider: "anthropic", pin: await extractPin(body.text || "", body.image) }, { headers: { "Cache-Control": "no-store" } });

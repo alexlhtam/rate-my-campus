@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, Plus, Minus, LocateFixed, Star, Gift, Utensils, Tag, Navigation } from 'lucide-react';
+import { MapPin, Plus, Minus, LocateFixed, Star, Gift, Utensils, Tag, Navigation, Building2, X } from 'lucide-react';
 import CampusBuildings from './campus-buildings';
+import {layoutOverlayGroups,type OverlayGroupLayout} from '@/lib/campus-map-overlays';
 
 export type MapPosition = { lat: number; lng: number };
 export type MapProvider = 'google' | 'openstreetmap' | 'unavailable';
@@ -37,6 +38,8 @@ async function readJSON<T>(url: string, signal?: AbortSignal): Promise<T> {
 
 export default function CampusFlatMap({ items, onSelect, selected, confirm, initialPosition, requireGoogle = false, onPosition, onProviderChange, focusView, directoryOverlay = false, onRecenter }: Props) {
   const container = useRef<HTMLDivElement>(null), drag = useRef<Drag | null>(null);
+  const groupLayoutRef=useRef<OverlayGroupLayout<MapItem>|null>(null);
+  const [pinGroup,setPinGroup]=useState<MapItem[]|null>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [center, setCenter] = useState<MapPosition>(() => validPosition(initialPosition));
   const [zoom, setZoom] = useState(confirm ? 16 : 17);
@@ -128,6 +131,7 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     drag.current = null;
     if (element.hasPointerCapture(current.pointerId)) element.releasePointerCapture(current.pointerId);
     if (!commit) { setCenter(current.start); return; }
+    setCenter({...current.last});
     if (confirm && current.moved) onPosition?.(current.last);
   }
   function recenter() {
@@ -136,6 +140,8 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     if (confirm && activeProvider !== 'unavailable') onPosition?.(campus);
   }
   const attribution = activeProvider === 'google' ? coverage!.copyright : '© OpenStreetMap contributors';
+  const projected=items.filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)).map(item=>{const position=project(item.lat,item.lng,zoom);return {item,x:position.x-left,y:position.y-top}});
+  const layout=layoutOverlayGroups(projected,groupLayoutRef.current,Boolean(drag.current),{zoom,selected});groupLayoutRef.current=layout;
 
   return <div className={'campus-map ' + (confirm ? 'confirm-map' : '')} ref={container} tabIndex={0} role="region"
     aria-label={confirm ? 'Confirm pin location. Drag the map or use arrow keys.' : 'Campus map. Use arrow keys to pan.'} style={{ touchAction: 'none', overflow: 'clip' }}
@@ -177,14 +183,16 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
     {activeProvider === 'unavailable' && <div role="status" className="map-provider-message" style={{ position: 'absolute', top: '45%', left: '12%', right: '12%', zIndex: 4, padding: 16, borderRadius: 14, background: '#fffdf8', textAlign: 'center', fontSize: 13 }}>
       {waiting ? 'Loading the map…' : 'Google Maps is unavailable. This matched location needs a Google map. Try again later, or reset to a manual campus location.'}
     </div>}
-    {!confirm && activeProvider !== 'unavailable' && items.filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lng)).map(item => {
-      const position = project(item.lat, item.lng, zoom), Icon = icons[item.type || 'rated'] || Star;
-      return <button type="button" key={item.id} className={`map-pin ${item.type || 'rated'} ${selected === item.id ? 'selected' : ''}`} style={{ left: position.x - left, top: position.y - top }}
-        onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); onSelect(item.id); }}
-        aria-pressed={selected === item.id} aria-label={`View ${item.name || item.title}`}>
-        <Icon size={14} fill={item.type ? 'none' : 'currentColor'} />{!item.type && <b>{item.score || '—'}</b>}<span className="pin-tooltip">{item.name || item.title}</span>
+    {!confirm && activeProvider !== 'unavailable' && layout.groups.map(group => {
+      const item=group.items[0],rated=!item.type||item.type==='rated',cluster=group.items.length>1,Icon=rated&&cluster?Building2:icons[item.type||'rated']||Star;
+      const description=cluster?`${group.items.length} ${rated?'places to review':`${item.type} alerts`} nearby`:item.name||item.title;
+      return <button type="button" key={group.items.map(pin=>pin.id).join('-')} className={`map-pin ${item.type || 'rated'} ${selected === item.id ? 'selected' : ''}`} data-map-layer={item.type||'rated'} style={{left:group.x,top:group.y,zIndex:selected===item.id?7:rated?4:5,transitionProperty:'background-color,box-shadow'}}
+        onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); if(cluster)setPinGroup(group.items);else onSelect(item.id); }}
+        aria-pressed={selected === item.id} aria-label={cluster?description:`View ${description}`}>
+        <Icon size={14}/>{rated&&<b>{cluster?group.items.length:item.score||'—'}</b>}{!rated&&cluster&&<span className="atlas-pin-count">{group.items.length}</span>}<span className="pin-tooltip">{description}</span>
       </button>;
     })}
+    {pinGroup&&!confirm&&<section className="atlas-building-card" aria-label="Places at this location"><button type="button" className="atlas-card-close" aria-label="Close places" onClick={()=>setPinGroup(null)}><X size={17}/></button><p className="atlas-eyebrow">A little closer</p><h3>{pinGroup.length} spots here</h3><button type="button" className="atlas-show-gaps" onClick={()=>{setCenter({lat:pinGroup.reduce((sum,pin)=>sum+pin.lat,0)/pinGroup.length,lng:pinGroup.reduce((sum,pin)=>sum+pin.lng,0)/pinGroup.length});setZoom(value=>Math.min(value+1,19));setPinGroup(null)}}>Zoom into these places →</button><div className="atlas-group-list">{pinGroup.map(item=><button type="button" key={item.id} onClick={()=>{setPinGroup(null);onSelect(item.id)}}><span>{item.name||item.title}</span><b>{item.score||'View'} →</b></button>)}</div></section>}
     {confirm ? activeProvider !== 'unavailable' && <div className="confirm-cross" aria-hidden="true"><MapPin fill="#e96548" size={42} /></div> : !directoryOverlay && <>
       <div className="map-location"><span className="location-symbol"><MapPin size={17} /></span><span>Bloomsbury, London<small>Your UCL neighbourhood</small></span><span className="location-dot" /></div>
       <div className="map-status"><i /> Explore the neighbourhood</div>
