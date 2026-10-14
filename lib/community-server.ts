@@ -4,9 +4,10 @@ import { moderateContent, moderatePhoto, runtimeEnv } from "./integrations";
 import {
   HttpError, assertSameOrigin, imageType, postInput, privateInformationReason,
   readLimitedBody, record, reviewInput, safeId, stripImageMetadata, textField, uclEmail,
-  communityRequestInput, collectionUpdateInput,
+  communityRequestInput, collectionUpdateInput, foodDetailsInput, foodPortions, foodRevision,
 } from "./community-validation";
 import { placeSummaries, pageOffset, retryModeration } from "./community-features";
+import { readFoodDetails } from "./food";
 import { places } from "./data";
 import { adminClient, authClient, authConfigured, currentUser, photoStorage } from "./supabase";
 
@@ -82,7 +83,21 @@ function publicPost(row: Row, own = false): Row {
     image: row.photo_key ? `/api/community/photo?key=${encodeURIComponent(String(row.photo_key))}` : undefined,
     price: row.price, originalPrice: row.original_price, createdAt: iso(row.created_at), status: row.status,
     collectionInstructions: row.collection_instructions || "", portionsRemaining: row.portions_remaining ?? null,
+    foodDetails: row.type === "food" ? readFoodDetails(parsed(row.food_details, {})) : undefined,
+    revision: Number(row.moderation_revision || 0), closureReason: row.closure_reason || null,
+    closedAt: row.closed_at == null ? null : iso(row.closed_at),
+    availabilityUpdatedAt: iso(row.availability_updated_at ?? row.created_at),
+    freshStillCount: Number(row.fresh_still || 0), freshGoneCount: Number(row.fresh_gone || 0),
+    lastAvailabilityFeedbackAt: row.last_feedback_at == null ? null : iso(row.last_feedback_at),
     own, ...(own && row.moderation_reason ? { moderationReason: row.moderation_reason } : {}) };
+}
+
+async function hydrateFoodFeedback(rows: Row[]): Promise<void> {
+  const ids = rows.filter((row) => row.type === "food").map((row) => row.id);
+  if (!ids.length) return;
+  const result = await database().prepare("SELECT v.target_id, count(*) FILTER (WHERE v.kind = 'still') AS fresh_still, count(*) FILTER (WHERE v.kind = 'gone') AS fresh_gone, max(v.created_at) AS last_feedback_at FROM votes v JOIN posts p ON p.id = v.target_id WHERE p.id IN (SELECT jsonb_array_elements_text(?::jsonb)) AND v.kind IN ('still','gone') AND v.user_id <> p.user_id AND v.created_at > GREATEST(?, COALESCE(p.availability_updated_at, p.created_at)) GROUP BY v.target_id")
+    .bind(JSON.stringify(ids), Date.now() - 30 * 60000).all<Row>();
+  for (const row of rows) Object.assign(row, result.results.find((entry) => entry.target_id === row.id) || {});
 }
 function publicThread(row: Row, own = false): Row {
   return { id: row.id, placeId: row.place_id, title: row.title, text: row.text, createdAt: iso(row.created_at), status: row.status, own,
@@ -108,12 +123,13 @@ async function communityState(): Promise<Response> {
       db.prepare("SELECT target_id, kind FROM votes WHERE user_id = ? LIMIT 1000").bind(userId),
     ]), runtimeEnv(), placeSummaries(db),
   ]);
+  await hydrateFoodFeedback(result[1].results);
   const voteCount = (id: unknown, kind: string) => Number(result[4].results.find((vote) => vote.target_id === id && vote.kind === kind)?.count || 0);
   const isAdmin = Boolean(profile && typeof config.ADMIN_USER_IDS === "string" && config.ADMIN_USER_IDS.split(",").map((id) => id.trim()).includes(userId));
   const mapRows = (index: number, transform: (row: Row, own: boolean) => Row) => result[index].results.map((row) => ({
     ...transform(row, Boolean(row.own)),
     helpful: voteCount(row.id, "helpful"), unhelpful: voteCount(row.id, "unhelpful"),
-    still: voteCount(row.id, "still"), goneCount: voteCount(row.id, "gone"),
+    still: row.type === "food" ? Number(row.fresh_still || 0) : voteCount(row.id, "still"), goneCount: row.type === "food" ? Number(row.fresh_gone || 0) : voteCount(row.id, "gone"),
     ...(index === 2 ? { replies: result[3].results.filter((reply) => reply.thread_id === row.id && reply.status === "approved").length } : {}),
   }));
   return json({
@@ -226,7 +242,7 @@ async function action(request: Request): Promise<Response> {
   const id = crypto.randomUUID();
   const now = Date.now();
   await retentionSweep();
-  if (action === "delete-own" || action === "close-post" || action === "update-post") return ownAction(profile.userId, body, action);
+  if (action === "delete-own" || action === "close-post" || action === "update-post" || action === "food-availability") return ownAction(profile.userId, body, action);
   if (action === "review") {
     const category = placeCategory(safeId(body.placeId, "Place"));
     const data = reviewInput(body, category);
@@ -259,12 +275,14 @@ async function action(request: Request): Promise<Response> {
       const duplicatePhoto = await db.prepare("SELECT p.id FROM posts p JOIN photos existing ON existing.key = p.photo_key JOIN photos uploaded ON uploaded.content_hash = existing.content_hash WHERE uploaded.key = ? AND p.expires_at > ? AND p.status IN ('approved', 'pending') AND abs(p.lat - ?) < 0.001 AND abs(p.lng - ?) < 0.001").bind(data.photoKey, now, data.lat, data.lng).first();
       if (duplicatePhoto) throw new HttpError(409, "That photo is already attached to an active alert here.");
     }
-    let postModeration = await moderation(`${data.type}: ${data.title}\n${data.description}\nLocation: ${data.location}`, "pin");
-    if (data.photoKey && postModeration.status === "approved") postModeration = await photoModeration(data.photoKey, `${data.title}\n${data.description}`);
+    const moderationText = `${data.type}: ${data.title}\n${data.description}\nLocation: ${data.location}\nCollection: ${data.collectionInstructions}\n${data.foodDetails ? JSON.stringify(data.foodDetails) : ""}`;
+    let postModeration = await moderation(moderationText, "pin");
+    if (data.photoKey && postModeration.status === "approved") postModeration = await photoModeration(data.photoKey, moderationText);
     let row: Row | null;
     try {
-      row = await db.prepare("INSERT INTO posts (id, user_id, type, title, description, location, lat, lng, expires_at, starts_at, source_url, source_name, dietary, photo_key, price, original_price, status, moderation_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *")
-        .bind(id, profile.userId, data.type, data.title, data.description, data.location, data.lat, data.lng, data.expiresAt, data.startsAt, data.sourceUrl, data.sourceName, JSON.stringify(data.dietary), data.photoKey, data.price, data.originalPrice, postModeration.status, postModeration.reason, now).first<Row>();
+      if (data.type === "food" && data.expiresAt <= Date.now()) throw new HttpError(400, "The collection window ended while this alert was checked. Confirm a new expiry before posting.");
+      row = await db.prepare("INSERT INTO posts (id, user_id, type, title, description, location, lat, lng, expires_at, starts_at, source_url, source_name, dietary, photo_key, price, original_price, status, moderation_reason, created_at, collection_instructions, portions_remaining, food_details, availability_updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *")
+        .bind(id, profile.userId, data.type, data.title, data.description, data.location, data.lat, data.lng, data.expiresAt, data.startsAt, data.sourceUrl, data.sourceName, JSON.stringify(data.dietary), data.photoKey, data.price, data.originalPrice, postModeration.status, postModeration.reason, now, data.collectionInstructions, data.portionsRemaining, JSON.stringify(data.foodDetails || {}), now).first<Row>();
     } catch (error) {
       if (data.sourceUrl && isUniqueViolation(error)) throw new HttpError(409, "This Union event has already been imported.");
       throw error;
@@ -300,6 +318,25 @@ async function action(request: Request): Promise<Response> {
     const target = await targetKind(targetId);
     if (!(target === "post" ? ["still", "gone"] : ["helpful", "unhelpful"]).includes(kind)) throw new HttpError(400, "This vote does not apply to that contribution.");
     await consumeRateLimit(profile.userId, "vote", 80, 3600);
+    const targetPost = target === "post" ? await db.prepare("SELECT * FROM posts WHERE id = ?").bind(targetId).first<Row>() : null;
+    if (targetPost?.type === "food") {
+      if (targetPost.user_id === profile.userId) throw new HttpError(400, "Use your food availability controls to update your own alert.");
+      if (targetPost.status !== "approved" || Number(targetPost.expires_at) <= now || Number(targetPost.starts_at || 0) > now || targetPost.closed_at != null) throw new HttpError(400, "This food collection is not available now.");
+      const threshold = now - 30 * 60000;
+      const [voted] = await db.batch([
+        // Lock the collection row for this transaction so owner updates, expiry
+        // decisions and concurrent feedback use the same availability version.
+        db.prepare("INSERT INTO votes (id, user_id, target_id, kind, created_at) SELECT ?, ?, p.id, ?, ? FROM posts p WHERE p.id = ? AND p.type = 'food' AND p.status = 'approved' AND p.expires_at > ? AND (p.starts_at IS NULL OR p.starts_at <= ?) AND p.closed_at IS NULL AND p.user_id <> ? FOR UPDATE OF p ON CONFLICT(user_id, target_id) DO UPDATE SET kind = excluded.kind, created_at = excluded.created_at RETURNING id")
+          .bind(id, profile.userId, kind, now, targetId, now, now, profile.userId),
+        db.prepare("UPDATE posts p SET expires_at = LEAST(p.expires_at, ?), closure_reason = 'community-gone', closed_at = ?, moderation_revision = moderation_revision + 1 WHERE p.id = ? AND p.status = 'approved' AND p.expires_at > ? AND p.closed_at IS NULL AND (SELECT count(*) FROM votes v WHERE v.target_id = p.id AND v.kind = 'gone' AND v.user_id <> p.user_id AND v.created_at > GREATEST(?, COALESCE(p.availability_updated_at, p.created_at))) >= 3 AND (SELECT count(*) FROM votes v WHERE v.target_id = p.id AND v.kind = 'gone' AND v.user_id <> p.user_id AND v.created_at > GREATEST(?, COALESCE(p.availability_updated_at, p.created_at))) > (SELECT count(*) FROM votes v WHERE v.target_id = p.id AND v.kind = 'still' AND v.user_id <> p.user_id AND v.created_at > GREATEST(?, COALESCE(p.availability_updated_at, p.created_at)))")
+          .bind(now, now, targetId, now, threshold, threshold, threshold),
+      ]);
+      if (!voted.results.length) throw new HttpError(409, "This food collection changed. Refresh before confirming availability.");
+      const updated = await db.prepare("SELECT * FROM posts WHERE id = ?").bind(targetId).first<Row>();
+      if (!updated) throw new HttpError(404, "This food alert is no longer available.");
+      await hydrateFoodFeedback([updated]);
+      return json({ ok: true, post: publicPost(updated, false), message: updated.closed_at ? "Thanks. Recent community reports have closed this alert." : "Thanks for confirming what you found." });
+    }
     await db.prepare("INSERT INTO votes (id, user_id, target_id, kind, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id, target_id) DO UPDATE SET kind = excluded.kind, created_at = excluded.created_at")
       .bind(id, profile.userId, targetId, kind, now).run();
     if (target === "post") {
@@ -374,7 +411,7 @@ async function drainModerationRetries(): Promise<void> {
   if (!row || (job.kind === "post" && Number(row.expires_at) <= now)) { await clear(); return; }
   let result: ModerationResult;
   try {
-    const content = [row.title, row.text, row.description, row.location, row.tags, row.term, row.collection_instructions].filter(Boolean).join("\n");
+    const content = [row.title, row.text, row.description, row.location, row.tags, row.term, row.collection_instructions, row.food_details].filter(Boolean).join("\n");
     const privateHome = job.kind === "review" && places.find((place) => place.id === row.place_id)?.category === "rental";
     result = await moderation(content, job.kind === "review" ? "review" : job.kind === "post" ? "pin" : "thread", privateHome);
     if (job.kind === "post" && row.photo_key && result.status === "approved") result = await photoModeration(String(row.photo_key), content);
@@ -393,6 +430,7 @@ async function ownContributions(request: Request): Promise<Response> {
   const tables = ["reviews", "posts", "threads", "replies"];
   const maps = [publicReview, publicPost, publicThread, publicReply];
   const results = await database().batch(tables.map((table) => database().prepare(`SELECT * FROM ${table} WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 51 OFFSET ?`).bind(userId, offset)));
+  await hydrateFoodFeedback(results[1].results);
   return json({ ...Object.fromEntries(tables.map((table, i) => [table, results[i].results.slice(0, 50).map((row) => maps[i](row, true))])), nextOffset: results.some((result) => result.results.length > 50) ? offset + 50 : null });
 }
 
@@ -400,9 +438,24 @@ async function sharedPin(request: Request): Promise<Response> {
   const id = safeId(new URL(request.url).searchParams.get("id"), "Pin");
   const row = await database().prepare("SELECT * FROM posts WHERE id = ? AND status = 'approved'").bind(id).first<Row>();
   if (!row) throw new HttpError(404, "This pin is not available.");
+  await hydrateFoodFeedback([row]);
   const own = row.user_id === (await currentUser())?.userId;
   const expired = Number(row.expires_at) <= Date.now();
   return json({ post: { ...publicPost(row, own), expired, ...(expired ? { photoKey: null, photoUrl: null, image: undefined } : {}) } });
+}
+
+async function foodFeed(request: Request): Promise<Response> {
+  const userId = (await currentUser())?.userId || "";
+  const offset = pageOffset(new URL(request.url).searchParams.get("offset"));
+  const now = Date.now();
+  const active = "type = 'food' AND status = 'approved' AND expires_at > ? AND (starts_at IS NULL OR starts_at <= ?) AND closed_at IS NULL AND (portions_remaining IS NULL OR portions_remaining > 0)";
+  const [rows, total] = await database().batch([
+    database().prepare(`SELECT * FROM posts WHERE ${active} ORDER BY created_at DESC, id DESC LIMIT 40 OFFSET ?`).bind(now, now, offset),
+    database().prepare(`SELECT count(*) AS total FROM posts WHERE ${active}`).bind(now, now),
+  ]);
+  await hydrateFoodFeedback(rows.results);
+  const count = Number(total.results[0]?.total || 0);
+  return json({ posts: rows.results.map((row) => publicPost(row, row.user_id === userId)), total: count, nextOffset: offset + rows.results.length < count ? offset + rows.results.length : null });
 }
 
 async function ownAction(userId: string, body: Row, action: string): Promise<Response> {
@@ -424,17 +477,38 @@ async function ownAction(userId: string, body: Row, action: string): Promise<Res
   const post = await db.prepare("SELECT * FROM posts WHERE id = ? AND user_id = ?").bind(targetId, userId).first<Row>();
   if (!post) throw new HttpError(404, "Your alert could not be found.");
   if (action === "close-post") {
-    await db.batch([db.prepare("UPDATE posts SET expires_at = LEAST(expires_at, ?), portions_remaining = CASE WHEN type = 'food' THEN 0 ELSE portions_remaining END, moderation_revision = moderation_revision + 1 WHERE id = ? AND user_id = ?").bind(Date.now(), targetId, userId), db.prepare("DELETE FROM moderation_retries WHERE target_id = ?").bind(targetId)]);
-    return json({ ok: true, message: "Your alert is closed and no longer appears on the live map." });
+    const reason = textField(body.reason ?? "ended", "Closure reason", 1, 20);
+    if (!["collected", "ended", "withdrawn"].includes(reason)) throw new HttpError(400, "Choose collected, ended or withdrawn.");
+    if (post.closed_at != null) return json({ ok: true, post: publicPost(post, true), message: "This alert is already closed." });
+    const closedAt = Date.now();
+    const [result] = await db.batch([db.prepare("UPDATE posts SET expires_at = LEAST(expires_at, ?), portions_remaining = CASE WHEN type = 'food' AND ? = 'collected' THEN 0 ELSE portions_remaining END, closure_reason = COALESCE(closure_reason, ?), closed_at = COALESCE(closed_at, ?), availability_updated_at = ?, moderation_revision = moderation_revision + 1 WHERE id = ? AND user_id = ? AND closed_at IS NULL RETURNING *").bind(closedAt, reason, reason, closedAt, closedAt, targetId, userId), db.prepare("DELETE FROM moderation_retries WHERE target_id = ?").bind(targetId)]);
+    const closed = result.results[0] || await db.prepare("SELECT * FROM posts WHERE id = ? AND user_id = ?").bind(targetId, userId).first<Row>();
+    if (!closed) throw new HttpError(404, "Your alert could not be found.");
+    return json({ ok: true, post: publicPost(closed, true), message: result.results.length ? "Your alert is closed and no longer appears on the live map." : "This alert is already closed." });
   }
-  if (post.status === "hidden" || Number(post.expires_at) <= Date.now()) throw new HttpError(400, "Only an active alert can be updated. Create a new alert for a new collection.");
-  const update = collectionUpdateInput(body);
+  if (post.type === "food" && foodRevision(body.revision) !== Number(post.moderation_revision)) throw new HttpError(409, "This alert has changed. Refresh before updating it.");
+  if (action === "food-availability") {
+    if (post.type !== "food") throw new HttpError(400, "Availability controls apply only to food alerts.");
+    if (!("portionsRemaining" in body)) throw new HttpError(400, "Provide a portion count or choose unknown.");
+    const portions = foodPortions(body.portionsRemaining, true);
+    const now = Date.now();
+    const updated = await db.prepare("UPDATE posts SET portions_remaining = ?, availability_updated_at = ?, moderation_revision = moderation_revision + 1, expires_at = CASE WHEN ? = 0 THEN LEAST(expires_at, ?) ELSE expires_at END, closure_reason = CASE WHEN ? = 0 THEN 'collected' ELSE closure_reason END, closed_at = CASE WHEN ? = 0 THEN ? ELSE closed_at END WHERE id = ? AND user_id = ? AND type = 'food' AND status = 'approved' AND expires_at > ? AND (starts_at IS NULL OR starts_at <= ?) AND closed_at IS NULL AND moderation_revision = ? RETURNING *")
+      .bind(portions, now, portions, now, portions, portions, now, targetId, userId, now, now, body.revision).first<Row>();
+    if (!updated) throw new HttpError(409, "This collection has ended, is awaiting moderation or changed. Refresh the alert.");
+    return json({ ok: true, post: publicPost(updated, true), message: portions === 0 ? "All collected. Your alert is closed." : "Food availability updated." });
+  }
+  if (post.status === "hidden" || post.closed_at != null || Number(post.expires_at) <= Date.now()) throw new HttpError(400, "Only an active alert can be updated. Create a new alert for a new collection.");
+  const update = collectionUpdateInput({ ...body, collectionInstructions: body.collectionInstructions ?? post.collection_instructions, portionsRemaining: "portionsRemaining" in body ? body.portionsRemaining : post.portions_remaining });
+  const foodDetails = post.type === "food" ? foodDetailsInput(body.foodDetails ?? parsed(post.food_details, {})) : null;
+  if (post.type === "food") { textField(update.instructions, "Collection instructions", 5, 500); update.portions = foodPortions("portionsRemaining" in body ? body.portionsRemaining : post.portions_remaining, true); }
   if (update.portions !== null && post.type !== "food") throw new HttpError(400, "Portion counts apply only to food alerts.");
-  const verdict = await moderation(`${post.title}\n${post.description}\n${post.location}\nCollection: ${update.instructions}`, "pin");
+  const moderationText = `${post.title}\n${post.description}\n${post.location}\nCollection: ${update.instructions}\n${foodDetails ? JSON.stringify(foodDetails) : ""}`;
+  const verdict = await moderation(moderationText, "pin");
   // A text edit cannot bypass a pending photo check.
-  const result = post.photo_key && verdict.status === "approved" ? await photoModeration(String(post.photo_key), `${post.title}\n${post.description}\n${update.instructions}`) : verdict;
-  const row = await db.prepare("UPDATE posts SET collection_instructions = ?, portions_remaining = ?, status = ?, moderation_reason = ?, moderation_revision = moderation_revision + 1, expires_at = CASE WHEN ? = 0 THEN LEAST(expires_at, ?) ELSE expires_at END WHERE id = ? AND user_id = ? AND moderation_revision = ? AND status <> 'hidden' AND expires_at > ? RETURNING *")
-    .bind(update.instructions, update.portions, result.status, result.reason, update.portions, Date.now(), targetId, userId, post.moderation_revision, Date.now()).first<Row>();
+  const result = post.photo_key && verdict.status === "approved" ? await photoModeration(String(post.photo_key), moderationText) : verdict;
+  const updatedAt = Date.now();
+  const row = await db.prepare("UPDATE posts SET collection_instructions = ?, portions_remaining = ?, food_details = ?, availability_updated_at = ?, status = ?, moderation_reason = ?, moderation_revision = moderation_revision + 1, expires_at = CASE WHEN ? = 0 THEN LEAST(expires_at, ?) ELSE expires_at END, closure_reason = CASE WHEN ? = 0 THEN 'collected' ELSE closure_reason END, closed_at = CASE WHEN ? = 0 THEN ? ELSE closed_at END WHERE id = ? AND user_id = ? AND moderation_revision = ? AND status <> 'hidden' AND expires_at > ? AND closed_at IS NULL RETURNING *")
+    .bind(update.instructions, update.portions, JSON.stringify(foodDetails || {}), updatedAt, result.status, result.reason, update.portions, updatedAt, update.portions, update.portions, updatedAt, targetId, userId, post.moderation_revision, updatedAt).first<Row>();
   if (!row) throw new HttpError(409, "This alert changed while it was being checked. Refresh your contributions.");
   await scheduleModeration(row!, "post", result);
   return json({ ok: true, post: publicPost(row!, true), message: result.status === "approved" ? "Collection details updated." : "Your changes are awaiting moderation." });
@@ -626,7 +700,7 @@ async function moderateAction(request: Request): Promise<Response> {
     const row = await database().prepare(`SELECT * FROM ${table} WHERE id = ?`).bind(targetId).first<Row>();
     if (!row) continue;
     if (decision === "approve") {
-      const privacy = privateInformationReason([row.title, row.text, row.description, row.location, row.tags].filter(Boolean).join("\n"));
+      const privacy = privateInformationReason([row.title, row.text, row.description, row.location, row.tags, row.collection_instructions, row.food_details].filter(Boolean).join("\n"));
       if (privacy) throw new HttpError(400, privacy);
     }
     await database().batch([
@@ -684,6 +758,7 @@ export async function communityRoute(request: Request, path: string[]): Promise<
       if (endpoint === "moderation") return await moderationQueue(request);
       if (endpoint === "contributions") return await ownContributions(request);
       if (endpoint === "pin") return await sharedPin(request);
+      if (endpoint === "food") return await foodFeed(request);
       if (endpoint === "place") return await placePage(request);
       if (endpoint === "preferences") return await preferences();
       if (endpoint === "inbox") return await inbox();

@@ -1,3 +1,5 @@
+import { FOOD_ALLERGENS, type FoodDetails } from "./food";
+
 export class HttpError extends Error {
   readonly status: number;
   constructor(status: number, message: string) { super(message); this.name = "HttpError"; this.status = status; }
@@ -80,6 +82,37 @@ export function collectionUpdateInput(body: Record<string, unknown>) {
   return { instructions, portions };
 }
 
+export function foodDetailsInput(value: unknown): FoodDetails {
+  const details = value == null ? {} : record(value);
+  const allergenStatus = details.allergenStatus ?? "unknown";
+  if (allergenStatus !== "unknown" && allergenStatus !== "provided") throw new HttpError(400, "Choose whether allergen information is provided or unknown.");
+  const allergens = stringList(details.allergens ?? [], "Allergens", FOOD_ALLERGENS.map((item) => item.id), 14) as FoodDetails["allergens"];
+  if (allergenStatus === "unknown" && allergens.length) throw new HttpError(400, "Only list allergens when the sharer has provided this information.");
+  const pickupAccess = details.pickupAccess ?? "ask";
+  if (pickupAccess !== "ucl" && pickupAccess !== "public" && pickupAccess !== "ask") throw new HttpError(400, "Choose who can access the collection point.");
+  if (details.bringContainer !== undefined && typeof details.bringContainer !== "boolean") throw new HttpError(400, "Choose whether to bring a container.");
+  const ingredients = textField(details.ingredients ?? "", "Ingredients", 0, 500);
+  if (allergenStatus === "provided" && !allergens.length && !ingredients) throw new HttpError(400, "List the declared allergens or provide ingredient information, or choose unknown.");
+  const handling = textField(details.handling ?? "", "Storage and handling information", 0, 300);
+  const sourceLabel = textField(details.sourceLabel ?? "", "Organisation or event name", 0, 100);
+  const privacy = privateInformationReason([ingredients, handling, sourceLabel].join("\n"));
+  if (privacy) throw new HttpError(400, privacy);
+  return { allergenStatus, allergens, ingredients, handling, sourceLabel, pickupAccess, bringContainer: details.bringContainer === true };
+}
+
+export function foodPortions(value: unknown, allowZero = false): number | null {
+  if (value == null) return null;
+  const portions = finiteNumber(value, "Portions remaining", allowZero ? 0 : 1, 10000);
+  if (!Number.isInteger(portions)) throw new HttpError(400, "Enter a whole number of portions.");
+  return portions;
+}
+
+export function foodRevision(value: unknown): number {
+  const revision = finiteNumber(value, "Alert version", 0, 2147483647);
+  if (!Number.isInteger(revision)) throw new HttpError(400, "Refresh this alert before updating it.");
+  return revision;
+}
+
 export function reviewInput(body: Record<string, unknown>, category?: keyof typeof criterionGroups) {
   const rating = finiteNumber(body.rating, "Rating", 1, 5);
   if (!Number.isInteger(rating)) throw new HttpError(400, "Choose a whole-star rating.");
@@ -107,6 +140,12 @@ export function postInput(body: Record<string, unknown>, now = Date.now(), trust
   if (!Number.isFinite(expiresAt) || expiresAt <= now || expiresAt > now + max) throw new HttpError(400, type === "food" ? "Food alerts must expire within six hours." : union ? "Union events must expire within fourteen days." : "Posts must expire within seven days.");
   const startsAt = body.startsAt == null || body.startsAt === "" ? null : typeof body.startsAt === "number" ? body.startsAt : Date.parse(String(body.startsAt));
   if (startsAt !== null && (!Number.isFinite(startsAt) || startsAt >= expiresAt)) throw new HttpError(400, "The start time must be before the expiry time.");
+  if (type === "food" && startsAt !== null && startsAt > now) throw new HttpError(400, "Leftover food must be available now. Post the alert when collection starts.");
+  if (type === "food" && body.locationConfirmed !== true) throw new HttpError(400, "Confirm the food collection point on the map.");
+  if (type === "food" && body.foodSafetyAcknowledged !== true) throw new HttpError(400, "Confirm the food sharing safety notice before posting.");
+  const collectionInstructions = type === "food" ? textField(body.collectionInstructions, "Collection instructions", 5, 500) : "";
+  const portionsRemaining = type === "food" ? foodPortions(body.portionsRemaining) : null;
+  const foodDetails = type === "food" ? foodDetailsInput(body.foodDetails) : null;
   let sourceUrl: string | null = null;
   if (body.sourceUrl != null && body.sourceUrl !== "") {
     const source = textField(body.sourceUrl, "Source URL", 1, 500);
@@ -127,7 +166,7 @@ export function postInput(body: Record<string, unknown>, now = Date.now(), trust
     lat: finiteNumber(body.lat, "Latitude", 51.35, 51.68), lng: finiteNumber(body.lng, "Longitude", -0.35, 0.1),
     startsAt, expiresAt, sourceUrl, sourceName: sourceUrl ? "Students’ Union UCL" : null,
     dietary: stringList(body.dietary ?? [], "Dietary tags", ["vegetarian", "vegan", "halal", "gluten-free", "dairy-free", "unknown"]),
-    photoKey, price, originalPrice,
+    photoKey, price, originalPrice, collectionInstructions, portionsRemaining, foodDetails,
   };
 }
 
