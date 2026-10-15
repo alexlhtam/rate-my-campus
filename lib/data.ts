@@ -133,6 +133,19 @@ const originalPlaces: Place[] = [
     visitGuide: [{text: "The library is on the first floor of the Wilkins Building. A lift is near the library entrance, but some collection areas have access restrictions; check the library's accessibility information before visiting.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/main-library", checkedAt: "2026-10-12"}],
   },
   {
+    id: "archaeology-library", campusBuildingId: "ucl-institute-of-archaeology", name: "Institute of Archaeology Library", category: "study",
+    aliases: ["Archaeology Library", "Archeology Library", "Institute of Archeology Library", "IoA Library"],
+    address: "Fifth floor, Institute of Archaeology, 31–34 Gordon Square, WC1H 0PY",
+    description: "UCL's archaeology and heritage library is on the fifth floor of the Institute of Archaeology. Bookable quiet study seats are in rooms 505 and 506 and at the rear of the library; other seats do not need advance booking.",
+    image: "", tags: ["Library", "Quiet study", "Bookable seats", "UCL ID required"], openLabel: "Check opening hours", distance: "",
+    criteria: categoryCriteria.study,
+    sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/institute-archaeology-library",
+    visitGuide: [
+      {text: "The building entrance faces Gordon Square. Use the card reader to the right of the main door with your UCL ID or library card, then go to the fifth floor. The map pin marks the building, not an entrance or room.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/institute-archaeology-library", checkedAt: "2026-10-15"},
+      {text: "UCL currently states that the library has no wheelchair access. Check the official library page for current access arrangements before visiting.", sourceUrl: "https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/institute-archaeology-library", checkedAt: "2026-10-15"},
+    ],
+  },
+  {
     id: "senate-house", campusBuildingId: "ucl-senate-house", name: "Senate House Library", category: "study",
     lat: 51.5211506, lng: -0.1288017, address: "Senate House, Malet Street",
     description: "University of London's library in a landmark Bloomsbury building. Check registration, access arrangements and opening hours before visiting.",
@@ -271,7 +284,8 @@ export const places: Place[] = [
     if (place.demo) return {...place, locationStatus: 'demo-area' as const};
     const building = buildingsById.get(place.campusBuildingId || '');
     if (!building) throw new Error(`Missing campus directory entry for ${place.id}`);
-    return {...place, ...directoryDetails(building), parentPlaceId: wholeBuildingIds.has(building.id) ? undefined : buildingPlaceId(building.id)};
+    const details = directoryDetails(building);
+    return {...place, ...details, aliases: [...new Set([...(place.aliases || []), ...(details.aliases || [])])], parentPlaceId: wholeBuildingIds.has(building.id) ? undefined : buildingPlaceId(building.id)};
   }),
   ...directoryBuildings.filter(building => !wholeBuildingIds.has(building.id)).map((building): Place => {
     const category: PlaceCategory = building.type === 'residence' ? 'halls' : building.type === 'study' || building.type === 'library' ? 'study' : 'building';

@@ -6,6 +6,8 @@ import ts from 'typescript';
 const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
 const searchSource=await readFile(new URL('../lib/campus-search.ts',import.meta.url),'utf8');
 const {requestCampusSearch,localSearchFilters,SearchRequestError}=await import('data:text/javascript;base64,'+Buffer.from(compile(searchSource)).toString('base64'));
+const viewSource=await readFile(new URL('../lib/campus-assistant-view.ts',import.meta.url),'utf8');
+const {directoryAnswer}=await import('data:text/javascript;base64,'+Buffer.from(compile(viewSource)).toString('base64'));
 const filters={query:'',category:'study',layer:'rated',tags:['plugs'],dietary:[],openNow:false};
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return{promise,resolve,reject}};
 
@@ -50,8 +52,8 @@ const handlers=names.map(name=>{
  const node=app.body.statements.find(item=>ts.isFunctionDeclaration(item)&&item.name?.text===name);
  assert.ok(node,`Missing real ${name} handler`);return node.getText(ast);
 }).join('\n');
-const setterKeys=['searchBusy','submittedQuery','searchFailed','searchNeedsSignIn','aiMessage','tab','mobileMap','searchTerm','searchTags','category','dietary','radius','nowOnly','freebieTime','layers'];
-const factory=new Function('deps','requestCampusSearch','localSearchFilters','SearchRequestError',compile(`
+const setterKeys=['searchBusy','submittedQuery','searchFailed','searchNeedsSignIn','aiMessage','tab','mobileMap','searchTerm','searchTags','category','dietary','radius','nowOnly','freebieTime','layers','assistantResult','assistantSelected','assistantFocus'];
+const factory=new Function('deps','requestCampusSearch','localSearchFilters','SearchRequestError','directoryAnswer',compile(`
  const state={query:deps.query??'where can I study',searchBusy:false,submittedQuery:'',searchFailed:false,searchNeedsSignIn:false,aiMessage:'',tab:'community',mobileMap:true,busy:true};
  let query=state.query;
  const setQuery=value=>{query=value;state.query=value};
@@ -60,9 +62,10 @@ const factory=new Function('deps','requestCampusSearch','localSearchFilters','Se
  const searchSequence={current:0},searchController={current:null};
  const services=deps.services??{ai:true},stateLoaded=deps.stateLoaded??true,availablePlaces=deps.places??[];
  const applied=[];const applySearchFilters=value=>applied.push(value);
+ const showAssistantResult=value=>{state.assistantResult=value};
  ${handlers}
  `)+'\nreturn {state,applied,search,cancelSearch,clearFilters,controller:searchController};');
-const harness=(deps={})=>factory(deps,deps.request??requestCampusSearch,localSearchFilters,SearchRequestError);
+const harness=(deps={})=>factory(deps,deps.request??requestCampusSearch,localSearchFilters,SearchRequestError,directoryAnswer);
 
 test('submitting clears only the draft immediately and retains the question while awaiting Claude',async()=>{
  const pending=deferred();let question;
@@ -108,10 +111,17 @@ test('failed searches retain the question for retry and preserve the previous ma
 });
 
 test('exact names and disconnected keyword search also clear their submitted draft',async()=>{
- const exact=harness({query:'  Main Library  ',places:[{name:'Main Library',aliases:[]}],request:()=>{throw new Error('Exact names do not need Claude')}});
+ const exact=harness({query:'  Main Library  ',places:[{id:'main-library',name:'Main Library',address:'Wilkins Building',description:'Campus library',aliases:[]}],request:()=>{throw new Error('Exact names do not need Claude')}});
  await exact.search();assert.equal(exact.state.query,'');assert.equal(exact.state.submittedQuery,'Main Library');assert.equal(exact.state.searchBusy,false);assert.deepEqual(exact.applied,[{query:'Main Library',layer:'rated'}]);
  const offline=harness({query:'quiet study with plugs',services:{ai:false}});await offline.search();
  assert.equal(offline.state.query,'');assert.equal(offline.state.submittedQuery,'quiet study with plugs');assert.match(offline.state.aiMessage,/not connected/);assert.deepEqual(offline.applied[0].tags,['quiet','plugs']);
+});
+
+test('researched answers reach the map state, and Reset clears their private pins',async()=>{
+ const assistant={answer:'A source-backed answer.',sources:[],suggestions:[{id:'campus:main-library',name:'Main Library'}]};
+ const app=harness({request:async()=>({filters:null,message:assistant.answer,assistant})});
+ await app.search();assert.deepEqual(app.state.assistantResult,assistant);assert.deepEqual(app.applied,[]);
+ app.clearFilters();assert.equal(app.state.assistantResult,null);assert.equal(app.state.assistantFocus,undefined);assert.equal(app.state.assistantSelected,null);
 });
 
 test('unknown service status does not prematurely bypass connected search',async()=>{

@@ -7,10 +7,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 // Server rendering does not run effects, so neither the GPU renderer nor its
 // worker is loaded. Compile the real local dependencies, not a component stub.
-const names = ['data', 'model', 'overlays', 'buildings', 'flat', 'main', 'fallback', 'garden', 'wilkins', 'mixedMain', 'mixedFlat'];
+const names = ['data', 'model', 'overlays', 'focus', 'buildings', 'flat', 'main', 'fallback', 'garden', 'wilkins', 'mixedMain', 'mixedFlat'];
 const modules = Object.fromEntries(names.map(name => [name, new URL(`.map-${name}-under-test-${process.pid}.mjs`, import.meta.url)]));
-const paths = { data: '../lib/data.ts', model: '../lib/campus-map-model.ts', overlays: '../lib/campus-map-overlays.ts', buildings: '../components/campus-buildings.tsx', flat: '../components/campus-flat-map.tsx', main: '../components/campus-map.tsx', fallback: '../components/campus-map.tsx', garden: '../components/campus-map.tsx', wilkins: '../components/campus-map.tsx', mixedMain:'../components/campus-map.tsx', mixedFlat:'../components/campus-flat-map.tsx' };
-const mixedItems=[['event','Campus talk'],['freebie','Society giveaway'],['food','Leftover lunch'],['deal','Student discount']].map(([type,title])=>({id:type,type,title,lat:51.525,lng:-.134,eventState:'upcoming',timeLabel:'Tomorrow'}));
+const paths = { data: '../lib/data.ts', model: '../lib/campus-map-model.ts', overlays: '../lib/campus-map-overlays.ts', focus: '../lib/campus-map-focus.ts', buildings: '../components/campus-buildings.tsx', flat: '../components/campus-flat-map.tsx', main: '../components/campus-map.tsx', fallback: '../components/campus-map.tsx', garden: '../components/campus-map.tsx', wilkins: '../components/campus-map.tsx', mixedMain:'../components/campus-map.tsx', mixedFlat:'../components/campus-flat-map.tsx' };
+const mixedItems=[['event','Campus talk'],['freebie','Society giveaway'],['food','Leftover lunch'],['deal','Student discount'],['assistant','Assistant cafe']].map(([type,title])=>({id:type,type,title,lat:51.525,lng:-.134,eventState:'upcoming',timeLabel:'Tomorrow'}));
 const compile = value => ts.transpileModule(value, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
 let CampusMap, FlatCampusMap, FallbackCampusMap, GardenCampusMap, WilkinsCampusMap, MixedMainMap, MixedFlatMap, areCampusMapPropsEqual;
 try {
@@ -21,6 +21,7 @@ try {
       .replace(/from\s+(['"])@\/lib\/campus-map-model\1/g, `from '${modules.model.href}'`)
       .replace(/from\s+(['"])\.\/campus-map-model\1/g, `from '${modules.model.href}'`)
       .replace(/from\s+(['"])@\/lib\/campus-map-overlays\1/g, `from '${modules.overlays.href}'`)
+      .replace(/from\s+(['"])@\/lib\/campus-map-focus\1/g, `from '${modules.focus.href}'`)
       .replace(/from\s+(['"])@\/lib\/data\1/g, `from '${modules.data.href}'`);
     if (name === 'data') {
       // Use the real catalogue/index without asking Node to resolve TS paths.
@@ -91,6 +92,26 @@ test('map memo never retains stale callbacks, selection or confirmation settings
   assert.equal(areCampusMapPropsEqual(props,{...props,initialPosition:{lat:51.525,lng:-.135}}),false,'Longitude changes must update a confirmed position');
 });
 
+test('map memo responds to repeated focus requests for the same item without rerendering equivalent requests',()=>{
+  const props={items:[],onSelect(){},focus:{id:'assistant-cafe',request:1}};
+  assert.equal(areCampusMapPropsEqual(props,{...props,focus:{...props.focus}}),true);
+  assert.equal(areCampusMapPropsEqual(props,{...props,focus:{id:'assistant-cafe',request:2}}),false);
+  assert.equal(areCampusMapPropsEqual(props,{...props,focus:{id:'library',request:1}}),false);
+  assert.equal(areCampusMapPropsEqual(props,{...props,focus:undefined}),false);
+});
+
+test('assistant markers show a suggestion icon and label without inventing a rating',()=>{
+  const item={id:'assistant-cafe',title:'Suggested cafe',type:'assistant',lat:51.525,lng:-.134,score:'4.9'};
+  const markup=renderToStaticMarkup(React.createElement(FlatCampusMap,{items:[item],selected:item.id,onSelect(){}}));
+  assert.match(markup,/data-map-layer="assistant"/);
+  assert.match(markup,/lucide-sparkles/);
+  assert.match(markup,/aria-label="View Assistant suggestion: Suggested cafe"/);
+  assert.match(markup,/aria-pressed="true"/);
+  assert.doesNotMatch(markup,/>4\.9</);
+  const hidden=renderToStaticMarkup(React.createElement(FlatCampusMap,{items:[{...item,locationProvider:'google'}],selected:item.id,onSelect(){}}));
+  assert.doesNotMatch(hidden,/data-map-layer="assistant"/,'Google Places suggestions stay hidden on an OSM map');
+});
+
 test('general events retain calendar icons, time labels, accessible targets and live/upcoming state',()=>{
   for(const [eventState,timeLabel] of [['upcoming','Thu 19:00'],['live','Live']]){
     const markup=renderToStaticMarkup(React.createElement(FlatCampusMap,{items:[{id:'talk',title:'Campus talk',type:'event',lat:51.525,lng:-.134,eventState,timeLabel}],onSelect(){}}));
@@ -105,15 +126,16 @@ test('general events retain calendar icons, time labels, accessible targets and 
 test('one mixed alert target leads to every co-located event and find with its own icon',()=>{
   const markup=renderToStaticMarkup(React.createElement(FlatCampusMap,{items:mixedItems,onSelect(){}}));
   assert.equal(markup.split('data-map-layer="mixed"').length-1,1);
-  assert.match(markup,/aria-label="4 events and finds nearby"/);
+  assert.match(markup,/aria-label="5 events and finds nearby"/);
   assert.match(markup,/lucide-layers/);
   for(const Component of [MixedMainMap,MixedFlatMap]){
     const html=renderToStaticMarkup(React.createElement(Component,{items:mixedItems,onSelect(){}}));
     const picker=html.split('aria-label="Places at this location"')[1]?.split('</section>')[0];
     assert.ok(picker,'The mixed target opens a picker');
     for(const item of mixedItems)assert.ok(picker.includes(item.title),item.title+' remains selectable');
-    for(const icon of ['calendar-days','gift','utensils','tag'])assert.ok(picker.includes('lucide-'+icon),icon);
-    assert.equal((picker.match(/<button\b/g)||[]).length,6,'Close, zoom and four individual item buttons');
+    for(const icon of ['calendar-days','gift','utensils','tag','sparkles'])assert.ok(picker.includes('lucide-'+icon),icon);
+    assert.ok(picker.includes('Assistant suggestion'));
+    assert.equal((picker.match(/<button\b/g)||[]).length,7,'Close, zoom and five individual item buttons');
   }
 });
 

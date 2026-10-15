@@ -43,6 +43,7 @@ export const placeOpeningHours: Record<string, OpeningSchedule> = {
 export const placeHoursLinks: Record<string, string> = {
   'student-centre': 'https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/student-centre',
   'main-library': 'https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/main-library',
+  'archaeology-library': 'https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/institute-archaeology-library',
   'science-library': 'https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/science-library',
   'ssees-library': 'https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/ssees-library',
   'ioe-library': 'https://www.ucl.ac.uk/library/using-library/libraries-and-study-spaces/ioe-library',

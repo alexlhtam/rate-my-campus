@@ -2,9 +2,11 @@ import { z } from "zod";
 import { currentUser } from "@/lib/supabase";
 import { consumeRateLimit, requireVerified } from "@/lib/community-server";
 import { assertSameOrigin } from "@/lib/community-validation";
-import { extractFood, extractPin, importUnionEvent, integrationErrorResponse, IntegrationError, integrationStatus, locatePlace, readLimitedText, runtimeEnv, searchWithClaude, summarizeReviews } from "@/lib/integrations";
+import { extractFood, extractPin, importUnionEvent, integrationErrorResponse, IntegrationError, integrationStatus, locatePlace, readLimitedText, runtimeEnv, summarizeReviews } from "@/lib/integrations";
+import { researchCampus } from "@/lib/campus-assistant";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const bodySchema = z.object({
   action: z.enum(["search", "extract", "extract-food", "locate", "summary", "import-event"]),
@@ -61,14 +63,14 @@ export async function POST(request: Request) {
     if (!identity) throw new IntegrationError(401, "Sign in to use connected services.");
     const body = bodySchema.parse(JSON.parse(await readLimitedText(request, 3_000_000)));
     // The limit is stored atomically in Postgres and applies across instances.
-    // Search shares one eight-second prerequisite budget. Claude then has its
-    // own 25-second transport deadline; the browser also bounds the full request.
+    // Search shares one eight-second prerequisite budget, then a fifty-second
+    // research budget. The browser also bounds the complete request.
     if (body.action === "search") await deadline.run(() => consumeRateLimit(identity.userId, "assist", 30, 3600));
     else await consumeRateLimit(identity.userId, "assist", 30, 3600);
     if (body.action === "search") {
       if (!body.text?.trim()) throw new IntegrationError(400, "Enter a search first.");
       deadline.check();
-      return Response.json({ provider: "anthropic", filters: await searchWithClaude(body.text) }, { headers: { "Cache-Control": "no-store" } });
+      return Response.json({ provider: "anthropic", ...await researchCampus(body.text, { signal: request.signal }) }, { headers: { "Cache-Control": "no-store" } });
     }
     if (body.action === "locate") {
       if (!body.text?.trim()) throw new IntegrationError(400, "Enter a location first.");

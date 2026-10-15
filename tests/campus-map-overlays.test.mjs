@@ -87,6 +87,14 @@ test('expired pins are removed immediately even during a gesture',()=>{
   assert.deepEqual(moving.groups.flatMap(group=>group.items.map(item=>item.id)),['2']);
 });
 
+test('a selected assistant suggestion remains its own target beside co-located alerts',()=>{
+  const suggestion={...pin('assistant',100,'—'),item:{id:'assistant',type:'assistant',lat:51.525,lng:-.134}};
+  const event={...pin('event',100),item:{id:'event',type:'event',lat:51.525,lng:-.134}};
+  const result=layoutOverlayGroups([suggestion,event],null,false,{zoom:14,selected:'assistant'});
+  assert.equal(result.groups.find(group=>group.items[0].id==='assistant').items.length,1);
+  assert.deepEqual(new Set(result.groups.flatMap(group=>group.items.map(item=>item.id))),new Set(['assistant','event']));
+});
+
 test('campus zoom prioritises actual ratings without hiding a selected unrated place or food',()=>{
   const pins=[...Array.from({length:190},(_,index)=>pin(String(index),index*10,'—')),pin('reviewed',150,'4.7'),{...pin('food',5,'—'),item:{id:'food',type:'food',lat:51.5,lng:0}}];
   const initial=layoutOverlayGroups(pins,null,false,{zoom:16.65,selected:'120'});
