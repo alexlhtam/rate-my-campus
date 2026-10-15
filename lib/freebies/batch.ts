@@ -54,13 +54,14 @@ const moderation=`For EACH event, also moderate its source title, venue, organis
 export async function askClaudeBatch(items:BatchItem[],config:ProviderConfig):Promise<Map<string,{checkpoint?:ImportCheckpoint;error?:string}>> {
   if(!items.length||items.length>MAX_BATCH_EVENTS||new Set(items.map(item=>item.id)).size!==items.length)throw new Error('Invalid event batch.');
   const body=await requestJson('Claude','https://api.anthropic.com/v1/messages',config.claudeKey,{
-    model:config.claudeModel,max_tokens:Math.min(32_000,2500+items.length*800),temperature:0,
+    model:config.claudeModel,max_tokens:Math.min(32_000,2500+items.length*800),
     system:CLAUDE_SYSTEM+`\nBATCH MODE: Return {events:[{id,extraction,moderation}]} using the supplied schema. Return exactly one result for every input id, unchanged. Each extraction follows the rules above using ONLY its own event. Keep summaries under 45 words and omit redundant conditions. ${moderation}`,
     messages:[{role:'user',content:JSON.stringify({events:items.map(input)})}],
-    output_config:{format:{type:'json_schema',schema:batchSchema}},
+    output_config:{...(config.claudeModel==='claude-haiku-5-5'?{effort:'low'}:{}),format:{type:'json_schema',schema:batchSchema}},
   },{timeoutMs:90_000,attempts:1});
   const envelope=z.object({stop_reason:z.string().nullable().optional(),content:z.array(z.object({type:z.string(),text:z.string().optional()}))}).parse(body);
   if(envelope.stop_reason==='max_tokens')throw new Error('Batch response was cut short; pending events will retry in smaller batches.');
+  if(envelope.stop_reason==='refusal'||envelope.stop_reason==='model_context_window_exceeded')throw new Error('Batch response could not be completed; pending events will retry in smaller batches.');
   const text=envelope.content.filter(block=>block.type==='text').map(block=>block.text||'').join('');
   let parsed:unknown;try{parsed=JSON.parse(text)}catch{throw new Error('Batch response was unreadable; pending events will retry in smaller batches.')}
   const rows=z.object({events:z.array(z.unknown()).max(MAX_BATCH_EVENTS)}).parse(parsed).events;

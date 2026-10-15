@@ -27,11 +27,24 @@ const publish=(source,extraction,verdict)=>publishFreebie(db,source,extraction,d
 async function clear(){await pg.exec('TRUNCATE freebie_tasks,freebie_scans,posts,freebie_venues RESTART IDENTITY CASCADE');await pg.exec('UPDATE freebie_worker SET lock_token=NULL,lock_until=0');}
 async function seed(items,{pages=true}={}){const start=await actOnScan(db,config,{action:'start'});await insertEvents(db,start.run.id,items.map(i=>i.source));await db.prepare("UPDATE freebie_scans SET exhausted=1,status='running' WHERE id=?").bind(start.run.id).run();if(pages)for(const i of items)await db.prepare('UPDATE freebie_tasks SET page_json=? WHERE run_id=? AND event_id=?').bind(JSON.stringify(i.page),start.run.id,i.source.id).run();return start.run.id;}
 
-test('30 events use one request with extraction and moderation, no adaptive thinking',async(t)=>{
+test('30 events use one request with extraction and moderation',async(t)=>{
  const calls=fakeProvider(t),items=Array.from({length:30},(_,i)=>item(i));
  const result=await askClaudeBatch(items,config);assert.equal(calls.length,1);assert.equal(result.size,30);
  assert.equal(calls[0].thinking,undefined);assert.ok(calls[0].max_tokens>2500);
  for(const i of items){assert.equal(result.get(i.id).checkpoint._processing.moderation.approved,true);assert.equal(result.get(i.id).checkpoint._processing.fingerprint,fingerprint(i,config.claudeModel));}
+});
+test('Haiku uses low effort and omits unsupported sampling parameters',async(t)=>{
+ const calls=fakeProvider(t);await askClaudeBatch([item('haiku')],{...config,claudeModel:'claude-haiku-5-5'});
+ assert.equal(calls[0].model,'claude-haiku-5-5');assert.equal(calls[0].output_config.effort,'low');assert.equal(calls[0].temperature,undefined);assert.equal(calls[0].top_p,undefined);
+ await askClaudeBatch([item('override')],{...config,claudeModel:'claude-haiku-4-5-20251001'});
+ assert.equal(calls[1].output_config.effort,undefined);assert.equal(calls[1].thinking,undefined);
+});
+test('provider refusals cannot approve even a response containing valid JSON',async(t)=>{
+ const original=globalThis.fetch;t.after(()=>{globalThis.fetch=original});
+ for(const reason of ['refusal','model_context_window_exceeded']){
+  globalThis.fetch=async()=>respond([{id:'one',extraction,moderation}],reason);
+  await assert.rejects(askClaudeBatch([item('one')],config),/could not be completed/);
+ }
 });
 test('batch sizes respect complete text, 30-event cap and smaller retries',()=>{
  const items=Array.from({length:35},(_,i)=>item(i));assert.equal(selectBatch(items).length,30);

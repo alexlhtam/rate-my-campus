@@ -16,7 +16,7 @@ const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache
 function config(env:Record<string,unknown>):ProviderConfig {
  const value=(key:string,fallback='')=>typeof env[key]==='string'?String(env[key]).trim()||fallback:fallback;
  const threshold=Number(value('JEV_THRESHOLD','0.5'));
- return {jevKey:'',claudeKey:value('ANTHROPIC_API_KEY'),jevModel:value('JEV_MODEL','jev-latest'),claudeModel:value('FREEBIE_CLAUDE_MODEL',value('ANTHROPIC_MODEL','claude-sonnet-4-6')),threshold:Number.isFinite(threshold)&&threshold>=0&&threshold<=1?threshold:0.5};
+ return {jevKey:'',claudeKey:value('ANTHROPIC_API_KEY'),jevModel:value('JEV_MODEL','jev-latest'),claudeModel:value('FREEBIE_CLAUDE_MODEL','claude-haiku-5-5'),threshold:Number.isFinite(threshold)&&threshold>=0&&threshold<=1?threshold:0.5};
 }
 export function workerAuthorized(request:Request,env:Record<string,unknown>){
  const secret=String(env.CRON_SECRET||''),provided=request.headers.get('authorization')||'',expected='Bearer '+secret;

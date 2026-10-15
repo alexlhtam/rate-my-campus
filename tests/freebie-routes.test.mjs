@@ -56,9 +56,14 @@ test('moderator imports require same-origin writes and start a background job us
  assert.equal((await freebiesRoute(request('scan',{action:'start'},{origin:'https://evil.example'}),['scan'])).status,403);
  const response=await freebiesRoute(request('scan',{action:'start',startDate:'2099-01-01'}),['scan']);
  assert.equal(response.status,202);const body=await response.json();
- assert.notEqual(body.run.startDate,'2099-01-01');assert.equal(body.models.claude,'fixture-model');assert.equal(jobs.length,1);
+ assert.notEqual(body.run.startDate,'2099-01-01');assert.equal(body.models.claude,'claude-haiku-5-5');assert.equal(jobs.length,1);
  assert.equal((await freebiesRoute(request('scan',{action:'start'}),['scan'])).status,202);
  assert.equal((await db.prepare('SELECT * FROM freebie_scans').all()).results.length,1);
+});
+test('the importer respects its own model override independently of the campus assistant',async()=>{
+ admin=true;env.FREEBIE_CLAUDE_MODEL='claude-haiku-4-5-20251001';
+ const response=await freebiesRoute(request('scan',{action:'start'}),['scan']);assert.equal(response.status,202);
+ assert.equal((await response.json()).models.claude,'claude-haiku-4-5-20251001');assert.equal(env.ANTHROPIC_MODEL,'fixture-model');
 });
 test('disabled imports and missing configuration do not create jobs or spend quota',async()=>{
  admin=true;env.UNION_IMPORT_ENABLED='false';
