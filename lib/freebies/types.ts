@@ -47,6 +47,8 @@ export interface EventRecord {
   publicationState?: string | null;
   imageUrl: string | null;
   sourceLocation: string | null;
+  sourceOrganizer?: string | null;
+  sourceOnline?: boolean | null;
 }
 
 export interface ScanRun {

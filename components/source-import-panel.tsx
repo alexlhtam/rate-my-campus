@@ -22,17 +22,23 @@ export function londonDateTime(value: string | number): string {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date).map(part => [part.type, part.value]));
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
-export function londonDateTimeToISO(value: string): string {
+export function londonTimeCandidates(value: string): number[] {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return [];
+  const nominal = Date.parse(`${value}:00Z`);
+  if (!Number.isFinite(nominal) || new Date(nominal).toISOString().slice(0, 16) !== value) return [];
+  return [nominal - 3600000, nominal].filter(time => londonDateTime(time) === value);
+}
+export function londonDateTimeToISO(value: string, original?: string | null, occurrence?: 'earlier' | 'later'): string {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) throw new Error('Enter a complete event date and time.');
   const nominal = Date.parse(`${value}:00Z`);
   if (!Number.isFinite(nominal)) throw new Error('Enter a valid event date and time.');
-  let actual = nominal;
-  for (let iteration = 0; iteration < 2; iteration++) {
-    const represented = Date.parse(`${londonDateTime(actual)}:00Z`);
-    actual += nominal - represented;
-  }
-  if (londonDateTime(actual) !== value) throw new Error('This London time does not exist because the clocks change. Check the event time.');
-  return new Date(actual).toISOString();
+  if (new Date(nominal).toISOString().slice(0, 16) !== value) throw new Error('Enter a valid event date and time.');
+  const candidates = londonTimeCandidates(value);
+  if (!candidates.length) throw new Error('This London time does not exist because the clocks change. Check the event time.');
+  if (occurrence) return new Date(occurrence === 'earlier' ? candidates[0] : candidates[candidates.length - 1]).toISOString();
+  if (original && londonDateTime(original) === value) return new Date(original).toISOString();
+  if (candidates.length > 1) throw new Error('This London time occurs twice when the clocks change. Choose the first (BST) or second (GMT) occurrence.');
+  return new Date(candidates[0]).toISOString();
 }
 
 async function requestJSON<T>(url: string, body?: Record<string, unknown>): Promise<T> {
@@ -48,6 +54,7 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
   const [result, setResult] = useState<ImportResult | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [start, setStart] = useState(''), [expiry, setExpiry] = useState('');
+  const [startOccurrence, setStartOccurrence] = useState<'' | 'earlier' | 'later'>(''), [expiryOccurrence, setExpiryOccurrence] = useState<'' | 'earlier' | 'later'>('');
   const [position, setPosition] = useState<MapPosition>(campus);
   const [locationSource, setLocationSource] = useState<'manual' | 'google'>('manual');
   const [mapProvider, setMapProvider] = useState<MapProvider>('unavailable');
@@ -73,6 +80,7 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
       const imported = await requestJSON<ImportResult>('/api/assist', { action: 'import-event', sourceUrl: sourceUrl.trim() });
       setResult(imported); setDraft(imported.pin); setStart(imported.pin.startsAt ? londonDateTime(imported.pin.startsAt) : '');
       setExpiry(imported.pin.expiresAt ? londonDateTime(imported.pin.expiresAt) : '');
+      setStartOccurrence(''); setExpiryOccurrence('');
       setPosition(campus); setLocationSource('manual'); setConfirmed(false); setMatches([]);
     } catch (failure) { setError((failure as Error).message); }
     finally { setBusy(''); }
@@ -93,7 +101,7 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
     if (locationSource === 'google' && mapProvider !== 'google') { setError('Wait for the Google map, or reset to a manual campus location.'); return; }
     setBusy('submit');
     try {
-      const ends = londonDateTimeToISO(expiry), begins = start ? londonDateTimeToISO(start) : null;
+      const ends = londonDateTimeToISO(expiry, result.pin.expiresAt, expiryOccurrence || undefined), begins = start ? londonDateTimeToISO(start, result.pin.startsAt, startOccurrence || undefined) : null;
       if (Date.parse(ends) <= Date.now() || Date.parse(ends) > Date.now() + 14 * 86400000) throw new Error('Choose an expiry in the next fourteen days. Import later if the event is further away.');
       if (begins && Date.parse(begins) >= Date.parse(ends)) throw new Error('The event must start before this pin expires.');
       const response = await requestJSON<{ post: Record<string, unknown>; message?: string }>('/api/community/action', {
@@ -127,10 +135,12 @@ export default function SourceImportPanel({ onSubmitted, onRequireAccount }: Pro
       <label>Pin title<input required minLength={3} maxLength={100} value={draft.title} onChange={event => { setDraft({ ...draft, title: event.target.value }); setConfirmed(false); }} /></label>
       <label>Offer and event details<textarea rows={3} maxLength={1500} value={draft.description} onChange={event => { setDraft({ ...draft, description: event.target.value }); setConfirmed(false); }} /></label>
       <div className="form-columns">
-        <label>Starts at (London time)<input type="datetime-local" value={start} onChange={event => { setStart(event.target.value); setConfirmed(false); }} /></label>
-        <label>Pin expires (London time)<input type="datetime-local" required min={londonDateTime(Date.now())} max={londonDateTime(Date.now() + 14 * 86400000)} value={expiry} onChange={event => { setExpiry(event.target.value); setConfirmed(false); }} /></label>
+        <label>Starts at (London time)<input type="datetime-local" value={start} onChange={event => { setStart(event.target.value); setStartOccurrence(''); setConfirmed(false); }} /></label>
+        <label>Pin expires (London time)<input type="datetime-local" required min={londonDateTime(Date.now())} max={londonDateTime(Date.now() + 14 * 86400000)} value={expiry} onChange={event => { setExpiry(event.target.value); setExpiryOccurrence(''); setConfirmed(false); }} /></label>
       </div>
-      <p className="fineprint">Unknown times stay blank. Confirm the advertised event end time; the pin expires within seven days.</p>
+      {londonTimeCandidates(start).length > 1 && <label>Repeated start time<select value={startOccurrence} onChange={event => { setStartOccurrence(event.target.value as '' | 'earlier' | 'later'); setConfirmed(false); }}><option value="">Keep the source time, or choose an occurrence</option><option value="earlier">First occurrence (BST)</option><option value="later">Second occurrence (GMT)</option></select></label>}
+      {londonTimeCandidates(expiry).length > 1 && <label>Repeated expiry time<select value={expiryOccurrence} onChange={event => { setExpiryOccurrence(event.target.value as '' | 'earlier' | 'later'); setConfirmed(false); }}><option value="">Keep the source time, or choose an occurrence</option><option value="earlier">First occurrence (BST)</option><option value="later">Second occurrence (GMT)</option></select></label>}
+      <p className="fineprint">Unknown times stay blank. Confirm the advertised event end time; the pin expires within fourteen days.</p>
       <label>Meeting location<div className="input-with-button"><input required minLength={3} maxLength={150} value={draft.location || ''} onChange={event => { setDraft({ ...draft, location: event.target.value }); setConfirmed(false); setMatches([]); }} />
         <button type="button" onClick={findLocation} disabled={!status?.google || Boolean(busy) || !draft.location?.trim()}><MapPin size={14} />{busy === 'location' ? 'Finding…' : 'Find'}</button></div></label>
       {matches.length > 0 && <div className="source-location-results" style={{ padding: 10, background: '#f5f3ed', borderRadius: 10, marginBottom: 12 }}>

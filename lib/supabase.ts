@@ -35,17 +35,17 @@ export async function authClient(): Promise<SupabaseClient | null> {
   });
 }
 
-/** The signed-in UCL account, verified from the session JWT. */
+/** Resolve the current Auth record: a valid JWT alone can outlive account deletion. */
 export async function currentUser(): Promise<CampusUser | null> {
   const client = await authClient();
   if (!client) return null;
-  const { data, error } = await client.auth.getClaims();
-  const claims = data?.claims;
-  if (error || !claims?.sub || typeof claims.email !== "string") return null;
-  const email = claims.email.toLowerCase();
+  const { data, error } = await client.auth.getUser();
+  const user = data?.user;
+  if (error || !user?.id || typeof user.email !== "string") return null;
+  const email = user.email.toLowerCase();
   // Supabase Auth accepts any address; only UCL accounts count as signed in here.
   if (!email.endsWith("@ucl.ac.uk")) return null;
-  return { userId: claims.sub, email };
+  return { userId: user.id, email };
 }
 
 let admin: SupabaseClient | undefined;

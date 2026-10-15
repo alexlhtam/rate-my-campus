@@ -31,11 +31,13 @@ let moderationHook = null;
 let photoVerdict = { approved: true, reasons: [] };
 let photoChecks = 0;
 let moderationTexts = [];
+let authStub = null, adminStub = null;
 globalThis.__communityTools = { publicFreebie, db, isUniqueViolation, validation, features, food,
   currentUser: async () => user, runtimeEnv: async () => ({ ADMIN_USER_IDS: "moderator", ANTHROPIC_API_KEY: "test" }),
+  authClient: async () => authStub, adminClient: () => adminStub,
   moderateContent: async (text) => { moderationTexts.push(text); if (moderationHook) await moderationHook(); if (serviceFailure) throw serviceFailure; return verdict; }, moderatePhoto: async () => { photoChecks++; return photoVerdict; },
   photoStorage: () => ({ download: async () => ({ data: new Blob([new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])]) }), remove: async () => ({ error: null }) }),
-  places: [{ id: "ucl-test", category: "building" }, { id: "study-test", category: "study" }],
+  places: [{ id: "ucl-test", category: "building" }, { id: "study-test", category: "study" }, { id: "rental-test", category: "rental" }],
 };
 const { communityRoute } = await loadTs("community-server", [
   [/import .*publicFreebie.*from .*freebies\/publication.*;/, "const {publicFreebie}=globalThis.__communityTools;"],
@@ -46,7 +48,7 @@ const { communityRoute } = await loadTs("community-server", [
   [/import \{([^}]+)\} from "\.\/community-features";/, "const {$1} = globalThis.__communityTools.features;"],
   [/import \{([^}]+)\} from "\.\/food";/, "const {$1} = globalThis.__communityTools.food;"],
   [/import \{ places \} from "\.\/data";/, "const {places} = globalThis.__communityTools;"],
-  [/import \{[^}]+\} from "\.\/supabase";/, "const { currentUser, photoStorage } = globalThis.__communityTools; const authConfigured = () => true; const authClient = async () => null; const adminClient = () => null;"],
+  [/import \{[^}]+\} from "\.\/supabase";/, "const { currentUser, photoStorage, authClient, adminClient } = globalThis.__communityTools; const authConfigured = () => true;"],
 ]);
 
 async function call(path, data, method = data ? "POST" : "GET") {
@@ -470,6 +472,100 @@ test("community tools enforce ownership, moderation, private requests and comple
     }
     assert.equal((await db.prepare("SELECT status FROM posts WHERE id='union-expired'").first()).status,'hidden');
     assert.equal((await call('pin?id=union-expired')).status,404);
+  });
+  await t.test("a discussion hidden or deleted during moderation cannot accept an orphan reply", async () => {
+    asUser('discussion-writer');
+    for(const status of ['hidden','deleted']){
+      const threadId='reply-race-'+status;
+      await db.prepare("INSERT INTO threads(id,user_id,place_id,title,text,status,created_at) VALUES (?,'discussion-host','ucl-test','Discussion fixture','Question','approved',?)").bind(threadId,Date.now()).run();
+      moderationHook=async()=>{
+        moderationHook=null;
+        if(status==='deleted')await db.prepare('DELETE FROM threads WHERE id=?').bind(threadId).run();
+        else await db.prepare("UPDATE threads SET status='hidden',moderation_revision=moderation_revision+1 WHERE id=?").bind(threadId).run();
+      };
+      const response=await call('action',{action:'reply',threadId,text:'A useful answer'});
+      assert.equal(response.status,409);
+      assert.equal(Number((await db.prepare('SELECT count(*) AS count FROM replies WHERE thread_id=?').bind(threadId).first()).count),0);
+    }
+  });
+  await t.test("manual approval checks private details in review terms and complete imported event metadata", async () => {
+    asUser('moderator');
+    await review('private-term-review','private-term-author','ucl-test',4,'pending');
+    await db.prepare("UPDATE reviews SET term='Contact private@example.com' WHERE id='private-term-review'").run();
+    await review('private-room-review','private-room-author','rental-test',4,'pending');
+    await db.prepare("UPDATE reviews SET text='My room 12 has damp' WHERE id='private-room-review'").run();
+    await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES ('private-source-event','system:union','event','Society event','Public description','Campus',?,'private-source','{\"hasFreebies\":false,\"freebies\":[],\"conditions\":[\"Contact private@example.com\"]}','[]','pending',?)").bind(Date.now()+60000,Date.now()).run();
+    for(const targetId of ['private-term-review','private-source-event','private-room-review']){
+      const response=await call('moderation',{targetId,decision:'approve'});
+      assert.equal(response.status,400);assert.match(response.body.error,/contact details|flat or room/);
+    }
+    assert.equal((await db.prepare("SELECT status FROM reviews WHERE id='private-term-review'").first()).status,'pending');
+    assert.equal((await db.prepare("SELECT status FROM posts WHERE id='private-source-event'").first()).status,'pending');
+  });
+  await t.test("old hidden content cannot starve pending or newly reported contributions out of moderation", async () => {
+    asUser('moderator');
+    await pg.exec("INSERT INTO reviews(id,user_id,place_id,rating,criteria,tags,text,term,recommend,status,created_at) SELECT 'old-hidden-' || n,'old-hidden-' || n,'ucl-test',4,'{}','[]','Old hidden content','Autumn 2026',1,'hidden',1 FROM generate_series(1,201) AS n");
+    await review('fresh-pending','fresh-pending-author','ucl-test',4,'pending');
+    await review('fresh-reported','fresh-reported-author');
+    await db.prepare("INSERT INTO reports(id,user_id,target_id,reason,created_at) VALUES ('fresh-report','reporter','fresh-reported','Needs checking',?)").bind(Date.now()).run();
+    const response=await call('moderation');assert.equal(response.status,200);
+    assert.ok(response.body.queue.some(item=>item.id==='fresh-pending'));
+    assert.ok(response.body.queue.some(item=>item.id==='fresh-reported'));
+  });
+  await t.test("sign-out does not report success when Auth cannot end the session", async () => {
+    authStub={auth:{signOut:async()=>({error:{name:'AuthApiError',message:'private provider response'}})}};
+    let response=await call('auth/signout',{});
+    assert.equal(response.status,503);assert.match(response.body.error,/sign out/i);
+    assert.equal(JSON.stringify(response.body).includes('private provider response'),false);
+    authStub={auth:{signOut:async()=>({error:null})}};
+    response=await call('auth/signout',{});assert.equal(response.status,200);assert.equal(response.body.ok,true);
+    authStub=null;
+  });
+  await t.test("deleting an account during provider moderation cancels delayed writes without recreating its profile", async () => {
+    await db.prepare("INSERT INTO threads(id,user_id,place_id,title,text,status,created_at) VALUES ('account-race-parent','other-person','study-test','Open discussion','A public conversation','approved',1)").run();
+    const cases=[
+      {action:'review',placeId:'study-test',rating:4,criteria:{wifi:4},text:'Useful place',tags:[],recommend:true,term:'Autumn 2026'},
+      {action:'thread',placeId:'study-test',title:'A study question',text:'When is this place quiet?'},
+      {action:'reply',threadId:'account-race-parent',text:'It was quiet during my visit.'},
+      foodBody('Delayed approved food'),
+      foodBody('Delayed pending food'),
+      {action:'update-post',targetId:'account-race-food',revision:0,collectionInstructions:'An updated collection note'},
+    ];
+    adminStub={storage:{from:()=>({remove:async()=>({error:null})})},auth:{admin:{deleteUser:async()=>{user=null;return {error:null}}}}};
+    authStub={auth:{signOut:async()=>({error:null})}};
+    try {
+      for(const [index,body] of cases.entries()){
+        const userId=`deleted-during-check-${index}`;asUser(userId);
+        verdict={approved:index!==4,reasons:index===4?['Needs review']:[]};
+        if(body.action==='update-post')await post('account-race-food',userId,Date.now()+60000,'pending');
+        moderationHook=async()=>{moderationHook=null;assert.equal((await call('account',undefined,'DELETE')).status,200)};
+        const response=await call('action',body);
+        assert.equal(response.status,403,`${body.action} must stop after deletion`);
+        assert.match(response.body.error,/account changed/i);
+        for(const table of ['profiles','reviews','threads','replies','posts'])assert.equal(Number((await db.prepare(`SELECT count(*) AS count FROM ${table} WHERE user_id=?`).bind(userId).first()).count),0,`${table} must not be recreated`);
+      }
+    } finally {verdict={approved:true,reasons:[]};moderationHook=null;authStub=null;adminStub=null;asUser('alice');}
+  });
+  await t.test("account deletion preserves retry access and reports partial Auth failure honestly", async () => {
+    asUser('account-delete-fixture');
+    await review('account-delete-review',user.userId);
+    await db.prepare("INSERT INTO photos(key,user_id,mime,bytes,created_at) VALUES ('photos/account-delete.jpg',?,'image/jpeg',20,?)").bind(user.userId,Date.now()).run();
+    let storageError={message:'private storage error'},authError={name:'AuthApiError',message:'private delete error'},deletions=0,signouts=0;
+    adminStub={storage:{from:()=>({remove:async()=>({error:storageError})})},auth:{admin:{deleteUser:async(id)=>{assert.equal(id,'account-delete-fixture');deletions++;return {error:authError}}}}};
+    authStub={auth:{signOut:async()=>{signouts++;return {error:null}}}};
+    let response=await call('account',undefined,'DELETE');
+    assert.equal(response.status,503);assert.equal(deletions,0);assert.equal(signouts,0);
+    assert.ok(await db.prepare("SELECT id FROM reviews WHERE id='account-delete-review'").first());
+    storageError=null;
+    response=await call('account',undefined,'DELETE');
+    assert.equal(response.status,503);assert.match(response.body.error,/community data.*deleted.*sign-in account/i);
+    assert.equal(deletions,1);assert.equal(signouts,0,'keep the session available so failed Auth deletion can be retried');
+    assert.equal(JSON.stringify(response.body).includes('private delete error'),false);
+    assert.equal(await db.prepare("SELECT id FROM reviews WHERE id='account-delete-review'").first(),null);
+    authError=null;
+    response=await call('account',undefined,'DELETE');
+    assert.equal(response.status,200);assert.equal(deletions,2);assert.equal(signouts,1);
+    authStub=null;adminStub=null;
   });
   await pg.close(); delete globalThis.__communityTools;
 });

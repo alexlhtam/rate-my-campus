@@ -33,3 +33,15 @@ test('winter London event times use GMT without relying on the host timezone', (
 test('nonexistent spring-clock-change times cannot silently become another time', () => {
   assert.throws(() => londonDateTimeToISO('2026-03-29T01:30'), /does not exist/);
 });
+
+test('unchanged source times preserve either occurrence of the repeated autumn hour', () => {
+  assert.equal(londonDateTimeToISO('2026-10-25T01:30', '2026-10-25T00:30:00Z'), '2026-10-25T00:30:00.000Z');
+  assert.equal(londonDateTimeToISO('2026-10-25T01:30', '2026-10-25T01:30:00Z'), '2026-10-25T01:30:00.000Z');
+  assert.throws(() => londonDateTimeToISO('2026-10-25T01:30'), /occurs twice/);
+  assert.equal(londonDateTimeToISO('2026-10-25T01:30', null, 'earlier'), '2026-10-25T00:30:00.000Z');
+  assert.equal(londonDateTimeToISO('2026-10-25T01:30', '2026-10-25T00:30:00Z', 'later'), '2026-10-25T01:30:00.000Z');
+});
+
+test('invalid calendar dates are rejected rather than normalized into another month', () => {
+  assert.throws(() => londonDateTimeToISO('2026-02-30T12:00'), /valid event date/);
+});

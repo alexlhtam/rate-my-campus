@@ -92,9 +92,21 @@ export async function freebiesRoute(request:Request,path:string[]) {
   if(!provider.claudeKey||!connected)throw new HttpError(503,'Configure Claude, CRON_SECRET and FREEBIE_WORKER_URL before importing.');
   await consumeRateLimit(profile.userId,'freebie-scan',30,3600);
   const active=await db.prepare('SELECT id FROM freebie_scans WHERE active_slot=1').first<{id:string}>();
-  if(active)await db.prepare('UPDATE freebie_scans SET auto_retries=0 WHERE id=?').bind(active.id).run();
-  else await consumeRateLimit('union-radar','scan-start',1,3600);
-  const result=active?await dashboard(db,provider,active.id):await actOnScan(db,provider,{action:'start',startDate:londonDate()},publisher);
+  const latest=active?null:await db.prepare('SELECT id,start_date,status FROM freebie_scans ORDER BY ordinal DESC LIMIT 1').first<{id:string;start_date:string;status:string}>();
+  // The explicit Import button recovers today's exhausted retry chain. Starting
+  // over would repeat successful fetches and paid extraction checkpoints.
+  const recover=latest&&latest.start_date===londonDate()&&['failed','partial','paused'].includes(latest.status)?latest:null;
+  let result;
+  if(active){
+   await db.prepare('UPDATE freebie_scans SET auto_retries=0 WHERE id=?').bind(active.id).run();
+   result=await dashboard(db,provider,active.id);
+  }else if(recover){
+   result=await actOnScan(db,provider,{action:'retry',runId:recover.id},publisher);
+   await db.prepare('UPDATE freebie_scans SET auto_retries=0 WHERE id=?').bind(recover.id).run();
+  }else{
+   await consumeRateLimit('union-radar','scan-start',1,3600);
+   result=await actOnScan(db,provider,{action:'start',startDate:londonDate()},publisher);
+  }
   launch();
   return json({...result,enabled,workerConnected:connected},202);
  }catch(error){

@@ -4,6 +4,14 @@ export type ShareTarget = { kind: 'place' | 'pin'; id: string; mode: CampusMode 
 const validId = (id: unknown): id is string => typeof id === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,119}$/.test(id);
 const validMode = (mode: unknown): mode is CampusMode => mode === 'demo' || mode === 'live';
 
+/** The unselected map still has a mode; a refresh must not silently switch datasets. */
+export function parseCampusMode(input: string): CampusMode | null {
+  try {
+    const url = new URL(input), mode = url.searchParams.get('mode');
+    return ['http:', 'https:'].includes(url.protocol) && url.searchParams.getAll('mode').length === 1 && validMode(mode) ? mode : null;
+  } catch { return null; }
+}
+
 export function campusShareUrl(base: string, target: ShareTarget): string {
   if (!validId(target.id) || !validMode(target.mode) || !['place', 'pin'].includes(target.kind)) throw new Error('Invalid shared place or alert.');
   const url = new URL(base);

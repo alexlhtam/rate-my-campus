@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {Check,Clock,Flag,MapPin,Navigation,Utensils} from 'lucide-react';
 import {FOOD_ALLERGENS,foodAvailability,foodQuantity,foodUpdatedLabel,readFoodDetails,type FoodDetails} from '@/lib/food';
 import {ShareCampusLink} from './share-campus-link';
@@ -7,9 +7,10 @@ type Row=Record<string,any>;
 export default function FoodDetail({post,demo,clock,vote,onAction,onReport}:{post:Row;demo:boolean;clock:number;vote?:string;onAction:(action:string,body:Row)=>Promise<Row|unknown>;onReport:()=>void}) {
   const status=foodAvailability(post,clock),details=readFoodDetails(post.foodDetails);
   const [editor,setEditor]=useState<'quantity'|'details'|'close'|null>(null),[quantity,setQuantity]=useState(''),[instructions,setInstructions]=useState(''),[food,setFood]=useState<FoodDetails>(details),[revision,setRevision]=useState(0),[reason,setReason]=useState('collected'),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
-  useEffect(()=>{setEditor(null);setError('');setNotice('')},[post.id]);
+  const actionVersion=useRef(0);
+  useEffect(()=>{setEditor(null);setError('');setNotice('');setBusy(false);return()=>{actionVersion.current++}},[post.id]);
   function edit(kind:typeof editor){setEditor(kind);setQuantity(post.portionsRemaining==null?'':String(post.portionsRemaining));setInstructions(post.collectionInstructions||'');setFood(readFoodDetails(post.foodDetails));setRevision(Number(post.revision||0));setError('');setNotice('')}
-  async function act(action:string,body:Row){setBusy(true);setError('');try{const result=await onAction(action,{targetId:post.id,...body}) as Row;setNotice(result?.message||'Updated in your private demo.');setEditor(null)}catch(failure){setError((failure as Error).message)}finally{setBusy(false)}}
+  async function act(action:string,body:Row){const version=++actionVersion.current;setBusy(true);setError('');try{const result=await onAction(action,{targetId:post.id,...body}) as Row;if(version!==actionVersion.current)return;setNotice(result?.message||(demo?'Updated in your private demo.':action==='vote'?'Availability feedback recorded.':'Your pickup was updated.'));setEditor(null)}catch(failure){if(version===actionVersion.current)setError(failure instanceof Error?failure.message:'The pickup could not be updated. Please try again.')}finally{if(version===actionVersion.current)setBusy(false)}}
   const canManage=post.own&&status.available,canEdit=post.own&&(status.available||status.state==='pending'&&Date.parse(post.expiresAt)>clock);
   return <div className="food-detail">
     <div className="food-heading"><span className="food-symbol"><Utensils size={26}/></span><div className="eyebrow">{demo?'PRIVATE DEMO FOOD ALERT':'LEFTOVER FOOD'}</div></div><h2>{post.title}</h2>
