@@ -64,8 +64,12 @@ export async function freebiesRoute(request:Request,path:string[]) {
    const offset=Math.floor(Math.min(10000,Math.max(0,Number(params.get('offset'))||0))),now=Date.now();
    const end=londonMidnight(addDays(londonDate(new Date(now)),14)).getTime();
    const result=await db.prepare("SELECT * FROM posts WHERE type IN ('event','freebie') AND (?::text IS NULL OR type = ?) AND source_event_key IS NOT NULL AND status = 'approved' AND expires_at > ? AND starts_at < ? ORDER BY starts_at ASC,id ASC LIMIT 51 OFFSET ?").bind(type,type,now,end,offset).all<Record<string,unknown>>();
-   const last=await db.prepare('SELECT updated_at,status,exhausted FROM freebie_scans ORDER BY ordinal DESC LIMIT 1').first();
-   return json({posts:result.results.slice(0,50).map(publicFreebie),nextOffset:result.results.length>50?offset+50:null,lastScan:last});
+   const last=await db.prepare('SELECT start_date,end_date,updated_at,status,exhausted FROM freebie_scans ORDER BY ordinal DESC LIMIT 1').first<{start_date:string;end_date:string;updated_at:string;status:string;exhausted:number}>();
+   // Only operational state is public. Scan errors, provider configuration and
+   // source checkpoints remain in the authenticated moderator dashboard.
+   const importStatus=!enabled?'disabled':!connected||!provider.claudeKey?'setup_required':'ready';
+   const lastScan=last?{...last,coverageComplete:last.status==='complete'&&last.exhausted===1}:null;
+   return json({posts:result.results.slice(0,50).map(publicFreebie),nextOffset:result.results.length>50?offset+50:null,lastScan,importReady:importStatus==='ready',importStatus});
   }
   const profile=await requireModerator();
   if(request.method==='GET'&&endpoint==='dashboard'){

@@ -29,12 +29,16 @@ export function matchesSearchTags(wanted: string[], evidence: string[], openLate
   });
 }
 
+export class SearchRequestError extends Error {
+  constructor(message: string, public status?: number) { super(message); }
+}
+
 /** A clarification leaves the map intact; failures retain their actionable reason. */
 export async function readSearchResponse(response: Response) {
   let data;
   try { data = await response.json(); }
   catch { throw new Error('Search returned an unreadable response. Please try again.'); }
-  if (!response.ok) throw new Error(typeof data?.error === 'string' ? data.error : 'Search is unavailable. Please try again.');
+  if (!response.ok) throw new SearchRequestError(typeof data?.error === 'string' ? data.error : 'Search is unavailable. Please try again.', response.status);
   const filters = data?.filters;
   if (!filters || typeof filters !== 'object' || Array.isArray(filters) || typeof filters.query !== 'string' || !Array.isArray(filters.tags)) {
     throw new Error('Search returned incomplete filters. Please try again.');
@@ -45,6 +49,42 @@ export async function readSearchResponse(response: Response) {
   const labels: Record<string, string> = { study: 'study spaces', lecture: 'lecture halls', halls: 'student halls', rental: 'rentals', building: 'campus buildings', food: 'leftover food', freebie: 'society freebies', event: 'Union events', deal: 'student deals' };
   const details = [filters.query, labels[filters.category] || labels[filters.layer] || 'campus places', ...filters.tags, ...(filters.dietary || []), filters.openNow ? 'open now' : '', filters.near ? `near ${filters.near}` : '', filters.radiusKm ? `within ${filters.radiusKm} km` : ''].filter(Boolean);
   return { filters, message: `Looking for ${details.join(' · ')}. Only recorded information is matched; missing details can limit results.` };
+}
+
+/** Bound the whole request, including authentication and a stalled response body. */
+export async function requestCampusSearch(text: string, options: {
+  signal?: AbortSignal; timeoutMs?: number; fetcher?: typeof fetch;
+} = {}) {
+  if (options.signal?.aborted) throw new DOMException('Search cancelled.', 'AbortError');
+  const controller = new AbortController();
+  let timedOut = false;
+  const cancel = () => controller.abort();
+  options.signal?.addEventListener('abort', cancel, { once: true });
+  let onAbort: () => void;
+  const aborted = new Promise<never>((_, reject) => {
+    onAbort = () => reject(new DOMException('Search cancelled.', 'AbortError'));
+    controller.signal.addEventListener('abort', onAbort, { once: true });
+  });
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, options.timeoutMs ?? 35_000);
+  try {
+    const request = (async () => {
+      const response = await (options.fetcher ?? fetch)('/api/assist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'search', text }), signal: controller.signal,
+      });
+      return readSearchResponse(response);
+    })();
+    return await Promise.race([request, aborted]);
+  } catch (error) {
+    if (timedOut) throw new SearchRequestError('Search took too long to respond. Please try again.');
+    if (controller.signal.aborted) throw new DOMException('Search cancelled.', 'AbortError');
+    if (error instanceof TypeError) throw new SearchRequestError('Search could not connect. Please try again.');
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', cancel);
+    controller.signal.removeEventListener('abort', onAbort!);
+  }
 }
 
 /** Conservative offline interpretation. It selects filters, never invents results. */
