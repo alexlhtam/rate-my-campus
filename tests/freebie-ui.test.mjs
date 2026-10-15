@@ -5,11 +5,17 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {loadFreebie} from './freebies/load.mjs';
 const {FreebieCard,FreebieFacts,FreebieTimeFilter}=await loadFreebie('components/freebie-events.tsx');
 const {canConfirmEventVenue,eventFeedStatus}=await loadFreebie('lib/freebies/view.ts');
+const {default:EventFeedNotice}=await loadFreebie('components/event-feed-notice.tsx');
 const pin={id:'fixture',title:'Example event',startsAt:'2026-10-12T18:00:00Z',expiresAt:'2026-10-12T20:00:00Z',location:'Wilkins Building',lat:51.5246,lng:-.1338,sourceUrl:'https://studentsunionucl.org/whats-on/clubs-societies/example',dietary:['Vegan'],freebie:{hasFreebies:true,freebies:[{item:'pizza',category:'food',evidence:'Free pizza for members',certainty:'confirmed'}],society:{name:'Example Society',evidence:'Example Society'},admission:'paid',priceDetails:'£5 ticket',bookingRequired:true,eligibility:'Society members',conditions:['While stocks last']}};
 test('event cards display explicit items, society, ticket restrictions, dietary information and the source',()=>{
  const html=renderToStaticMarkup(React.createElement(FreebieCard,{pin,now:Date.parse('2026-10-12T12:00:00Z'),saved:false,onOpen(){},onSave(){}}));
  for(const value of ['upcoming','Example Society','pizza','Vegan','£5 ticket','Booking required','Society members','Union listing','London time'])assert.ok(html.includes(value),value);
  assert.ok(html.includes(pin.sourceUrl));
+});
+
+test('published events without coordinates have a direct list shortcut and explicit map explanation',()=>{
+ const html=renderToStaticMarkup(React.createElement(EventFeedNotice,{metadata:null,count:2,locatedCount:0,now:Date.now(),loading:false,error:false,admin:true,onRefresh(){},onManage(){},onShowEvents(){}}));
+ for(const text of ['Show 2 published events','0 with map locations','2 online or awaiting a confirmed venue','All are available in the event list'])assert.ok(html.includes(text),text);
 });
 test('online events remain location TBC even if stale coordinates were supplied',()=>{
  const html=renderToStaticMarkup(React.createElement(FreebieFacts,{pin:{...pin,freebie:{...pin.freebie,attendance:'online'}},expanded:true}));

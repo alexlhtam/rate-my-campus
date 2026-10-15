@@ -70,6 +70,10 @@ export interface ScanRun {
   sourceCount: number;
   error: string | null;
   warnings: string[];
+  fetched?: number;
+  extracted?: number;
+  published?: number;
+  located?: number;
 }
 
 export interface Dashboard {

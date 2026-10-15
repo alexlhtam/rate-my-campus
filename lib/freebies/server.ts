@@ -41,7 +41,7 @@ export async function freebiesRoute(request:Request,path:string[]) {
   if(machine&&!workerAuthorized(request,env))throw new HttpError(401,'Worker authorization required.');
   const db=getDatabase();
   if(!db)throw new HttpError(503,'The freebie service is not connected yet.');
-  const publisher=(source:Parameters<typeof publishFreebie>[1],extraction:Parameters<typeof publishFreebie>[2])=>publishFreebie(db,source,extraction,{places,privacy:privateInformationReason,moderate:text=>moderateContent(text,'pin'),resolve:venue=>resolveVenue(db,venue,places,env.GOOGLE_MAPS_API_KEY?locatePlace:undefined)});
+  const publisher=(source:Parameters<typeof publishFreebie>[1],extraction:Parameters<typeof publishFreebie>[2],moderation?:Parameters<typeof publishFreebie>[4])=>publishFreebie(db,source,extraction,{places,privacy:privateInformationReason,moderate:text=>moderateContent(text,'pin'),resolve:venue=>resolveVenue(db,venue,places,env.GOOGLE_MAPS_API_KEY?locatePlace:undefined)},moderation);
   const connected=!!workerUrl(env)&&String(env.CRON_SECRET||'').length>=32;
   const enabled=env.UNION_IMPORT_ENABLED==='true';
   const launch=()=>after(async()=>{

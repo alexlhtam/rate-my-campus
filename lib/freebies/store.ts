@@ -2,6 +2,7 @@ import type { Database } from '../db';
 import type { Dashboard, EventRecord, RunStatus, ScanRun, SourceEvent } from "./types";
 import type { ProviderConfig } from "./providers";
 import { londonDate } from "./ucl";
+import {extractionOnly} from './batch';
 
 export interface RunRow {
   id: string; start_date: string; end_date: string; status: RunStatus;
@@ -23,7 +24,7 @@ export async function getRun(db: Database, id: string): Promise<RunRow | null> {
 
 export async function dashboard(db: Database, config: ProviderConfig, runId?: string): Promise<Dashboard> {
   const row = runId ? await getRun(db, runId) : await db.prepare("SELECT * FROM freebie_scans ORDER BY created_at DESC, ordinal DESC LIMIT 1").first<RunRow>();
-  const tasks = row ? (await db.prepare("SELECT id, run_id, event_id, source_json, jev_json, extraction_json, claude_model, status, error, failed_stage, attempts, checked_at, published_post_id, publication_state FROM freebie_tasks WHERE run_id = ? ORDER BY ordinal").bind(row.id).all<TaskRow>()).results : [];
+  const tasks = row ? (await db.prepare("SELECT id, run_id, event_id, source_json, page_json IS NOT NULL AS fetched, jev_json, extraction_json, claude_model, status, error, failed_stage, attempts, checked_at, published_post_id, publication_state FROM freebie_tasks WHERE run_id = ? ORDER BY ordinal").bind(row.id).all<TaskRow & {fetched:boolean}>()).results : [];
   const events: EventRecord[] = tasks.map(task => {
     const source: SourceEvent = JSON.parse(task.source_json);
     const jev = task.jev_json ? JSON.parse(task.jev_json) : null;
@@ -32,13 +33,15 @@ export async function dashboard(db: Database, config: ProviderConfig, runId?: st
       status: task.status,
       jevScore: jev?.score ?? null, jevModel: jev?.model ?? null,
       claudeModel: task.claude_model,
-      extraction: task.extraction_json ? JSON.parse(task.extraction_json) : null,
+      extraction: task.extraction_json ? extractionOnly(JSON.parse(task.extraction_json)) : null,
       error: task.error, failedStage: task.failed_stage, attempts: task.attempts,
       checkedAt: task.checked_at, publishedPostId: task.published_post_id, publicationState: task.publication_state,
     };
   }).sort((a, b) => Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title));
+  let located=0;
   if(row){
-    const publications=await db.prepare('SELECT p.id,p.status FROM posts p JOIN freebie_tasks t ON t.published_post_id=p.id WHERE t.run_id=?').bind(row.id).all<{id:string;status:string}>();
+    const publications=await db.prepare('SELECT p.id,p.status,p.lat,p.lng FROM posts p JOIN freebie_tasks t ON t.published_post_id=p.id WHERE t.run_id=?').bind(row.id).all<{id:string;status:string;lat:number|null;lng:number|null}>();
+    located=publications.results.filter(post=>post.status==='approved'&&post.lat!==null&&post.lng!==null).length;
     const status=new Map(publications.results.map(post=>[post.id,post.status]));
     for(const event of events){
       const current=event.publishedPostId?status.get(event.publishedPostId):undefined;
@@ -59,6 +62,8 @@ export async function dashboard(db: Database, config: ProviderConfig, runId?: st
       sourcePages: row.next_page, sourceCount: row.source_count,
       coverageComplete: !!row.exhausted && queued === 0 && failed === 0 && warnings.length === 0,
       error: row.error, warnings,
+      fetched:tasks.filter(task=>task.fetched).length,extracted:tasks.filter(task=>task.extraction_json).length,
+      published:events.filter(event=>event.publicationState==='published').length,located,
     };
   }
   return {
