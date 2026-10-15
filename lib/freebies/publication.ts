@@ -1,6 +1,7 @@
 import type { Database } from '../db';
 import type { Extraction, SourceEvent } from './types';
 import type {VenueMatch} from './venues';
+import {addDays,londonDate,londonMidnight} from './ucl';
 
 export type LocatedPlace = { id: string; name: string; aliases?: string[]; lat?: number; lng?: number; demo?: boolean; parentPlaceId?: string };
 export type FreebieDetails = Extraction & { sourceEventId: string; eventStart: string; eventEnd: string | null; placeId: string | null; locationConfirmed: boolean; sourceVenue?:string|null; locationProvider?:'campus'|'google'; locationValidUntil?:number };
@@ -31,24 +32,29 @@ export async function publishFreebie(db: Database, source: SourceEvent, extracti
   const key=source.id.split(':').slice(0,2).join(':');
   source={...source,id:key};
   const id=await postId(key), now=deps.now?.()??Date.now();
-  if(!extraction?.hasFreebies){
-    await db.prepare("UPDATE posts SET status = 'hidden', moderation_reason = 'The source no longer supports this offer.', source_checked_at = ?, moderation_revision = moderation_revision + 1 WHERE source_event_key = ? AND status = 'approved'").bind(now,source.id).run();
+  if(!extraction){
+    // Missing/withdrawn evidence is different from a validated ordinary event.
+    await db.prepare("UPDATE posts SET status = 'hidden', moderation_reason = 'The source no longer supports this listing.', source_checked_at = ?, moderation_revision = moderation_revision + 1 WHERE source_event_key = ? AND status = 'approved'").bind(now,source.id).run();
     return {id:null,state:'no_freebies'};
   }
+  const type=extraction.hasFreebies?'freebie':'event';
   const existing=await db.prepare('SELECT id, status, moderation_revision, source_location_revision, freebie_json, location, lat, lng FROM posts WHERE source_event_key = ?').bind(source.id).first<Record<string,unknown>>();
   // A community closure or moderator decision always wins over another scan.
   if(existing&&(existing.status==='hidden'||existing.status==='gone'||Number(existing.moderation_revision)>0))return {id:String(existing.id),state:'held_by_moderator'};
   const manual=await db.prepare('SELECT id FROM posts WHERE source_url = ? AND source_event_key IS NULL').bind(source.url).first<{id:string}>();
   if(manual)return {id:manual.id,state:'already_imported'};
-  const starts=Date.parse(source.start), sourceEnd=Date.parse(source.end||source.start), expires=Math.min(sourceEnd,now+14*86400000);
-  if(!Number.isFinite(starts)||!Number.isFinite(expires)||expires<=now)return {id:existing?String(existing.id):null,state:'expired'};
+  const starts=Date.parse(source.start),sourceEnd=source.end?Date.parse(source.end):NaN;
+  if(!Number.isFinite(starts)||!Number.isFinite(sourceEnd)||sourceEnd<=starts)throw new Error('The source must provide a valid event start and a later end time before publication.');
+  const windowEnd=londonMidnight(addDays(londonDate(new Date(now)),14)).getTime();
+  const expires=Math.min(sourceEnd,windowEnd);
+  if(expires<=now||starts>=windowEnd)return {id:existing?String(existing.id):null,state:'expired'};
   let previous: Partial<FreebieDetails>={};try{previous=JSON.parse(String(existing?.freebie_json||'{}'));}catch{/* Ignore incompatible older metadata. */}
-  const online=extraction.attendance==='online';
+  const online=source.sourceOnline===true||extraction.attendance==='online';
   const venue=extraction.venue||source.sourceLocation;
   const place=online?null:matchCampusVenue(venue,deps.places);
   const resolved=online?null:deps.resolve?await deps.resolve(venue):place?{lat:place.lat!,lng:place.lng!,placeId:place.id,provider:'campus' as const}:null;
   const preserve=!online&&previous.locationConfirmed&&previous.sourceVenue===venue&&Number.isFinite(existing?.lat)&&Number.isFinite(existing?.lng);
-  const details: FreebieDetails={...extraction,sourceEventId:source.id,eventStart:source.start,eventEnd:source.end,sourceVenue:venue,placeId:preserve?previous.placeId||null:resolved?.placeId||null,locationConfirmed:!!preserve,locationProvider:preserve?'campus':resolved?.provider,locationValidUntil:preserve?undefined:resolved?.validUntil};
+  const details: FreebieDetails={...extraction,attendance:online?'online':extraction.attendance,society:extraction.society||(source.sourceOrganizer?{name:source.sourceOrganizer,evidence:`Calendar organiser: ${source.sourceOrganizer}`}:null),sourceEventId:source.id,eventStart:source.start,eventEnd:source.end,sourceVenue:venue,placeId:preserve?previous.placeId||null:resolved?.placeId||null,locationConfirmed:!!preserve,locationProvider:preserve?'campus':resolved?.provider,locationValidUntil:preserve?undefined:resolved?.validUntil};
   const title=source.title.slice(0,160), location=preserve?String(existing!.location):(extraction.venue||extraction.address||source.sourceLocation||'Location not stated — check the source').slice(0,300);
   const text=[title,location,JSON.stringify(details)].join('\n');
   const privacy=deps.privacy(text);
@@ -57,18 +63,18 @@ export async function publishFreebie(db: Database, source: SourceEvent, extracti
   let reason=privacy||(text.length>8000?'The event details need a moderator check.':null);
   let approved=false;
   if(!reason){const verdict=await deps.moderate(text);approved=verdict.approved;reason=verdict.approved?null:verdict.reasons.join('; ').slice(0,500)||'Held for a moderator check.';}
-  if(!extraction.freebies.some(item=>item.certainty==='confirmed')){approved=false;reason='The listing offers items, but their cost is unclear. Check the original event.';}
+  if(extraction.hasFreebies&&!extraction.freebies.some(item=>item.certainty==='confirmed')){approved=false;reason='The listing offers items, but their cost is unclear. Check the original event.';}
   const status=approved?'approved':'pending';
   const row=await db.prepare(`INSERT INTO posts (id,user_id,type,title,description,location,lat,lng,starts_at,expires_at,source_url,source_name,dietary,status,moderation_reason,created_at,source_event_key,freebie_json,source_checked_at)
-    VALUES (?,'system:union','freebie',?,?,?,?,?,?,?,?,'Students’ Union UCL',?,?,?,?,?,?,?)
-    ON CONFLICT(source_event_key) DO UPDATE SET title=excluded.title,description=excluded.description,location=excluded.location,lat=excluded.lat,lng=excluded.lng,starts_at=excluded.starts_at,expires_at=excluded.expires_at,source_url=excluded.source_url,dietary=excluded.dietary,status=excluded.status,moderation_reason=excluded.moderation_reason,freebie_json=excluded.freebie_json,source_checked_at=excluded.source_checked_at
+    VALUES (?,'system:union',?,?,?,?,?,?,?,?,?,'Students’ Union UCL',?,?,?,?,?,?,?)
+    ON CONFLICT(source_event_key) DO UPDATE SET type=excluded.type,title=excluded.title,description=excluded.description,location=excluded.location,lat=excluded.lat,lng=excluded.lng,starts_at=excluded.starts_at,expires_at=excluded.expires_at,source_url=excluded.source_url,dietary=excluded.dietary,status=excluded.status,moderation_reason=excluded.moderation_reason,freebie_json=excluded.freebie_json,source_checked_at=excluded.source_checked_at
     WHERE posts.moderation_revision = 0 AND posts.source_location_revision = ? AND posts.status IN ('approved','pending') RETURNING id,status`)
-    .bind(id,title,extraction.summary,location,preserve?existing!.lat:resolved?.lat??null,preserve?existing!.lng:resolved?.lng??null,starts,expires,source.url,JSON.stringify((extraction.dietary||[]).map(item=>item.tag)),status,reason,now,source.id,JSON.stringify(details),now,Number(existing?.source_location_revision||0)).first<{id:string;status:string}>();
+    .bind(id,type,title,extraction.summary,location,preserve?existing!.lat:resolved?.lat??null,preserve?existing!.lng:resolved?.lng??null,starts,expires,source.url,JSON.stringify((extraction.dietary||[]).map(item=>item.tag)),status,reason,now,source.id,JSON.stringify(details),now,Number(existing?.source_location_revision||0)).first<{id:string;status:string}>();
   return {id:row?.id||String(existing?.id||id),state:row?.status==='approved'?'published':row?'needs_review':'held_by_moderator'};
 }
 
 export function publicFreebie(row: Record<string,unknown>) {
   let details: FreebieDetails|null=null;try{details=JSON.parse(String(row.freebie_json||'null'));}catch{/* Missing metadata stays absent. */}
   const expiredLocation=details?.locationProvider==='google'&&Number(details.locationValidUntil||0)<=Date.now();
-  return {createdAt:new Date(Number(row.created_at)).toISOString(),id:String(row.id),type:'freebie',title:String(row.title),description:String(row.description),location:String(row.location),lat:expiredLocation?null:row.lat,lng:expiredLocation?null:row.lng,startsAt:row.starts_at==null?null:new Date(Number(row.starts_at)).toISOString(),expiresAt:new Date(Number(row.expires_at)).toISOString(),sourceUrl:row.source_url,sourceName:row.source_name,status:row.status,freebie:details,dietary:details?.dietary?.map(item=>item.tag)||[],sourceCheckedAt:row.source_checked_at?new Date(Number(row.source_checked_at)).toISOString():null};
+  return {createdAt:new Date(Number(row.created_at)).toISOString(),id:String(row.id),type:row.type==='event'?'event':'freebie',title:String(row.title),description:String(row.description),location:String(row.location),lat:expiredLocation?null:row.lat,lng:expiredLocation?null:row.lng,startsAt:row.starts_at==null?null:new Date(Number(row.starts_at)).toISOString(),expiresAt:new Date(Number(row.expires_at)).toISOString(),sourceUrl:row.source_url,sourceName:row.source_name,status:row.status,freebie:details,dietary:details?.dietary?.map(item=>item.tag)||[],sourceCheckedAt:row.source_checked_at?new Date(Number(row.source_checked_at)).toISOString():null};
 }

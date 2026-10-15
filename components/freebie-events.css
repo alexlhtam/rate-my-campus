@@ -3,3 +3,17 @@
 .freebie-facts .google-venue-attribution{font:400 12px sans-serif;color:#5e5e5e;white-space:nowrap}
 
 .campus-map .map-pin.freebie:has(.freebie-pin-time){width:max-content;min-width:42px;height:36px;display:flex;align-items:center;gap:6px;padding:0 11px;border-radius:20px}.campus-map .map-pin.freebie:has(.freebie-pin-time) svg{flex-shrink:0}.campus-map .map-pin.freebie .freebie-pin-time{font-size:10px}
+/* Union events keep a distinct calendar colour alongside purple freebie gifts. */
+.layer-button.event.on{background:#e9f1fb;color:#426fa2;border-color:#c6d8ed}
+.card-type.event,.pin-detail-icon.event,.how-list .event{background:#e9f1fb;color:#426fa2}
+.event-kind{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:750;border-radius:7px;padding:4px 7px;margin-bottom:8px}
+.event-kind.event{color:#426fa2;background:#e9f1fb}.event-kind.freebie{color:#755392;background:#f1eafa}
+.freebie-card.event{border-color:#d9e4f2}.freebie-card.event.upcoming{background:#fbfdff}
+.freebie-card.event .freebie-card-actions{border-color:#e6edf5}.freebie-card.event .freebie-card-actions a,.freebie-card.event .freebie-card-actions button{color:#426fa2}
+.map-pin.event{background:#e6effa;color:#426fa2;border-color:#c0d3eb}.map-pin.event.upcoming{background:#edf3fb;color:#4e73a0}
+.map-pin.event.live{border-color:#426fa2}.campus-map .map-pin.event:has(.freebie-pin-time){width:max-content;min-width:42px;height:36px;display:flex;align-items:center;gap:6px;padding:0 11px;border-radius:20px}
+.campus-map .map-pin.event:has(.freebie-pin-time) svg{flex-shrink:0}.campus-map .map-pin.event .freebie-pin-time{font-size:10px;white-space:nowrap;font-weight:650}
+
+@media(max-width:700px){.layer-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.campus-map .map-pin.mixed{background:linear-gradient(125deg,#dfeaf7,#e9def4);color:#574b73;min-width:48px;width:auto;height:36px;padding:0 9px;border-color:#fffdf4}

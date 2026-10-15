@@ -189,6 +189,9 @@ export function parseCalendarPage(data: unknown, startDate: string, endDate: str
       start: new Date(start * 1000).toISOString(),
       end: new Date(end * 1000).toISOString(),
       imageUrl, sourceLocation: cleanString(value.field_event_venue__label),
+      sourceOrganizer: cleanString(value.field_event_owner_group)?.slice(0, 200) || null,
+      sourceOnline: value.field_event_online === "On" || value.field_event_online === true ? true
+        : value.field_event_online === "Off" || value.field_event_online === false ? false : null,
     });
   });
   return { events: [...events.values()], rawCount: rows.length, done: rows.length === 0, warnings };
@@ -455,6 +458,8 @@ export function parseEventPage(html: string, event: SourceEvent, finalUrl = even
   ) : null;
   const text = [
     `Title: ${title}`, `Source: ${finalUrl}`, `Starts: ${start}`, end ? `Ends: ${end}` : "",
+    event.sourceOrganizer ? `Calendar organiser: ${event.sourceOrganizer}` : "",
+    event.sourceOnline === true ? "The calendar lists this as an online event." : "",
     location ? `Location: ${location}` : "Location: not stated",
     "Event page:", articleText,
     bookingText ? `\nBooking and price information:\n${bookingText}` : "",

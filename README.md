@@ -1,4 +1,4 @@
-# Rate My Campus
+# Rate Our Campus
 
 A mobile-first UCL campus map with category-specific place reviews, society freebies, time-limited food alerts, student deals, anonymous community discussion and UCL email verification.
 

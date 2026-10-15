@@ -23,7 +23,7 @@ export async function GET(request: Request, context: Context) {
     }
     const identity = await currentUser();
     if (!identity) throw new IntegrationError(401, "Sign in to load Google Maps.");
-    if (request.headers.get("sec-fetch-site") === "cross-site") throw new IntegrationError(403, "Open Rate My Campus directly to load its map.");
+    if (request.headers.get("sec-fetch-site") === "cross-site") throw new IntegrationError(403, "Open Rate Our Campus directly to load its map.");
     if (!status.google) throw new IntegrationError(503, "Google Maps is not connected yet.");
     const params = new URL(request.url).searchParams;
     if (path.length === 1 && path[0] === "session") {

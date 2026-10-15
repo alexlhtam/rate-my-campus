@@ -128,7 +128,7 @@ async function main() {
   process.once("SIGINT", () => stop()); process.once("SIGTERM", () => stop());
   process.once("exit", stopWorker);
   server.listen(options.port, iface.address, () => {
-    console.log(`\nRate My Campus Wi-Fi demo: http://${iface.address}:${options.port}\nInterface: ${iface.name}; subnet mask: ${iface.netmask}.\nWait for Next.js's ready message, then open the address on the same network.\nDemo activity stays separately on each device. Live accounts, admin actions and paid APIs are blocked.\nPress Ctrl+C to stop both the proxy and its local server.\n`);
+    console.log(`\nRate Our Campus Wi-Fi demo: http://${iface.address}:${options.port}\nInterface: ${iface.name}; subnet mask: ${iface.netmask}.\nWait for Next.js's ready message, then open the address on the same network.\nDemo activity stays separately on each device. Live accounts, admin actions and paid APIs are blocked.\nPress Ctrl+C to stop both the proxy and its local server.\n`);
   });
 }
 

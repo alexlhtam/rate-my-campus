@@ -5,11 +5,11 @@ import ts from 'typescript';
 const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
 const model=compile(await readFile(new URL('../lib/campus-map-model.ts',import.meta.url),'utf8'));
 const source=(await readFile(new URL('../lib/campus-map-overlays.ts',import.meta.url),'utf8')).replace("'./campus-map-model'",`'data:text/javascript;base64,${Buffer.from(model).toString('base64')}'`);
-const {positionMapOverlays,layoutOverlayGroups,reviewPinSpacing,UNRATED_PIN_ZOOM}=await import(`data:text/javascript;base64,${Buffer.from(compile(source)).toString('base64')}`);
+const {positionMapOverlays,mapOverlayPosition,updateBuildingHover,layoutOverlayGroups,reviewPinSpacing,UNRATED_PIN_ZOOM}=await import(`data:text/javascript;base64,${Buffer.from(compile(source)).toString('base64')}`);
 
 test('markers and labels use the current canvas projection before the render callback returns',()=>{
-  const pin={point:{lat:51.524,lng:-.133},element:{style:{left:'0px',top:'0px',visibility:''}}};
-  const label={point:{lat:51.522,lng:-.136},element:{style:{left:'0px',top:'0px',visibility:''}}};
+  const pin={point:{lat:51.524,lng:-.133},element:{style:{left:'0px',top:'0px',visibility:'',transform:'translate(-50%, -100%)',scale:'1.13'}}};
+  const label={point:{lat:51.522,lng:-.136},element:{style:{left:'0px',top:'0px',visibility:'',transform:'translate(-50%, 6px)'}}};
   const camera={panX:0,panY:0,zoom:1,pitch:.6};
   const map={project:([lng,lat])=>({x:lng*1000*camera.zoom+camera.panX,y:lat*100*camera.zoom*camera.pitch+camera.panY})};
   for (const frame of [{panX:0,panY:0,zoom:1,pitch:.6},{panX:180,panY:-90,zoom:1,pitch:.6},{panX:-45,panY:60,zoom:2,pitch:.35}]) {
@@ -17,17 +17,50 @@ test('markers and labels use the current canvas projection before the render cal
     positionMapOverlays(map,[pin,label]);
     for (const overlay of [pin,label]) {
       const actual=map.project([overlay.point.lng,overlay.point.lat]);
-      assert.equal(overlay.element.style.left,`${actual.x}px`,'No queued animation/React frame may leave an old x position');
-      assert.equal(overlay.element.style.top,`${actual.y}px`,'Zoom and pitch must use the same projection as the canvas');
+      assert.equal(overlay.element.style.translate,`${actual.x}px ${actual.y}px`,'The current subpixel projection is applied before this render returns');
+      assert.equal(overlay.element.style.left,'0px','Camera movement does not change layout coordinates');
+      assert.equal(overlay.element.style.top,'0px');
     }
+    assert.equal(pin.element.style.transform,'translate(-50%, -100%)','Preserve the bottom anchor');
+    assert.equal(pin.element.style.scale,'1.13','Hover/selection scale remains separate from screen translation');
+    assert.equal(label.element.style.transform,'translate(-50%, 6px)','Preserve the label anchor');
   }
+});
+
+test('initial React placement and subsequent camera frames use the same independent translation',()=>{
+  const placement=mapOverlayPosition(12.25,40.5);
+  assert.deepEqual(placement,{left:0,top:0,translate:'12.25px 40.5px'});
+  const overlay={point:{lat:51,lng:0},element:{style:{...placement,visibility:''}}};
+  positionMapOverlays({project:()=>({x:12.25,y:40.5})},[overlay]);
+  assert.deepEqual(overlay.element.style,{...placement,visibility:''});
+});
+
+test('viewport layout is read once before any marker style writes',()=>{
+  const operations=[];
+  const viewport={get clientWidth(){operations.push('read-width');return 800},get clientHeight(){operations.push('read-height');return 600}};
+  const overlays=Array.from({length:40},(_,index)=>({point:{lng:index,lat:51},element:{style:new Proxy({translate:'',visibility:''},{set(target,key,value){operations.push('write-'+key);target[key]=value;return true}})}}));
+  positionMapOverlays({getContainer:()=>viewport,project:([lng])=>({x:lng*10,y:200})},overlays);
+  assert.deepEqual(operations.slice(0,2),['read-width','read-height']);
+  assert.equal(operations.filter(value=>value.startsWith('read-')).length,2,'Overlay count must not multiply layout reads');
+  assert.ok(operations.slice(2).every(value=>value.startsWith('write-')),'Never force layout after changing an overlay');
+});
+
+test('building hover queries stop during camera movement and resume without redundant cursor writes',()=>{
+  let moving=true,layer=true,calls=0,writes=0,cursor='pointer';
+  const style={get cursor(){return cursor},set cursor(value){cursor=value;writes++}};
+  const map={isMoving:()=>moving,getLayer:()=>layer,getCanvas:()=>({style}),queryRenderedFeatures(point,options){calls++;assert.deepEqual(point,[40,60]);assert.deepEqual(options.layers,['campus-buildings','campus-ground']);return [{}]}};
+  updateBuildingHover(map,[40,60]);assert.equal(calls,0);assert.equal(cursor,'');
+  updateBuildingHover(map,[40,60]);assert.equal(writes,1,'Moving cursor is cleared only once');
+  moving=false;updateBuildingHover(map,[40,60]);assert.equal(calls,1);assert.equal(cursor,'pointer');
+  updateBuildingHover(map,[40,60]);assert.equal(calls,2);assert.equal(writes,2,'A resting pointer does not repeatedly write the same cursor');
+  layer=false;updateBuildingHover(map,[40,60]);assert.equal(calls,2);assert.equal(cursor,'');
 });
 test('invalid projected positions hide an overlay and a valid later frame restores it',()=>{
   const overlay={point:{lat:51,lng:0},element:{style:{left:'0px',top:'0px',visibility:''}}};
   positionMapOverlays({project:()=>({x:Infinity,y:NaN})},[overlay]);
   assert.equal(overlay.element.style.visibility,'hidden');
   positionMapOverlays({project:()=>({x:12.25,y:40.5})},[overlay]);
-  assert.equal(overlay.element.style.visibility,'');assert.equal(overlay.element.style.left,'12.25px');
+  assert.equal(overlay.element.style.visibility,'');assert.equal(overlay.element.style.translate,'12.25px 40.5px');
 });
 test('offscreen pins enter the viewport in the same render without a React update',()=>{
   const overlay={point:{lat:51,lng:0},element:{style:{left:'0px',top:'0px',visibility:''}}};
@@ -35,7 +68,7 @@ test('offscreen pins enter the viewport in the same render without a React updat
   const map={getContainer:()=>({clientWidth:800,clientHeight:600}),project:()=>({x,y:200})};
   positionMapOverlays(map,[overlay]);assert.equal(overlay.element.style.visibility,'hidden');
   x=400;positionMapOverlays(map,[overlay]);
-  assert.equal(overlay.element.style.left,'400px');assert.equal(overlay.element.style.visibility,'');
+  assert.equal(overlay.element.style.translate,'400px 200px');assert.equal(overlay.element.style.visibility,'');
 });
 const pin=(id,x,score='4')=>({x,y:50,item:{id,lat:51+Number(id)/100,lng:0,score}});
 test('zooming and parent countdown renders cannot change a cluster anchor mid-gesture',()=>{
@@ -90,11 +123,28 @@ test('dense review grids produce spaced groups rather than a bubble per place',(
 test('alert layers cannot be buried inside a review group and selection is independently accessible',()=>{
   const pins=[pin('review-a',100),pin('review-b',110),{...pin('food-a',100),item:{id:'food-a',type:'food',lat:51.5,lng:0}},{...pin('deal-a',100),item:{id:'deal-a',type:'deal',lat:51.5,lng:0}}];
   const result=layoutOverlayGroups(pins,null,false,{zoom:16.65,selected:'review-b'});
-  assert.equal(result.groups.length,3,'The selected review remains; the obscured nonselected review is suppressed');
+  assert.equal(result.groups.length,2,'The selected review remains beside one accessible mixed-alert group');
   assert.equal(result.groups.filter(group=>group.items[0].type==='food').length,1);
+  assert.deepEqual(result.groups.find(group=>group.items[0].type==='food').items.map(item=>item.id),['food-a','deal-a']);
   assert.equal(result.groups.find(group=>group.items[0].id==='review-b').items.length,1);
   const changed=layoutOverlayGroups(pins,result,true,{zoom:16.65,selected:'food-a'});
   assert.equal(changed.groups.find(group=>group.items[0].id==='food-a').items.length,1);
+});
+
+test('co-located events, freebies and food share one picker with a stable geographic anchor',()=>{
+  const alerts=['event','freebie','food','deal'].map((type,index)=>({...pin(type,100+index*3),item:{id:type,type,lat:51.5+index*.00001,lng:0,eventState:'upcoming',timeLabel:'Tomorrow'}}));
+  const rest=layoutOverlayGroups(alerts,null,false,{zoom:16.65});
+  assert.equal(rest.groups.length,1);
+  assert.deepEqual(rest.groups[0].items.map(item=>item.id),['event','freebie','food','deal']);
+  assert.equal(rest.groups[0].x,100,'The representative is a real location, not a sliding centroid');
+  const moved=layoutOverlayGroups(alerts.map((pin,index)=>({...pin,x:200+index*100})),rest,true,{zoom:18});
+  assert.equal(moved.groups.length,1,'A gesture cannot move an alert to a different group');
+  assert.equal(moved.groups[0].x,200);
+  const expired=layoutOverlayGroups(alerts.filter(pin=>pin.item.id!=='food'),moved,true,{zoom:18});
+  assert.deepEqual(expired.groups.flatMap(group=>group.items.map(item=>item.id)),['event','freebie','deal'],'An expired alert leaves even during camera movement');
+  const selected=layoutOverlayGroups(alerts,rest,false,{zoom:16.65,selected:'food'});
+  assert.equal(selected.groups.find(group=>group.items[0].id==='food').items.length,1,'Selection remains independent');
+  assert.deepEqual(selected.groups.find(group=>group.items[0].id==='event').items.map(item=>item.id),['event','freebie','deal']);
 });
 
 test('food reserves a clear click target without moving markers away from their actual anchors',()=>{

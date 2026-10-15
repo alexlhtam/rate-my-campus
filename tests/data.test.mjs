@@ -50,6 +50,21 @@ test('demo content remains distinguishable from real submissions and real event 
   assert.match(rental.address, /approximate location only/);
 });
 
+test('example events use relative demo times and existing campus positions without live provenance', () => {
+  const events = data.seedPins.filter(pin => pin.type === 'event');
+  assert.equal(events.length, 3);
+  assert.ok(events.some(pin => pin.startsInMinutes === 2 * 1440));
+  assert.ok(events.some(pin => pin.startsInMinutes === 8 * 1440));
+  for (const pin of events) {
+    assert.equal(pin.demo, true);assert.match(pin.title, /^Example event/);assert.match(pin.organizer, /^Example /);
+    assert.match(pin.description, /fictional/i);assert.equal(pin.sourceUrl, undefined);
+    assert.ok(pin.startsInMinutes >= 0 && pin.durationMinutes > pin.startsInMinutes && pin.durationMinutes < 14 * 1440);
+    const building = data.places.find(place => place.campusBuildingId === pin.campusBuildingId && place.lat === pin.lat && place.lng === pin.lng);
+    assert.ok(building, `Demo event ${pin.id} must reuse a known campus position`);
+    assert.deepEqual(pin.dietary, []);
+  }
+});
+
 test('all locally rendered photographs exist and have complete attribution', async () => {
   for (const row of [...data.places, ...data.seedPins].filter(row => row.image)) {
     assert.match(row.image, /^\/images\/[a-z-]+\.jpg$/);

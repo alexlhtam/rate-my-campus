@@ -65,10 +65,49 @@ test('daily imports are off by default; workers require the exact bearer secret'
 });
 test('public feed excludes held, hidden and expired pins and never includes account data',async()=>{
  for(const [id,status,end] of [['live','approved',Date.now()+60000],['held','pending',Date.now()+60000],['hidden','hidden',Date.now()+60000],['expired','approved',Date.now()-1]]){
-  await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES (?,'private-user','freebie','Test event','Test','TBC',?,?,'{}','[]',?,?)").bind(id,end,id,status,Date.now()).run();
+  await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,starts_at,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES (?,'private-user','freebie','Test event','Test','TBC',?,?,?,'{}','[]',?,?)").bind(id,Date.now()-1000,end,id,status,Date.now()).run();
  }
  const response=await freebiesRoute(request('feed'),['feed']);assert.equal(response.status,200);
  const body=await response.json();assert.deepEqual(body.posts.map(pin=>pin.id),['live']);assert.equal(JSON.stringify(body).includes('private-user'),false);
+});
+
+test('public feed includes events and freebies, supports a type filter and bounds London fortnight across DST',async(t)=>{
+ const clock=Date.parse('2026-10-15T12:00:00Z'),end=Date.parse('2026-10-29T00:00:00Z');
+ t.mock.method(Date,'now',()=>clock);
+ for(const [id,type,start,expiry] of [
+  ['ongoing','event',clock-86400000,clock+3600000],
+  ['offer','freebie',clock+3600000,clock+7200000],
+  ['last-night','event',end-1800000,end+3600000],
+  ['outside','event',end,end+3600000],
+  ['ended','event',clock-3600000,clock],
+ ])await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,starts_at,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES (?,'system:union',?,'Event','Test','TBC',?,?,?,'{}','[]','approved',?)").bind(id,type,start,expiry,id,clock).run();
+ const all=await (await freebiesRoute(request('feed'),['feed'])).json();
+ assert.deepEqual(all.posts.map(p=>p.id),['ongoing','offer','last-night']);
+ assert.deepEqual(all.posts.map(p=>p.type),['event','freebie','event']);
+ const events=await (await freebiesRoute(request('feed?type=event'),['feed'])).json();assert.deepEqual(events.posts.map(p=>p.id),['ongoing','last-night']);
+ const freebies=await (await freebiesRoute(request('feed?type=freebie'),['feed'])).json();assert.deepEqual(freebies.posts.map(p=>p.id),['offer']);
+ assert.equal((await freebiesRoute(request('feed?type=unknown'),['feed'])).status,400);
+});
+
+test('legacy Jev configuration cannot skip listings in an all-event import',async()=>{
+ admin=true;env.FREEBIE_JEV_SCREENING='true';env.JEV_API_KEY='legacy-fixture';
+ const response=await freebiesRoute(request('scan',{action:'start'}),['scan']);
+ assert.equal(response.status,202);assert.equal((await response.json()).configured.jev,false);
+});
+
+test('pagination applies after event-type and date filtering without losing the fifty-first result',async()=>{
+ const clock=Date.now();
+ for(let i=0;i<53;i++){
+  const id='page-'+String(i).padStart(2,'0'),type=i===0?'freebie':'event';
+  await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,starts_at,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES (?,'system:union',?,'Event','Test','TBC',?,?,?,'{}','[]','approved',?)").bind(id,type,clock+i*1000,clock+3600000,id,clock).run();
+ }
+ const first=await (await freebiesRoute(request('feed?type=event'),['feed'])).json();
+ assert.equal(first.posts.length,50);assert.equal(first.nextOffset,50);assert.equal(first.posts[0].id,'page-01');
+ const second=await (await freebiesRoute(request('feed?type=event&offset='+first.nextOffset),['feed'])).json();
+ assert.deepEqual(second.posts.map(p=>p.id),['page-51','page-52']);assert.equal(second.nextOffset,null);
+ assert.equal(new Set([...first.posts,...second.posts].map(p=>p.id)).size,52);
+ const offers=await (await freebiesRoute(request('feed?type=freebie'),['feed'])).json();
+ assert.deepEqual(offers.posts.map(p=>p.id),['page-00']);assert.equal(offers.nextOffset,null);
 });
 test('a confirmed campus venue uses a real directory position without changing publication state',async()=>{
  admin=true;
