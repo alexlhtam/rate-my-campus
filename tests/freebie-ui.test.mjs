@@ -4,6 +4,7 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadFreebie} from './freebies/load.mjs';
 const {FreebieCard,FreebieFacts,FreebieTimeFilter}=await loadFreebie('components/freebie-events.tsx');
+const {canConfirmEventVenue}=await loadFreebie('lib/freebies/view.ts');
 const pin={id:'fixture',title:'Example event',startsAt:'2026-10-12T18:00:00Z',expiresAt:'2026-10-12T20:00:00Z',location:'Wilkins Building',lat:51.5246,lng:-.1338,sourceUrl:'https://studentsunionucl.org/whats-on/clubs-societies/example',dietary:['Vegan'],freebie:{hasFreebies:true,freebies:[{item:'pizza',category:'food',evidence:'Free pizza for members',certainty:'confirmed'}],society:{name:'Example Society',evidence:'Example Society'},admission:'paid',priceDetails:'£5 ticket',bookingRequired:true,eligibility:'Society members',conditions:['While stocks last']}};
 test('event cards display explicit items, society, ticket restrictions, dietary information and the source',()=>{
  const html=renderToStaticMarkup(React.createElement(FreebieCard,{pin,now:Date.parse('2026-10-12T12:00:00Z'),saved:false,onOpen(){},onSave(){}}));
@@ -13,6 +14,14 @@ test('event cards display explicit items, society, ticket restrictions, dietary 
 test('online events remain location TBC even if stale coordinates were supplied',()=>{
  const html=renderToStaticMarkup(React.createElement(FreebieFacts,{pin:{...pin,freebie:{...pin.freebie,attendance:'online'}},expanded:true}));
  assert.ok(html.includes('Location TBC'));assert.ok(html.includes('Online event'));assert.ok(!html.includes('Get directions'));
+});
+
+test('venue confirmation respects the original online flag when extraction is incomplete',()=>{
+ const imported={publishedPostId:'published-event',extraction:{attendance:'unknown'}};
+ assert.equal(canConfirmEventVenue(imported),true);
+ assert.equal(canConfirmEventVenue({...imported,sourceOnline:true}),false);
+ assert.equal(canConfirmEventVenue({...imported,sourceOnline:false,extraction:{attendance:'online'}}),false);
+ assert.equal(canConfirmEventVenue({...imported,publishedPostId:null}),false);
 });
 test('unknown society, dietary and prices are labelled rather than inferred',()=>{
  const html=renderToStaticMarkup(React.createElement(FreebieFacts,{pin:{...pin,dietary:[],freebie:null}}));

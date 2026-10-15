@@ -10,15 +10,17 @@ export function updateDemoFood(state:Row,body:Row,now=Date.now()):Row {
   const post=(state.posts||[]).find((row:Row)=>row.id===body.targetId&&row.type==='food');
   if(!post||!post.own)throw new Error('This is not one of your demo food alerts.');
   const available=foodAvailability(post,now);
-  if(body.action!=='close-post'&&(!available.available||foodRevision(body.revision)!==Number(post.revision||0)))throw new Error('This pickup has ended or changed. Reopen the alert before updating it.');
+  const editable=available.available||body.action==='update-post'&&available.state==='pending';
+  if(body.action!=='close-post'&&(!editable||foodRevision(body.revision)!==Number(post.revision||0)))throw new Error('This pickup has ended or changed. Reopen the alert before updating it.');
   const update:Row={revision:Number(post.revision||0)+1,availabilityUpdatedAt:new Date(now).toISOString(),freshStillCount:0,freshGoneCount:0,lastAvailabilityFeedbackAt:null};
   function close(reason:string){update.closedAt=new Date(now).toISOString();update.closureReason=reason;update.expiresAt=new Date(Math.min(Date.parse(post.expiresAt),now)).toISOString();if(reason==='collected')update.portionsRemaining=0}
   if(body.action==='close-post'){
     const reason=body.reason||'ended';if(!['collected','ended','withdrawn'].includes(reason))throw new Error('Choose why collection is ending.');if(available.state==='closed')return state;close(reason);
   }else if(body.action==='food-availability'){
+    if(!Object.prototype.hasOwnProperty.call(body,'portionsRemaining'))throw new Error('Choose an estimated quantity or leave it unknown.');
     update.portionsRemaining=foodPortions(body.portionsRemaining,true);if(update.portionsRemaining===0)close('collected');
   }else if(body.action==='update-post'){
-    const value=collectionUpdateInput(body);update.collectionInstructions=textField(value.instructions,'Collection instructions',5,500);update.portionsRemaining=value.portions;update.foodDetails=foodDetailsInput(body.foodDetails??post.foodDetails);if(value.portions===0)close('collected');
+    const value=collectionUpdateInput({...body,collectionInstructions:body.collectionInstructions??post.collectionInstructions,portionsRemaining:body.portionsRemaining===undefined?post.portionsRemaining:body.portionsRemaining});update.collectionInstructions=textField(value.instructions,'Collection instructions',5,500);update.portionsRemaining=value.portions;update.foodDetails=foodDetailsInput(body.foodDetails??post.foodDetails);if(value.portions===0)close('collected');
   }else throw new Error('Unknown food action.');
   const feedback={...state.foodFeedback};delete feedback[post.id];
   return {...state,foodFeedback:feedback,posts:state.posts.map((row:Row)=>row.id===post.id?{...row,...update}:row)};
