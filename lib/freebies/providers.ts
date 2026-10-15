@@ -167,21 +167,22 @@ export function verifyExtraction(body: unknown, page: EventPage): Extraction {
   return result;
 }
 
-async function requestJson(provider: "Jev" | "Claude", url: string, key: string, body: object): Promise<unknown> {
+export async function requestJson(provider: "Jev" | "Claude", url: string, key: string, body: object, options: {timeoutMs?:number; attempts?:number} = {}): Promise<unknown> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (provider === "Jev") headers.Authorization = `Bearer ${key}`;
   else { headers["x-api-key"] = key; headers["anthropic-version"] = "2023-06-01"; }
-  for (let attempt = 0; attempt < 3; attempt++) {
+  const attempts = options.attempts ?? 3;
+  for (let attempt = 0; attempt < attempts; attempt++) {
     let response: Response;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 25000);
+    const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 25000);
     try {
       // Manual mode is portable across the hosted runtime and never forwards
       // provider credentials to a redirect target. A 3xx fails below.
       response = await fetch(url, { method: "POST", headers, body: JSON.stringify(body), signal: controller.signal, redirect: "manual" });
       if (response.ok) return await response.json();
     } catch (error) {
-      if (attempt === 2) {
+      if (attempt === attempts - 1) {
         const detail = (error instanceof Error ? `${error.name}: ${error.message}` : "Transport error")
           .split(key).join("[redacted]").replace(/(?:sk-ant-|apikey_)[A-Za-z0-9_\\-]+/g, "[redacted]").slice(0, 180);
         console.error(`${provider} transport failure: ${detail}`);
@@ -195,7 +196,7 @@ async function requestJson(provider: "Jev" | "Claude", url: string, key: string,
     const status = response.status;
     await response.body?.cancel();
     const retryable = [408, 429, 500, 502, 503, 504, 529].includes(status);
-    if (!retryable || attempt === 2) throw new ProviderError(provider, status, [400, 401, 402, 403, 404, 422].includes(status));
+    if (!retryable || attempt === attempts - 1) throw new ProviderError(provider, status, [400, 401, 402, 403, 404, 422].includes(status));
     const retryAfter = response.headers.get("retry-after");
     const seconds = retryAfter ? Number(retryAfter) : NaN;
     const requestedDelay = Number.isFinite(seconds) ? seconds * 1000 : retryAfter ? Date.parse(retryAfter) - Date.now() : 0;

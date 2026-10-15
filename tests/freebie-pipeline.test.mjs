@@ -149,6 +149,7 @@ test('society and dietary claims require matching evidence; unsupported claims a
  assert.equal(actual.society,null);assert.deepEqual(actual.dietary.map(item=>item.tag),['Vegan']);
 });
 test('saved stages resume automatically without a browser; a publication failure retries only that stage',async(t)=>{
+ t.mock.method(Date,'now',()=>now);
  await clear();const config={jevKey:'',claudeKey:'fixture',jevModel:'jev-latest',claudeModel:'fixture',threshold:.5};
  const start=await actOnScan(db,config,{action:'start',startDate:'2026-10-12'});const id=start.run.id;
  await insertEvents(db,id,[source,source]);assert.equal((await db.prepare('SELECT * FROM freebie_tasks').all()).results.length,1);
@@ -174,9 +175,9 @@ test('a fresh import discovers pages, opens the event, runs Claude and publishes
  const startSeconds=Math.floor((Date.now()+3600000)/1000),endSeconds=startSeconds+3600;
  const eventRow={product_id:'500',variation_id:'700',title:'Example pizza',variation_url:'https://studentsunionucl.org/whats-on/clubs-societies/example',field_date_range_value:String(startSeconds),field_date_range_end_value:String(endSeconds),field_event_venue__label:'Wilkins Building'};
  let pages=0,details=0,claude=0;
- globalThis.fetch=async(url)=>{
+ globalThis.fetch=async(url,options)=>{
   const address=String(url);
-  if(address.startsWith('https://api.anthropic.com/')){claude++;return Response.json({model:'fixture',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(extraction)}]})}
+  if(address.startsWith('https://api.anthropic.com/')){claude++;return Response.json({model:'fixture',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify({events:JSON.parse(JSON.parse(options.body).messages[0].content).events.map(item=>({id:item.id,extraction,moderation:{approved:true,reasons:[]}}))})}]})}
   if(address.includes('/whats-on/clubs-societies/')){details++;return new Response('<main><article><div class="field--name-body">Free Pizza for everyone. Wilkins Building. Tickets cost £5.</div></article></main>',{headers:{'content-type':'text/html'}})}
   if(address.startsWith('https://studentsunionucl.org/')){pages++;return Response.json(pages===1?[eventRow,eventRow]:[])}
   throw Error('Unexpected external request');
@@ -190,13 +191,14 @@ test('a fresh import discovers pages, opens the event, runs Claude and publishes
 });
 
 test('ordinary events receive a full Claude check even when a legacy Jev rejection is saved',async(t)=>{
+ t.mock.method(Date,'now',()=>now);
  await clear();const config={jevKey:'legacy-fixture',claudeKey:'fixture',jevModel:'j',claudeModel:'fixture',threshold:.5};
  const run=await actOnScan(db,config,{action:'start',startDate:'2026-10-12'});
  await insertEvents(db,run.run.id,[source]);
  await db.prepare("UPDATE freebie_scans SET exhausted=1,status='running' WHERE id=?").bind(run.run.id).run();
  await db.prepare('UPDATE freebie_tasks SET page_json=?,jev_json=? WHERE run_id=?').bind(JSON.stringify({text:'A student society discussion. Wilkins Building. Free entry.',links:[]}),JSON.stringify({score:0}),run.run.id).run();
  const original=globalThis.fetch;t.after(()=>{globalThis.fetch=original});let claude=0;
- globalThis.fetch=async(url)=>{assert.match(String(url),/^https:\/\/api\.anthropic\.com\//);claude++;return Response.json({model:'fixture',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(ordinary)}]})};
+ globalThis.fetch=async(url,options)=>{assert.match(String(url),/^https:\/\/api\.anthropic\.com\//);claude++;return Response.json({model:'fixture',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify({events:JSON.parse(JSON.parse(options.body).messages[0].content).events.map(item=>({id:item.id,extraction:ordinary,moderation:{approved:true,reasons:[]}}))})}]})};
  const result=await workFreebies(db,config,(event,details)=>publishFreebie(db,event,details,deps),{sleep:async()=>{}});
  assert.equal(result.status,'complete');assert.equal(claude,1);
  const task=await db.prepare('SELECT * FROM freebie_tasks').first();assert.equal(task.status,'no_freebies');assert.equal(task.publication_state,'published');assert.ok(task.published_post_id);

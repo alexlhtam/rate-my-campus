@@ -5,6 +5,9 @@ import {PGlite} from '@electric-sql/pglite';
 import ts from 'typescript';
 import {loadFreebie,compileFreebie} from './freebies/load.mjs';
 const {createDatabase}=await loadFreebie('lib/db.ts');
+const {publishFreebie}=await loadFreebie('lib/freebies/publication.ts');
+const {loadEventFeed}=await loadFreebie('lib/freebies/feed-client.ts');
+const {eventLocated}=await loadFreebie('lib/freebies/view.ts');
 const validation=await loadFreebie('lib/community-validation.ts');
 const pg=new PGlite();
 for(const name of readdirSync(new URL('../supabase/migrations/',import.meta.url)).filter(name=>name.endsWith('.sql')).sort())await pg.exec(readFileSync(new URL('../supabase/migrations/'+name,import.meta.url),'utf8').split('-- Private bucket')[0]);
@@ -30,6 +33,18 @@ test.beforeEach(async()=>{
  await pg.exec('TRUNCATE freebie_tasks,freebie_scans,posts RESTART IDENTITY CASCADE');
 });
 function request(path,body,headers={}){return new Request('https://campus.example/api/freebies/'+path,{method:body===undefined?'GET':'POST',headers:{origin:'https://campus.example','content-type':'application/json',...headers},body:body===undefined?undefined:JSON.stringify(body)})}
+
+test('published events travel through the real feed and client loader, including list-only venues',async()=>{
+ const now=Date.now(),source={id:'known:1:2',title:'Campus discussion',url:'https://studentsunionucl.org/whats-on/clubs-societies/example',start:new Date(now+3600000).toISOString(),end:new Date(now+7200000).toISOString(),sourceLocation:'Wilkins Building',imageUrl:null};
+ const extraction={hasFreebies:false,summary:'A campus discussion.',freebies:[],venue:'Wilkins Building',address:null,locationEvidence:'Wilkins Building',admission:'free',priceDetails:null,bookingRequired:null,bookingUrl:null,eligibility:null,conditions:[],dietary:[]};
+ const deps={places:globalThis.__freebieRoute.places,privacy:()=>null,moderate:async()=>{throw Error('Batch verdict should be reused')}};
+ for(const [id,venue,online] of [['known','Wilkins Building',false],['unknown','Venue awaiting confirmation',false],['online','Online',true]])await publishFreebie(db,{...source,id:id+':1:2',title:id,sourceOnline:online,sourceLocation:venue},{...extraction,venue},deps,{approved:true,reasons:[]});
+ const result=await loadEventFeed({fetcher:async url=>freebiesRoute(new Request('https://campus.example'+url),['feed'])});
+ assert.equal(result.posts.length,3);assert.deepEqual(result.posts.map(p=>p.title).sort(),['known','online','unknown']);
+ assert.deepEqual(result.posts.filter(eventLocated).map(p=>p.title),['known']);
+ for(const post of result.posts){assert.equal(post.status,'approved');assert.equal(post.type,'event');assert.equal(post.description,'A campus discussion.');}
+ assert.equal(result.posts.find(p=>p.title==='unknown').lat,null);assert.equal(result.posts.find(p=>p.title==='online').freebie.attendance,'online');
+});
 test('anonymous users cannot import, inspect private audit or confirm venues',async()=>{
  for(const [path,body] of [['scan',{action:'start'}],['dashboard',undefined],['location',{postId:'x',placeId:'wilkins',confirmed:true}]]){
   assert.equal((await freebiesRoute(request(path,body),[path])).status,403);
@@ -41,9 +56,14 @@ test('moderator imports require same-origin writes and start a background job us
  assert.equal((await freebiesRoute(request('scan',{action:'start'},{origin:'https://evil.example'}),['scan'])).status,403);
  const response=await freebiesRoute(request('scan',{action:'start',startDate:'2099-01-01'}),['scan']);
  assert.equal(response.status,202);const body=await response.json();
- assert.notEqual(body.run.startDate,'2099-01-01');assert.equal(body.models.claude,'fixture-model');assert.equal(jobs.length,1);
+ assert.notEqual(body.run.startDate,'2099-01-01');assert.equal(body.models.claude,'claude-haiku-5-5');assert.equal(jobs.length,1);
  assert.equal((await freebiesRoute(request('scan',{action:'start'}),['scan'])).status,202);
  assert.equal((await db.prepare('SELECT * FROM freebie_scans').all()).results.length,1);
+});
+test('the importer respects its own model override independently of the campus assistant',async()=>{
+ admin=true;env.FREEBIE_CLAUDE_MODEL='claude-haiku-4-5-20251001';
+ const response=await freebiesRoute(request('scan',{action:'start'}),['scan']);assert.equal(response.status,202);
+ assert.equal((await response.json()).models.claude,'claude-haiku-4-5-20251001');assert.equal(env.ANTHROPIC_MODEL,'fixture-model');
 });
 test('disabled imports and missing configuration do not create jobs or spend quota',async()=>{
  admin=true;env.UNION_IMPORT_ENABLED='false';

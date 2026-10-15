@@ -2,6 +2,7 @@ import type { Database } from '../db';
 import type { Extraction, SourceEvent } from './types';
 import type {VenueMatch} from './venues';
 import {addDays,londonDate,londonMidnight} from './ucl';
+import {verdictSchema,type ImportVerdict} from './batch';
 
 export type LocatedPlace = { id: string; name: string; aliases?: string[]; lat?: number; lng?: number; demo?: boolean; parentPlaceId?: string };
 export type FreebieDetails = Extraction & { sourceEventId: string; eventStart: string; eventEnd: string | null; placeId: string | null; locationConfirmed: boolean; sourceVenue?:string|null; locationProvider?:'campus'|'google'; locationValidUntil?:number };
@@ -26,7 +27,7 @@ async function postId(key: string) {
 }
 export type PublishDependencies = { places: LocatedPlace[]; moderate: (text: string)=>Promise<{approved:boolean;reasons:string[]}>; privacy: (text:string)=>string|null; resolve?:(venue:string|null)=>Promise<VenueMatch|null>; now?:()=>number };
 /** All generated text is checked before publication. Failed providers never approve a pin. */
-export async function publishFreebie(db: Database, source: SourceEvent, extraction: Extraction | null, deps: PublishDependencies) {
+export async function publishFreebie(db: Database, source: SourceEvent, extraction: Extraction | null, deps: PublishDependencies, batchModeration?:ImportVerdict) {
   // End-time edits update the occurrence, while separate recurrence start times
   // retain their own pins. Calendar ticket variants share the same occurrence.
   const key=source.id.split(':').slice(0,2).join(':');
@@ -62,7 +63,7 @@ export async function publishFreebie(db: Database, source: SourceEvent, extracti
   // of silently displaying fields that were omitted from its check.
   let reason=privacy||(text.length>8000?'The event details need a moderator check.':null);
   let approved=false;
-  if(!reason){const verdict=await deps.moderate(text);approved=verdict.approved;reason=verdict.approved?null:verdict.reasons.join('; ').slice(0,500)||'Held for a moderator check.';}
+  if(!reason){const verdict=batchModeration?verdictSchema.parse(batchModeration):await deps.moderate(text);approved=verdict.approved;reason=verdict.approved?null:verdict.reasons.join('; ').slice(0,500)||'Held for a moderator check.';}
   if(extraction.hasFreebies&&!extraction.freebies.some(item=>item.certainty==='confirmed')){approved=false;reason='The listing offers items, but their cost is unclear. Check the original event.';}
   const status=approved?'approved':'pending';
   const row=await db.prepare(`INSERT INTO posts (id,user_id,type,title,description,location,lat,lng,starts_at,expires_at,source_url,source_name,dietary,status,moderation_reason,created_at,source_event_key,freebie_json,source_checked_at)

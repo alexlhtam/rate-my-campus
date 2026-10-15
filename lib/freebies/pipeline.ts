@@ -1,5 +1,6 @@
 import type { Database } from '../db';
-import { askClaude, ProviderError } from "./providers";
+import { ProviderError } from "./providers";
+import {askClaudeBatch,selectBatch,reusableCheckpoint,readCheckpoint,extractionOnly,type ImportVerdict,type BatchItem} from './batch';
 import type { ProviderConfig } from "./providers";
 import type { EventPage, SourceEvent, Extraction } from "./types";
 import { addDays, discoverPage, fetchEventPage, londonDate, londonMidnight } from "./ucl";
@@ -53,7 +54,7 @@ async function discover(db: Database, run: RunRow) {
     .bind(result.rawCount, result.done ? 1 : 0, result.done ? "running" : "discovering", JSON.stringify(warnings), new Date().toISOString(), run.id).run();
 }
 
-export type Publication = (source: SourceEvent, extraction: Extraction | null) => Promise<{id: string | null; state: string}>;
+export type Publication = (source: SourceEvent, extraction: Extraction | null, moderation?:ImportVerdict) => Promise<{id: string | null; state: string}>;
 
 async function processEvent(db: Database, task: TaskRow, run: RunRow, config: ProviderConfig, publish?: Publication): Promise<ProviderError | null> {
   let stage: "fetch" | "jev" | "claude" | "publish" = "fetch";
@@ -66,6 +67,13 @@ async function processEvent(db: Database, task: TaskRow, run: RunRow, config: Pr
     else {
       page = await fetchEventPage(source);
       await db.prepare("UPDATE freebie_tasks SET page_json = ? WHERE id = ?").bind(JSON.stringify(page), task.id).run();
+      // Re-read public pages to detect edits, but reuse paid results only when
+      // the full input, model and moderation policy are exactly unchanged.
+      const prior=await db.prepare('SELECT extraction_json FROM freebie_tasks WHERE event_id=? AND id<>? AND extraction_json IS NOT NULL ORDER BY ordinal DESC LIMIT 3').bind(task.event_id,task.id).all<{extraction_json:string}>();
+      for(const row of prior.results){
+        const cached=reusableCheckpoint(JSON.parse(row.extraction_json),{id:task.id,source,page},config.claudeModel);
+        if(cached){await db.prepare('UPDATE freebie_tasks SET extraction_json=?,claude_model=? WHERE id=?').bind(JSON.stringify(cached),config.claudeModel,task.id).run();break;}
+      }
       return null; // One persisted stage per request keeps hosting deadlines bounded.
     }
     // The listing occurrence is authoritative for recurrence selection. A page's
@@ -79,15 +87,12 @@ async function processEvent(db: Database, task: TaskRow, run: RunRow, config: Pr
     // Every listing needs complete event details. A legacy Jev score only
     // estimates freebie likelihood and must not omit an ordinary event.
     stage = "claude";
-    if (!task.extraction_json) {
-      const result = await askClaude(page, config);
-      await db.prepare("UPDATE freebie_tasks SET extraction_json = ?, claude_model = ? WHERE id = ?")
-        .bind(JSON.stringify(result.extraction), result.model, task.id).run();
-      return null;
-    }
+    if (!task.extraction_json) throw new Error('The event is waiting for a batch extraction.');
     stage = "publish";
-    const extraction: Extraction = JSON.parse(task.extraction_json);
-    const publication = publish ? await publish(source, extraction) : {id:null,state:"not_connected"};
+    const saved = JSON.parse(task.extraction_json);
+    const extraction: Extraction = extractionOnly(saved);
+    const checkpoint=readCheckpoint(saved);
+    const publication = publish ? await publish(source, extraction,checkpoint?._processing.moderation) : {id:null,state:"not_connected"};
     const status = !extraction.hasFreebies ? "no_freebies" : extraction.freebies.some(item => item.certainty === "confirmed") ? "found" : "needs_review";
     await db.prepare("UPDATE freebie_tasks SET status = ?, checked_at = ?, published_post_id = ?, publication_state = ? WHERE id = ?")
       .bind(status, checkedAt(), publication.id, publication.state, task.id).run();
@@ -96,6 +101,23 @@ async function processEvent(db: Database, task: TaskRow, run: RunRow, config: Pr
     await db.prepare("UPDATE freebie_tasks SET status = 'failed', error = ?, failed_stage = ?, checked_at = ? WHERE id = ?")
       .bind(safeError(error), stage, checkedAt(), task.id).run();
     return error instanceof ProviderError && error.fatal ? error : null;
+  }
+}
+
+async function processBatch(db:Database,tasks:TaskRow[],config:ProviderConfig):Promise<ProviderError|null>{
+  const items=selectBatch(tasks.map(task=>({id:task.id,source:JSON.parse(task.source_json),page:JSON.parse(task.page_json!),attempts:task.attempts} as BatchItem)));
+  for(const item of items)await db.prepare('UPDATE freebie_tasks SET attempts=attempts+1,error=NULL,failed_stage=NULL WHERE id=?').bind(item.id).run();
+  try{
+    const result=await askClaudeBatch(items,config);
+    for(const item of items){
+      const row=result.get(item.id)!;
+      if(row.checkpoint)await db.prepare('UPDATE freebie_tasks SET extraction_json=?,claude_model=? WHERE id=?').bind(JSON.stringify(row.checkpoint),config.claudeModel,item.id).run();
+      else await db.prepare("UPDATE freebie_tasks SET status='failed',error=?,failed_stage='claude',checked_at=? WHERE id=?").bind(row.error,new Date().toISOString(),item.id).run();
+    }
+    return null;
+  }catch(error){
+    for(const item of items)await db.prepare("UPDATE freebie_tasks SET status='failed',error=?,failed_stage='claude',checked_at=? WHERE id=?").bind(safeError(error),new Date().toISOString(),item.id).run();
+    return error instanceof ProviderError&&error.fatal?error:null;
   }
 }
 
@@ -159,8 +181,22 @@ export async function actOnScan(db: Database, config: ProviderConfig, body: Reco
             .bind(safeError(error), new Date().toISOString(), runId).run();
         }
       } else {
-        const tasks = (await db.prepare("SELECT * FROM freebie_tasks WHERE run_id = ? AND status = 'queued' ORDER BY ordinal LIMIT 3").bind(runId).all<TaskRow>()).results;
-        const errors = await Promise.all(tasks.map(task => processEvent(db, task, run, config, publish)));
+        const queued = (await db.prepare("SELECT * FROM freebie_tasks WHERE run_id = ? AND status = 'queued' ORDER BY ordinal LIMIT 30").bind(runId).all<TaskRow>()).results;
+        const tasks:TaskRow[]=[];
+        // Ended occurrences never need an article fetch or a paid AI call.
+        for(const task of queued){
+          const source:SourceEvent=JSON.parse(task.source_json),end=source.end?Date.parse(source.end):NaN;
+          if(Number.isFinite(end)&&end<=Date.now()||Date.parse(source.start)>=londonMidnight(run.end_date).getTime()){
+            await db.prepare("UPDATE freebie_tasks SET status='out_of_window',publication_state='expired',checked_at=? WHERE id=?").bind(new Date().toISOString(),task.id).run();
+          }else tasks.push(task);
+        }
+        const ready=tasks.filter(task=>task.extraction_json);
+        const unfetched=tasks.filter(task=>!task.page_json);
+        // Fill a text-bounded batch before paying for extraction. Fetching and
+        // publication still run three at a time to be gentle on public sources.
+        const errors = ready.length?await Promise.all(ready.slice(0,3).map(task=>processEvent(db,task,run,config,publish)))
+          :unfetched.length?await Promise.all(unfetched.slice(0,3).map(task=>processEvent(db,task,run,config,publish)))
+          :tasks.length?[await processBatch(db,tasks,config)]:[];
         const fatal = errors.find(Boolean);
         if (fatal) {
           await db.prepare("UPDATE freebie_scans SET status = 'paused', error = ?, updated_at = ? WHERE id = ?").bind(safeError(fatal), new Date().toISOString(), runId).run();
