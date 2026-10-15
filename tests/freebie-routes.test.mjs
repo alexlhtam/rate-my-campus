@@ -52,6 +52,20 @@ test('disabled imports and missing configuration do not create jobs or spend quo
  assert.equal((await freebiesRoute(request('scan',{action:'start'}),['scan'])).status,503);
  assert.equal(jobs.length,0);assert.equal(rates.length,0);
 });
+
+test('manual import resumes today after automatic retries are exhausted without discarding checkpoints',async()=>{
+ admin=true;
+ const first=await (await freebiesRoute(request('scan',{action:'start'}),['scan'])).json();const id=first.run.id;
+ await db.prepare("UPDATE freebie_scans SET status='partial',active_slot=NULL,exhausted=1,next_page=4,auto_retries=2 WHERE id=?").bind(id).run();
+ const source={id:'42:1:2',title:'Saved event',url:'https://studentsunionucl.org/whats-on/clubs-societies/test',start:new Date(Date.now()+3600000).toISOString(),end:new Date(Date.now()+7200000).toISOString(),sourceLocation:null,imageUrl:null};
+ await db.prepare("INSERT INTO freebie_tasks(id,run_id,event_id,source_json,page_json,extraction_json,status,failed_stage) VALUES ('saved-task',?,'42:1:2',?,'{\"text\":\"saved page\"}','{\"hasFreebies\":false}','failed','publish')").bind(id,JSON.stringify(source)).run();
+ const result=await (await freebiesRoute(request('scan',{action:'start'}),['scan'])).json();
+ assert.equal(result.run.id,id);assert.equal(result.run.status,'running');assert.equal(result.run.sourcePages,4);
+ assert.equal((await db.prepare('SELECT id FROM freebie_scans').all()).results.length,1);
+ const task=await db.prepare("SELECT * FROM freebie_tasks WHERE id='saved-task'").first();
+ assert.equal(task.status,'queued');assert.equal(task.failed_stage,null);assert.equal(JSON.parse(task.page_json).text,'saved page');assert.equal(JSON.parse(task.extraction_json).hasFreebies,false);
+ assert.equal(rates.filter(rate=>rate[1]==='scan-start').length,1);
+});
 test('daily imports are off by default; workers require the exact bearer secret',async()=>{
  assert.equal((await freebiesRoute(request('worker',{}),['worker'])).status,401);
  assert.equal((await freebiesRoute(request('worker',{}, {authorization:'Bearer '+secret+'x'}),['worker'])).status,401);

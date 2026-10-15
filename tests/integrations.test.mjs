@@ -262,6 +262,27 @@ test("provider failures do not leak response bodies or secrets", async () => {
   await assert.rejects(api.locatePlace("Wilkins"), error => error.status === 502 && !error.message.includes("sensitive"));
 });
 
+test("malformed Google matches fail before invalid coordinates can reach the map", async () => {
+  process.env.GOOGLE_MAPS_API_KEY = "test-placeholder";
+  for (const payload of [null, { places: {} }, { places: [{ id: "place", location: {} }] }, { places: [{ id: "place", location: { latitude: 200, longitude: 0 } }] }]) {
+    globalThis.fetch = async () => Response.json(payload);
+    await assert.rejects(api.locatePlace("Wilkins"), error => error.status === 502);
+  }
+  globalThis.fetch = async () => new Response("not JSON");
+  await assert.rejects(api.locatePlace("Wilkins"), error => error.status === 502);
+});
+
+test("Google matches without coordinates are omitted while valid matches retain attribution", async () => {
+  process.env.GOOGLE_MAPS_API_KEY = "test-placeholder";
+  globalThis.fetch = async () => Response.json({ places: [{ id: "unlocated" }, { id: "located", displayName: { text: "Wilkins Building" }, location: { latitude: 51.5246, longitude: -0.134 }, attributions: [{ provider: "Example" }] }] });
+  const matches = await api.locatePlace("Wilkins");
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].lat, 51.5246);
+  assert.deepEqual(matches[0].attributions, [{ provider: "Example" }]);
+  globalThis.fetch = async () => Response.json({});
+  assert.deepEqual(await api.locatePlace("Wilkins"), []);
+});
+
 test("Google roadmap styling is sent to the supported session API on the server", async () => {
   process.env.GOOGLE_MAPS_API_KEY = "test-placeholder";
   globalThis.fetch = async (url, options) => {
@@ -303,6 +324,20 @@ test("Union importer obeys current robots restrictions", async () => {
   globalThis.fetch = async () => { calls++; return new Response("User-agent: *\nDisallow: /whats-on/\n"); };
   await assert.rejects(api.importUnionEvent("https://studentsunionucl.org/whats-on/test"), error => error.status === 403);
   assert.equal(calls, 1);
+});
+
+test("single-event import does not classify a silently truncated listing", async () => {
+  process.env.UNION_IMPORT_ENABLED = "true";
+  process.env.ANTHROPIC_API_KEY = "test-placeholder";
+  let calls = 0;
+  globalThis.fetch = async url => {
+    calls++;
+    if (url.endsWith("robots.txt")) return new Response("User-agent: *\nAllow: /\n");
+    assert.ok(url.startsWith("https://studentsunionucl.org"), "oversized source must not reach a paid provider");
+    return new Response(`<main>Free pizza. ${"Event details. ".repeat(1100)}Correction: refreshments are no longer included.</main>`, { headers: { "Content-Type": "text/html" } });
+  };
+  await assert.rejects(api.importUnionEvent("https://studentsunionucl.org/whats-on/test"), error => error.status === 413 && /complete page/.test(error.message));
+  assert.equal(calls, 2);
 });
 
 test("Union importer rejects free admission without a food or merchandise offer", async () => {

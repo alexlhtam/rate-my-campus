@@ -1,5 +1,5 @@
 import {addDays,londonDate,londonMidnight} from './ucl';
-import type {Extraction} from './types';
+import type {EventRecord,Extraction} from './types';
 import type {PinType} from '../data';
 
 export type FreebieTime = 'now'|'today'|'week'|'fortnight';
@@ -32,6 +32,10 @@ export function eventBadge(pin:Pick<EventPin,'startsAt'|'expiresAt'>,now:number)
 }
 export function eventLocated(pin:Pick<EventPin,'lat'|'lng'|'freebie'>) {
   return pin.freebie?.attendance!=='online'&&typeof pin.lat==='number'&&Number.isFinite(pin.lat)&&typeof pin.lng==='number'&&Number.isFinite(pin.lng);
+}
+/** The calendar's explicit online flag wins over an incomplete extraction. */
+export function canConfirmEventVenue(event:Pick<EventRecord,'publishedPostId'|'sourceOnline'|'extraction'>) {
+  return Boolean(event.publishedPostId)&&event.sourceOnline!==true&&event.extraction?.attendance!=='online';
 }
 export function admissionLabel(details?:Extraction|null) {
   if(!details)return 'Ticket / membership requirements not stated';
