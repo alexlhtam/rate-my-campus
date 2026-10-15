@@ -100,7 +100,7 @@ def build(refresh=False):
         url = f'https://api.openstreetmap.org/api/0.6/map?bbox={bbox}'
         path = CACHE / f'{key}.osm'
         if refresh:
-            request = urllib.request.Request(url, headers={'User-Agent': 'RateMyCampus-footprint-audit/1.0 (public UCL campus research)'})
+            request = urllib.request.Request(url, headers={'User-Agent': 'RateOurCampus-footprint-audit/1.0 (public UCL campus research)'})
             with urllib.request.urlopen(request, timeout=90) as response:
                 path.write_bytes(response.read())
         if not path.exists():

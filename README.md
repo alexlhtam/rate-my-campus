@@ -2,7 +2,7 @@
 
 A mobile-first UCL campus map with category-specific place reviews, society freebies, time-limited food alerts, student deals, anonymous community discussion and UCL email verification.
 
-The canonical project repository is [alexlhtam/rate-my-campus](https://github.com/alexlhtam/rate-my-campus).
+The canonical project repository is [alexlhtam/rate-our-campus](https://github.com/alexlhtam/rate-our-campus).
 
 ## Campus assistant
 
