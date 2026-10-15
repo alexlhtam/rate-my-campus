@@ -8,13 +8,13 @@ async function request(path: string, body?: unknown) {
   const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Could not update your campus inbox.'); return result;
 }
 export function FollowPlace({ placeId, enabled, onAccount }: { placeId: string; enabled: boolean; onAccount: () => void }) {
-  const [follows, setFollows] = useState<string[] | null>(null), [busy, setBusy] = useState(false), [message, setMessage] = useState('');
-  useEffect(() => { let cancelled = false; setFollows(null); setMessage(''); if (enabled) request('preferences').then(result => { if (!cancelled) setFollows(result.follows); }).catch(failure => { if (!cancelled) setMessage(failure.message); }); return () => { cancelled = true; }; }, [enabled, placeId]);
+  const [follows, setFollows] = useState<string[] | null>(null), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [retry, setRetry] = useState(0);
+  useEffect(() => { let cancelled = false; setFollows(null); setMessage(''); if (enabled) request('preferences').then(result => { if (!cancelled) setFollows(result.follows); }).catch(failure => { if (!cancelled) setMessage(failure.message); }); return () => { cancelled = true; }; }, [enabled, placeId, retry]);
   const following = follows?.includes(placeId);
   return <div><button disabled={busy || enabled && !follows} className="button light small" aria-pressed={!!following} onClick={async () => {
     if (!enabled) { onAccount(); return; } setBusy(true); setMessage('');
     try { const latest = await request('preferences'); const result = await request('preferences', { follows: latest.follows.includes(placeId) ? latest.follows.filter((id: string) => id !== placeId) : [...latest.follows, placeId] }); setFollows(result.follows); setMessage(result.follows.includes(placeId) ? 'New reviews and discussions will appear in your inbox.' : 'No longer following this place.'); } catch (failure) { setMessage((failure as Error).message); } finally { setBusy(false); }
-  }}>{busy ? <LoaderCircle className="spin" size={13} /> : following ? <Check size={13} /> : <Bell size={13} />}{following ? 'Following' : 'Follow place'}</button>{message && <p className="fineprint" role="status">{message}</p>}</div>;
+  }}>{busy ? <LoaderCircle className="spin" size={13} /> : following ? <Check size={13} /> : <Bell size={13} />}{following ? 'Following' : 'Follow place'}</button>{message && <p className="fineprint" role="status">{message}{enabled && !follows && <button className="text-link" onClick={() => setRetry(value => value + 1)}>Try again</button>}</p>}</div>;
 }
 export default function CampusInbox({ signedIn, onAccount, onSelect }: { signedIn: boolean; onAccount: () => void; onSelect: (id: string, section?: 'reviews' | 'community') => void }) {
   const [entries, setEntries] = useState<Record<string, any>[]>([]), [follows, setFollows] = useState<string[]>([]), [error, setError] = useState(''), [busy, setBusy] = useState(false);

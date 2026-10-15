@@ -17,3 +17,5 @@
 @media(max-width:700px){.layer-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 .campus-map .map-pin.mixed{background:linear-gradient(125deg,#dfeaf7,#e9def4);color:#574b73;min-width:48px;width:auto;height:36px;padding:0 9px;border-color:#fffdf4}
+
+.event-feed-status{margin:2px 24px 14px;padding:12px 14px;border:1px solid #e7dfee;border-radius:12px;background:#f8f5fb;color:#665570;font-size:11px;line-height:1.6}.event-feed-status strong{display:block;font-size:12px;color:#554161}.event-feed-status p{margin:5px 0}.event-feed-status small{display:block;font-size:10px}.event-feed-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}.event-feed-actions a,.event-feed-actions button,.activity-mode-note button{font:inherit;color:#674282;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}.event-feed-actions button:disabled{opacity:.6;cursor:wait}.activity-mode-note{margin:2px 24px 14px;padding:10px 12px;border-radius:10px;background:#f1ebf7;font-size:11px;line-height:1.6;display:flex;flex-wrap:wrap;gap:4px 12px}.explore-panel:focus-visible{outline:2px solid #9471b1;outline-offset:-3px}

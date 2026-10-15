@@ -6,13 +6,33 @@ Clear, source-backed events pass Claude moderation and publish automatically. Un
 
 ## Alex’s deployment checklist
 
-1. On a new database, apply **supabase/migrations/20261014000000_freebie_radar.sql** after the existing community migrations. It adds private scan/checkpoint/venue tables, source occurrence metadata, and nullable coordinates for unlocated imports. Ordinary student posts still require a confirmed location. It is already applied to the hosted project identified below.
-2. Set **ANTHROPIC_API_KEY** and a supported **ANTHROPIC_MODEL** (default claude-sonnet-4-6). **FREEBIE_CLAUDE_MODEL** optionally overrides it. Keys remain on the server.
-3. Set a random **CRON_SECRET** of at least 32 characters and **FREEBIE_WORKER_URL=https://YOUR-DEPLOYMENT/api/freebies/worker**. The URL must refer to this environment, be reachable by the server, and must not redirect. Preview protection must permit the callback; leave imports disabled in previews that share production credentials.
-4. Add the moderator’s Supabase Auth user ID to **ADMIN_USER_IDS**. Existing UCL sign-in is unchanged.
-5. Confirm permission for this use under the Union’s [website terms](https://studentsunionucl.org/website-terms-and-conditions), then set **UNION_IMPORT_ENABLED=true**. Clause 7 reserves storage and reproduction beyond private browsing without express permission. The public feed is a technical source, not a reuse licence. The shorter `/terms-and-conditions` page does not contain the relevant website terms.
-6. Google Places is optional: set **GOOGLE_MAPS_API_KEY** with Places API (New) and Map Tiles enabled. Without it, campus matches still work and other venues remain **Location TBC**.
-7. Deploy after review. In the live activity view, a moderator opens the Union import tool, presses **Import next 14 days**, and watches the publication and failure counts. Check an ordinary event, a freebie, a source link, a pending decision, a known campus venue, and an unlocated event.
+**Merging code does not itself populate the map.** No real two-week import has been run as part of this change. Alex needs to configure the production deployment, then run the first import. Enter private values directly in Vercel; never put keys, database passwords or the cron secret in chat, the PR, or this file.
+
+1. In the correct Vercel project, open **Settings → Environment Variables** and select **Production**. Confirm that its Supabase connection and Auth configuration point to the same intended project. Use the settings below; keep the two import flags false in Preview environments that share production services.
+
+   | Variable | Production value |
+   | --- | --- |
+   | `NEXT_PUBLIC_SUPABASE_URL` | The existing Supabase project URL. |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | That project's publishable key. The existing `NEXT_PUBLIC_SUPABASE_ANON_KEY` is also supported. |
+   | `POSTGRES_URL` | The project's transaction-pooler connection string, including its database password. If `DATABASE_URL` is already set, it takes precedence and must point to the intended database. |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Existing server-only credential for account administration and private photos; `SUPABASE_SECRET_KEY` is also supported. Never give either a `NEXT_PUBLIC_` prefix. |
+   | `ANTHROPIC_API_KEY` | A working Anthropic key with available credit. |
+   | `ANTHROPIC_MODEL` | A model available to that account; the app defaults to `claude-sonnet-4-6`. `FREEBIE_CLAUDE_MODEL` is an optional importer override. |
+   | `CRON_SECRET` | A new random secret of **at least 32 characters**; the app rejects shorter values. |
+   | `FREEBIE_WORKER_URL` | `https://YOUR-PRODUCTION-DOMAIN/api/freebies/worker`, using this project's trusted, reachable production domain. No redirect, query string, embedded credentials or preview URL. Continuations send the cron secret here. |
+   | `ADMIN_USER_IDS` | The moderator's real Supabase **Auth user UUID**, or comma-separated UUIDs; not an email address or GitHub username. |
+   | `UNION_IMPORT_ENABLED` | `true` only after the source-permission step below. |
+   | `FREEBIE_DAILY_IMPORT_ENABLED` | `true` to enable the daily refresh already registered in `vercel.json`. |
+
+   Get the database connection from **Supabase → Connect → Transaction pooler** (port 6543). The app disables prepared statements for this mode. See [Supabase connection guidance](https://supabase.com/docs/guides/database/connecting-to-postgres).
+2. In Supabase **Authentication → Users**, copy the UUID of the actual UCL account that will sign in, and use it for `ADMIN_USER_IDS`. If the user does not exist yet, create their account through the app first, then add its ID and redeploy. Existing UCL sign-in is unchanged.
+3. On a new database, apply **supabase/migrations/20261014000000_freebie_radar.sql** after the existing community migrations. It adds private scan/checkpoint/venue tables, source occurrence metadata, and nullable coordinates for unlocated imports. It is already applied to the hosted project identified below; do not apply it twice. This change adds no new schema migration.
+4. Confirm permission for this use under the Union’s [website terms](https://studentsunionucl.org/website-terms-and-conditions), then enable `UNION_IMPORT_ENABLED`. Clause 7 reserves storage and reproduction beyond private browsing without express permission. The public feed is a technical source, not a reuse licence. The shorter `/terms-and-conditions` page does not contain the relevant website terms.
+5. Google Places is optional: set **GOOGLE_MAPS_API_KEY** with Places API (New) and Map Tiles enabled. Without it, confirmed campus matches still work and other venues remain **Location TBC**. Jev is not required for this importer.
+6. Deploy the reviewed code to **Production** after saving the environment variables. Ensure Fluid Compute permits the route's 300-second duration, and that deployment protection does not block the worker callback. A local `.env` or a GitHub merge alone does not configure Vercel. In **Settings → Cron Jobs**, verify `/api/freebies/daily` is listed; there is no second schedule to add manually.
+7. Open that production site, use **Join the campus / My account → Sign in**, close the account panel, then choose **Import Union events** in the left sidebar. Normal visits now show live activity; use **View real activity** first if you explicitly opened the demo. Press **Import next 14 days** once. The enabled button confirms the required settings are present; a successful scan still depends on valid credentials and a reachable worker. The window covers London today and the following thirteen dates; closing the panel does not stop processing.
+8. Reopen the import panel or press **Refresh** to verify the result. Expect **0 remaining**, **0 failed** and **Coverage complete** for a healthy completed scan. Check **events found**, **calendar pages checked**, **published**, **held** and **skipped** against the actual calendar; there is no fixed promised event count. For a populated two-week calendar, zero discovered or zero published is a reason to inspect errors, warnings and held records. The JSON/CSV export provides individual records. Failed or paused imports resume from saved progress when **Import next 14 days** is pressed after the cause is fixed.
+9. Open **What’s on · 2 weeks** and verify ordinary events are blue, explicit freebies are purple, and source links and times match the Union listing. Check a known campus venue, an unlocated/online event if present, and any held review. Only published, unexpired events with confirmed supported coordinates get map bubbles; online and **Location TBC** entries remain in the list, and several events at one building can share a bubble. Do not equate the bubble count with the published event count.
 
 The frontend demo remains explicitly synthetic and separate. Imported events appear in **live activity**, not in the demo. No real import is performed by builds or tests. This extension adds no schema migration: the existing radar migration already stores event metadata, and `posts.type` is text. Apply that existing migration if it is missing from the deployment.
 
@@ -38,21 +58,15 @@ This is a resumable worker, not a hosted durable queue. A hard process terminati
 
 The route requests 300 seconds of function duration, using a 65-second launch budget so the last bounded provider stage can finish. Enable Vercel Fluid Compute, or use an equivalent runtime supporting that duration. See [Vercel function duration](https://vercel.com/docs/functions/configuring-functions/duration).
 
-## Optional daily import — off until enabled
+## Daily import — registered, off until enabled
 
-There is no active schedule in vercel.json. After Friday:
+`vercel.json` registers one daily **GET /api/freebies/daily** invocation at **05:00 UTC**. Vercel installs that schedule when this configuration reaches the production deployment; this PR does not change hosted settings or start an import. The route still requires the secret, source flag, daily flag, database, Claude and continuation URL. With either import flag off, it cannot start a scheduled import.
 
-1. Set **FREEBIE_DAILY_IMPORT_ENABLED=true** alongside the normal import settings.
-2. Register a daily authenticated GET or POST to **https://YOUR-DEPLOYMENT/api/freebies/daily**, with the header **Authorization: Bearer YOUR_CRON_SECRET**. Duplicate calls on the same London calendar date do not start another window.
-3. For Vercel Cron, add this entry to your deployment configuration:
+Vercel sends the production `CRON_SECRET` as **Authorization: Bearer …** automatically. The app compares it before doing any work; opening the endpoint in a normal browser returns 401. Schedules use UTC, so the nominal local time is 06:00 during British Summer Time and 05:00 in winter. Vercel invokes only the production deployment, not branch previews. See [cron operation](https://vercel.com/docs/cron-jobs) and [cron authentication](https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs).
 
-    {
-      "crons": [
-        { "path": "/api/freebies/daily", "schedule": "0 5 * * *" }
-      ]
-    }
+Hobby supports this once-daily schedule, with delivery anywhere within **05:00–05:59 UTC**, rather than an exact-minute guarantee. A more frequent cron expression would fail a Hobby deployment. Do not add a five-minute worker schedule to `vercel.json` on Hobby. [Vercel cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing).
 
-Vercel supplies CRON_SECRET as the bearer header. Schedules use UTC. Hobby supports daily schedules; more frequent recovery needs an external scheduler or a plan supporting it. [Vercel cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing). Turning the daily flag off stops scheduled new imports; turning UNION_IMPORT_ENABLED off stops all subsequent batches. Scheduled imports require both the flag and registered schedule.
+After enabling and deploying, check the next run in **Settings → Cron Jobs → View Logs** and the app's import history. An accepted trigger returns 202; it is not proof that every event has finished processing. Vercel does not retry a failed cron invocation, so inspect failures and use the Import button to recover saved work. Duplicate calls on the same London date do not start another window. Turning `FREEBIE_DAILY_IMPORT_ENABLED` off stops scheduled new imports; turning `UNION_IMPORT_ENABLED` off stops subsequent worker invocations as well. Redeploy after changing these flags. [Cron error handling](https://vercel.com/docs/cron-jobs/manage-cron-jobs#cron-job-error-handling).
 
 ## Locations, freshness and cost
 

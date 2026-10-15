@@ -43,6 +43,16 @@ export async function requireVerified(): Promise<VerifiedProfile> {
   return { userId: user.userId, email: user.email, verified: true };
 }
 
+/** Provider checks may outlive account deletion or a change to a non-UCL email.
+ * Never recreate a profile when rechecking a delayed write. This is not session
+ * revocation: the request's token can remain valid after remote sign-out. */
+async function requireActiveWrite(userId: string): Promise<void> {
+  const user = await currentUser();
+  if (user?.userId !== userId || !await database().prepare("SELECT user_id FROM profiles WHERE user_id = ?").bind(userId).first()) {
+    throw new HttpError(403, "Your account changed while this contribution was checked. Sign in again before submitting.");
+  }
+}
+
 export async function consumeRateLimit(userId: string, scope: string, limit: number, windowSeconds: number): Promise<void> {
   const now = Date.now();
   const windowMs = windowSeconds * 1000;
@@ -190,7 +200,8 @@ async function passwordAuth(request: Request, mode: "signup" | "signin"): Promis
 }
 
 async function signOut(): Promise<Response> {
-  await (await authClient())?.auth.signOut();
+  const result = await (await authClient())?.auth.signOut();
+  if (result?.error) throw new HttpError(503, "We could not sign out your account. Please try again.");
   return json({ ok: true });
 }
 
@@ -248,6 +259,7 @@ async function action(request: Request): Promise<Response> {
     const data = reviewInput(body, category);
     await consumeRateLimit(profile.userId, "review", 8, 86400);
     const reviewModeration = await moderation(`${data.text}\n${data.tags.join(", ")}\n${data.term}`, "review", category === "rental");
+    await requireActiveWrite(profile.userId);
     const row = await db.prepare("INSERT INTO reviews (id, user_id, place_id, rating, criteria, tags, text, term, recommend, status, moderation_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, place_id) DO UPDATE SET rating = excluded.rating, criteria = excluded.criteria, tags = excluded.tags, text = excluded.text, term = excluded.term, recommend = excluded.recommend, status = excluded.status, moderation_reason = excluded.moderation_reason, created_at = excluded.created_at, moderation_revision = reviews.moderation_revision + 1 RETURNING *")
       .bind(id, profile.userId, data.placeId, data.rating, JSON.stringify(data.criteria), JSON.stringify(data.tags), data.text, data.term, Number(data.recommend), reviewModeration.status, reviewModeration.reason, now).first<Row>();
     await scheduleModeration(row!, "review", reviewModeration);
@@ -278,6 +290,7 @@ async function action(request: Request): Promise<Response> {
     const moderationText = `${data.type}: ${data.title}\n${data.description}\nLocation: ${data.location}\nCollection: ${data.collectionInstructions}\n${data.foodDetails ? JSON.stringify(data.foodDetails) : ""}`;
     let postModeration = await moderation(moderationText, "pin");
     if (data.photoKey && postModeration.status === "approved") postModeration = await photoModeration(data.photoKey, moderationText);
+    await requireActiveWrite(profile.userId);
     let row: Row | null;
     try {
       if (data.type === "food" && data.expiresAt <= Date.now()) throw new HttpError(400, "The collection window ended while this alert was checked. Confirm a new expiry before posting.");
@@ -296,6 +309,7 @@ async function action(request: Request): Promise<Response> {
     const text = textField(body.text, "Message", 1, 2500);
     await consumeRateLimit(profile.userId, "thread", 10, 3600);
     const result = await moderation(`${title}\n${text}`, "thread");
+    await requireActiveWrite(profile.userId);
     const row = await db.prepare("INSERT INTO threads (id, user_id, place_id, title, text, status, moderation_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *")
       .bind(id, profile.userId, placeId, title, text, result.status, result.reason, now).first<Row>();
     await scheduleModeration(row!, "thread", result);
@@ -307,8 +321,12 @@ async function action(request: Request): Promise<Response> {
     const text = textField(body.text, "Reply", 1, 2500);
     await consumeRateLimit(profile.userId, "reply", 20, 3600);
     const result = await moderation(text, "thread");
-    const row = await db.prepare("INSERT INTO replies (id, user_id, thread_id, text, status, moderation_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *")
-      .bind(id, profile.userId, threadId, text, result.status, result.reason, now).first<Row>();
+    await requireActiveWrite(profile.userId);
+    // The parent may be removed or hidden while Claude checks the reply. Lock
+    // it for this insert; thread deletion locks the parent before its replies.
+    const row = await db.prepare("INSERT INTO replies (id, user_id, thread_id, text, status, moderation_reason, created_at) SELECT ?, ?, id, ?, ?, ?, ? FROM threads WHERE id = ? AND status = 'approved' FOR SHARE RETURNING *")
+      .bind(id, profile.userId, text, result.status, result.reason, now, threadId).first<Row>();
+    if (!row) throw new HttpError(409, "This discussion changed while your reply was checked. Refresh before replying again.");
     await scheduleModeration(row!, "reply", result);
     return json({ ok: true, reply: publicReply(row!, true), message: result.status === "approved" ? "Reply published." : "Your reply is awaiting moderation." }, 201);
   }
@@ -473,7 +491,10 @@ async function ownAction(userId: string, body: Row, action: string): Promise<Res
     const own = await db.prepare(`SELECT id FROM ${table} WHERE id = ? AND user_id = ?`).bind(targetId, userId).first();
     if (!own) throw new HttpError(404, "Your contribution could not be found.");
     const statements = [db.prepare("DELETE FROM votes WHERE target_id = ?").bind(targetId), db.prepare("DELETE FROM reports WHERE target_id = ?").bind(targetId), db.prepare("DELETE FROM moderation_retries WHERE target_id = ?").bind(targetId)];
-    if (kind === "thread") statements.push(db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM replies WHERE thread_id = ?)").bind(targetId), db.prepare("DELETE FROM reports WHERE target_id IN (SELECT id FROM replies WHERE thread_id = ?)").bind(targetId), db.prepare("DELETE FROM moderation_retries WHERE target_id IN (SELECT id FROM replies WHERE thread_id = ?)").bind(targetId), db.prepare("DELETE FROM replies WHERE thread_id = ?").bind(targetId));
+    if (kind === "thread") {
+      statements.unshift(db.prepare("SELECT id FROM threads WHERE id = ? AND user_id = ? FOR UPDATE").bind(targetId, userId));
+      statements.push(db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM replies WHERE thread_id = ?)").bind(targetId), db.prepare("DELETE FROM reports WHERE target_id IN (SELECT id FROM replies WHERE thread_id = ?)").bind(targetId), db.prepare("DELETE FROM moderation_retries WHERE target_id IN (SELECT id FROM replies WHERE thread_id = ?)").bind(targetId), db.prepare("DELETE FROM replies WHERE thread_id = ?").bind(targetId));
+    }
     statements.push(db.prepare(`DELETE FROM ${table} WHERE id = ? AND user_id = ?`).bind(targetId, userId));
     await db.batch(statements);
     return json({ ok: true, message: "Your contribution has been deleted." });
@@ -510,6 +531,7 @@ async function ownAction(userId: string, body: Row, action: string): Promise<Res
   const verdict = await moderation(moderationText, "pin");
   // A text edit cannot bypass a pending photo check.
   const result = post.photo_key && verdict.status === "approved" ? await photoModeration(String(post.photo_key), moderationText) : verdict;
+  await requireActiveWrite(userId);
   const updatedAt = Date.now();
   const row = await db.prepare("UPDATE posts SET collection_instructions = ?, portions_remaining = ?, food_details = ?, availability_updated_at = ?, status = ?, moderation_reason = ?, moderation_revision = moderation_revision + 1, expires_at = CASE WHEN ? = 0 THEN LEAST(expires_at, ?) ELSE expires_at END, closure_reason = CASE WHEN ? = 0 THEN 'collected' ELSE closure_reason END, closed_at = CASE WHEN ? = 0 THEN ? ELSE closed_at END WHERE id = ? AND user_id = ? AND moderation_revision = ? AND status <> 'hidden' AND expires_at > ? AND closed_at IS NULL RETURNING *")
     .bind(update.instructions, update.portions, JSON.stringify(foodDetails || {}), updatedAt, result.status, result.reason, update.portions, updatedAt, update.portions, update.portions, updatedAt, targetId, userId, post.moderation_revision, updatedAt).first<Row>();
@@ -670,7 +692,7 @@ async function moderationQueue(request: Request): Promise<Response> {
   await requireModerator();
   const db = database();
   const result = await db.batch<Row>([
-    ...["reviews", "posts", "threads", "replies"].map((table) => db.prepare(`SELECT * FROM ${table} WHERE status IN ('pending', 'hidden') OR id IN (SELECT target_id FROM reports) ORDER BY created_at ASC LIMIT 200`)),
+    ...["reviews", "posts", "threads", "replies"].map((table) => db.prepare(`SELECT * FROM ${table} WHERE status IN ('pending', 'hidden') OR id IN (SELECT target_id FROM reports) ORDER BY CASE WHEN status = 'pending' THEN 0 WHEN id IN (SELECT target_id FROM reports) THEN 1 ELSE 2 END, created_at ASC, id ASC LIMIT 200`)),
     db.prepare("SELECT id, target_id, reason, created_at FROM reports ORDER BY created_at DESC LIMIT 500"),
     db.prepare("SELECT id, kind, contact, target_id, reason, evidence_url, status, moderator_note, created_at FROM community_requests WHERE status = 'pending' ORDER BY created_at ASC LIMIT 200"),
   ]);
@@ -704,7 +726,8 @@ async function moderateAction(request: Request): Promise<Response> {
     const row = await database().prepare(`SELECT * FROM ${table} WHERE id = ?`).bind(targetId).first<Row>();
     if (!row) continue;
     if (decision === "approve") {
-      const privacy = privateInformationReason([row.title, row.text, row.description, row.location, row.tags, row.collection_instructions, row.food_details].filter(Boolean).join("\n"));
+      const privateHome = table === "reviews" && places.find((place) => place.id === row.place_id)?.category === "rental";
+      const privacy = privateInformationReason([row.title, row.text, row.description, row.location, row.tags, row.term, row.collection_instructions, row.food_details, row.freebie_json].filter(Boolean).join("\n"), privateHome);
       if (privacy) throw new HttpError(400, privacy);
     }
     await database().batch([
@@ -737,6 +760,7 @@ async function deleteAccount(): Promise<Response> {
     if (removed.error) throw new HttpError(503, "Photo storage is unavailable. Try account deletion again later.");
   }
   await db.batch([
+    db.prepare("SELECT id FROM threads WHERE user_id = ? FOR UPDATE").bind(userId),
     db.prepare("DELETE FROM moderation_retries WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ? UNION SELECT r.id FROM replies r JOIN threads t ON t.id = r.thread_id WHERE t.user_id = ?)").bind(userId, userId, userId, userId, userId),
     db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ?)").bind(userId, userId, userId, userId),
     db.prepare("DELETE FROM reports WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ?)").bind(userId, userId, userId, userId),
@@ -746,9 +770,11 @@ async function deleteAccount(): Promise<Response> {
     ...["reviews", "posts", "threads", "replies", "votes", "reports", "photos", "profiles", "community_requests", "community_preferences"].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(userId)),
     db.prepare("DELETE FROM rate_limits WHERE key LIKE ? ESCAPE '\\'").bind(`%:${userId.replace(/[\\%_]/g, "\\$&") }:%`),
   ]);
-  await (await authClient())?.auth.signOut();
   const removed = await admin.auth.admin.deleteUser(userId);
-  if (removed.error) console.error("Auth user deletion failed:", removed.error.name);
+  if (removed.error) throw new HttpError(503, "Your community data was deleted, but your sign-in account could not be deleted. Please retry account deletion.");
+  // Auth no longer recognises this account, even if cookie cleanup is briefly
+  // unavailable. Retain the session until this point so partial deletion can retry.
+  try { await (await authClient())?.auth.signOut(); } catch { /* Deleted identity cannot authorise another request. */ }
   return json({ ok: true, message: "Your community account, contributions and uploaded photos have been deleted." });
 }
 

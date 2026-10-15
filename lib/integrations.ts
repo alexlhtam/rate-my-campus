@@ -231,7 +231,14 @@ export async function locatePlace(query: string) {
     });
   } catch { throw new IntegrationError(504, "Location matching took too long. Please choose the location on the map."); }
   if (!response.ok) throw new IntegrationError(response.status === 429 ? 429 : 502, "Google location matching is unavailable. Please choose the location on the map.");
-  const data = await response.json() as { places?: { id: string; displayName?: { text: string }; formattedAddress?: string; location?: { latitude: number; longitude: number }; attributions?: unknown[] }[] };
+  let data: { places?: { id: string; displayName?: { text: string }; formattedAddress?: string; location?: { latitude: number; longitude: number }; attributions?: unknown[] }[] };
+  try {
+    data = z.object({ places: z.array(z.object({
+      id: z.string().min(1), displayName: z.object({ text: z.string() }).optional(), formattedAddress: z.string().optional(),
+      location: z.object({ latitude: z.number().finite().min(-90).max(90), longitude: z.number().finite().min(-180).max(180) }).optional(),
+      attributions: z.array(z.unknown()).optional(),
+    })).optional() }).parse(await response.json());
+  } catch { throw new IntegrationError(502, "Google returned incomplete location details. Please choose the location on the map."); }
   return (data.places || []).filter(place => place.location).map(place => ({ id: place.id, name: place.displayName?.text || query, address: place.formattedAddress || "", lat: place.location!.latitude, lng: place.location!.longitude, attributions: place.attributions || [] }));
 }
 
@@ -326,7 +333,8 @@ export async function importUnionEvent(sourceUrl: string) {
   if (!response.ok || !response.headers.get("content-type")?.includes("text/html")) throw new IntegrationError(502, "The Union listing could not be loaded.");
   const html = await readLimitedText(response, 500_000);
   const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1] || html;
-  const text = main.replace(/<(script|style|nav|header|footer)\b[^>]*>[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").slice(0, 14000);
+  const text = main.replace(/<(script|style|nav|header|footer)\b[^>]*>[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+  if (text.length > 14000) throw new IntegrationError(413, "This listing is too long for a single-event preview. Use the full Union event importer so the complete page is checked.");
   const result = await claudeJSON(
     'Review a public Students Union UCL event listing. Only qualify events whose listing explicitly promises free food or free merchandise. Free admission alone is not a freebie. Schema: {"includesFreeFoodOrMerch":boolean,"evidence":string,"title":string,"description":string,"location":string|null,"startsAt":ISO8601|null,"expiresAt":ISO8601|null,"dietary":("vegan"|"vegetarian"|"halal"|"gluten-free")[],"layer":"freebie","price":null,"originalPrice":null,"confidence":"high"|"medium"|"low","warnings":string[]}. Evidence should paraphrase in at most 20 words the explicit free food or merch offer; leave empty when absent. Summarise the listing in your own words; do not reproduce long passages. Extract dates and locations only from this event, never from navigation or other promoted events. Interpret dates in Europe/London using now; missing start/end times must be null. Do not infer dietary suitability or freshness. Flag uncertainties. The draft requires moderator confirmation.',
     { listing: text, sourceUrl: url.toString(), now: new Date().toISOString(), timezone: "Europe/London" },

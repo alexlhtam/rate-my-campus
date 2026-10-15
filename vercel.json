@@ -3,5 +3,8 @@
   "framework": "nextjs",
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
-  "regions": ["dub1"]
+  "regions": ["dub1"],
+  "crons": [
+    { "path": "/api/freebies/daily", "schedule": "0 5 * * *" }
+  ]
 }

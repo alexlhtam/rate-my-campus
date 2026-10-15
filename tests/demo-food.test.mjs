@@ -58,6 +58,28 @@ test('pickup detail edits validate instructions and allergen claims and preserve
   assert.throws(()=>updateDemoFood(original,{action:'update-post',targetId:'demo-food-test',revision:0,collectionInstructions:'Collect from reception.',portionsRemaining:4,foodDetails:{allergenStatus:'unknown',allergens:['milk']}},now+1000));
 });
 
+test('pending owner details can be corrected without publishing the alert or enabling availability controls',()=>{
+  const original=state();original.posts[0].status='pending';
+  const changed=updateDemoFood(original,{action:'update-post',targetId:'demo-food-test',revision:0,foodDetails:{allergenStatus:'provided',allergens:['milk']}},now+1000);
+  const post=changed.posts[0];
+  assert.equal(post.status,'pending');assert.equal(foodAvailability(post,now+1000).available,false);
+  assert.equal(post.revision,1);assert.deepEqual(post.foodDetails.allergens,['milk']);
+  assert.equal(post.collectionInstructions,draft.collectionInstructions);assert.equal(post.portionsRemaining,8);assert.equal(post.expiresAt,draft.expiresAt);
+  assert.throws(()=>updateDemoFood(changed,{action:'food-availability',targetId:post.id,revision:1,portionsRemaining:4},now+2000),/ended or changed/);
+  assert.throws(()=>updateDemoFood(changed,{action:'update-post',targetId:post.id,revision:0,collectionInstructions:'Collect at reception.'},now+2000),/ended or changed/);
+  assert.throws(()=>updateDemoFood(changed,{action:'update-post',targetId:post.id,revision:1,collectionInstructions:'Collect at reception.'},now+46*60000),/ended or changed/);
+});
+
+test('partial pickup detail edits preserve omitted values but explicit unknown quantity is respected',()=>{
+  const original=state();
+  const changed=updateDemoFood(original,{action:'update-post',targetId:'demo-food-test',revision:0,collectionInstructions:'Collect from the society table.'},now+1000);
+  assert.equal(changed.posts[0].portionsRemaining,8);assert.equal(changed.posts[0].foodDetails.allergenStatus,'unknown');
+  const unknown=updateDemoFood(changed,{action:'update-post',targetId:'demo-food-test',revision:1,portionsRemaining:null},now+2000);
+  assert.equal(unknown.posts[0].portionsRemaining,null);assert.equal(unknown.posts[0].collectionInstructions,'Collect from the society table.');
+  assert.throws(()=>updateDemoFood(original,{action:'food-availability',targetId:'demo-food-test',revision:0},now+1000),/quantity/);
+  assert.equal(original.posts[0].portionsRemaining,8);
+});
+
 test('one demo participant can change their feedback but cannot create a gone quorum',()=>{
   const post={...create(),own:false};
   const once=demoFoodFeedback({posts:[],votes:{},foodFeedback:{}},post,'gone',now+1000);

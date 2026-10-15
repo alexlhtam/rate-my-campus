@@ -14,6 +14,36 @@ const bodySchema = z.object({
   sourceUrl: z.string().url().max(500).optional(),
 });
 
+function prerequisiteDeadline(signal: AbortSignal) {
+  const end = Date.now() + 8000;
+  const timeout = () => new IntegrationError(504, "Campus services took too long to respond. Please try again.");
+  const cancelled = () => new IntegrationError(408, "The request was cancelled. Please try again.");
+  const check = () => { if (signal.aborted) throw cancelled(); if (Date.now() >= end) throw timeout(); };
+  return {
+    check,
+    async run<T>(operation: () => Promise<T>): Promise<T> {
+      check();
+      return new Promise<T>((resolve, reject) => {
+        let finished = false;
+        const finish = (outcome: { value: T } | { error: unknown }) => {
+          if (finished) return;
+          finished = true; clearTimeout(timer); signal.removeEventListener("abort", abort);
+          if ("error" in outcome) reject(outcome.error); else resolve(outcome.value);
+        };
+        const abort = () => finish({ error: cancelled() });
+        const timer = setTimeout(() => finish({ error: timeout() }), Math.max(0, end - Date.now()));
+        signal.addEventListener("abort", abort, { once: true });
+        // The awaited boundary rejects on expiry. A delayed Auth/DB result can
+        // settle its own operation, but cannot continue the route to Claude.
+        Promise.resolve().then(() => { check(); return operation(); }).then(
+          value => { try { check(); finish({ value }); } catch (error) { finish({ error }); } },
+          error => finish({ error }),
+        );
+      });
+    },
+  };
+}
+
 export async function GET() {
   const [status, identity, env] = await Promise.all([integrationStatus(), currentUser(), runtimeEnv()]);
   const admins = typeof env.ADMIN_USER_IDS === "string" ? env.ADMIN_USER_IDS.split(",").map(value => value.trim()) : [];
@@ -26,13 +56,18 @@ export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
     if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new IntegrationError(415, "This feature expects a JSON request.");
-    const identity = await currentUser();
+    const deadline = prerequisiteDeadline(request.signal);
+    const identity = await deadline.run(currentUser);
     if (!identity) throw new IntegrationError(401, "Sign in to use connected services.");
     const body = bodySchema.parse(JSON.parse(await readLimitedText(request, 3_000_000)));
     // The limit is stored atomically in Postgres and applies across instances.
-    await consumeRateLimit(identity.userId, "assist", 30, 3600);
+    // Search shares one eight-second prerequisite budget. Claude then has its
+    // own 25-second transport deadline; the browser also bounds the full request.
+    if (body.action === "search") await deadline.run(() => consumeRateLimit(identity.userId, "assist", 30, 3600));
+    else await consumeRateLimit(identity.userId, "assist", 30, 3600);
     if (body.action === "search") {
       if (!body.text?.trim()) throw new IntegrationError(400, "Enter a search first.");
+      deadline.check();
       return Response.json({ provider: "anthropic", filters: await searchWithClaude(body.text) }, { headers: { "Cache-Control": "no-store" } });
     }
     if (body.action === "locate") {

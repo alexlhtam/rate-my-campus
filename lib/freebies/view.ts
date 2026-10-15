@@ -1,5 +1,5 @@
 import {addDays,londonDate,londonMidnight} from './ucl';
-import type {Extraction} from './types';
+import type {EventRecord,Extraction} from './types';
 import type {PinType} from '../data';
 
 export type FreebieTime = 'now'|'today'|'week'|'fortnight';
@@ -23,6 +23,38 @@ export function inFreebieWindow(pin:Pick<EventPin,'startsAt'|'expiresAt'>,filter
 }
 const dayTime=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
 export function eventTime(value?:string|null){return value&&Number.isFinite(Date.parse(value))?dayTime.format(new Date(value)):'Time not stated';}
+export type EventFeedMetadata = {
+  importReady:boolean;
+  importStatus:'ready'|'disabled'|'setup_required';
+  lastScan:{start_date:string;end_date:string;updated_at:string;status:string;exhausted:number;coverageComplete:boolean}|null;
+};
+export type EventFeedStatus = {
+  state:'disabled'|'setup_required'|'not_started'|'importing'|'incomplete'|'outdated'|'empty'|'current';
+  title:string;
+  detail:string;
+  lastChecked:string|null;
+};
+/** Counts describe published records, never the size of the Union calendar. */
+export function eventFeedStatus(meta:EventFeedMetadata,count:number,now:number):EventFeedStatus {
+  const total=Number.isFinite(count)?Math.max(0,Math.floor(count)):0;
+  const countText=total?`${total} published Union ${total===1?'event is':'events are'} available.`:'No Union events have been published for the next two weeks.';
+  const scan=meta.lastScan,updated=scan?Date.parse(scan.updated_at):NaN;
+  const lastChecked=Number.isFinite(updated)?eventTime(scan!.updated_at):null;
+  const result=(state:EventFeedStatus['state'],title:string,detail:string):EventFeedStatus=>({state,title,detail:countText+' '+detail,lastChecked});
+  if(meta.importStatus==='disabled')return result('disabled','Union event updates are switched off.','Browse the Union calendar for current listings.');
+  if(meta.importStatus==='setup_required'||!meta.importReady)return result('setup_required','Union event updates need connecting.','The import service is not ready yet. Browse the Union calendar for current listings.');
+  if(!scan)return result('not_started','Union events have not been imported yet.','The first import still needs to run.');
+  if(['running','discovering'].includes(scan.status)){
+    // A saved running flag is not evidence that an interrupted worker continues.
+    if(!Number.isFinite(updated)||now-updated>30*60000)return result('incomplete','The latest Union import has not finished.','Coverage is incomplete; the import needs checking.');
+    return result('importing','Union events are being imported.','More listings may appear as the import finishes.');
+  }
+  if(!scan.coverageComplete||scan.status!=='complete')return result('incomplete','Some Union listings still need checking.','The latest import is incomplete. Browse the Union calendar for the full programme.');
+  const today=londonDate(new Date(now)),windowEnd=addDays(today,14);
+  if(!Number.isFinite(updated)||updated>now+5*60000||now-updated>24*60*60000||scan.start_date>today||scan.end_date<windowEnd)return result('outdated','Union listings need a fresh check.','The latest import does not cover the current two-week window.');
+  return total?result('current','Union events for the next two weeks.','Events with confirmed venues appear on the map; online or unconfirmed venues stay in the list.')
+    :result('empty','No published Union events in this window.','The latest import has finished. Check the Union calendar for unpublished or newly added listings.');
+}
 export function eventBadge(pin:Pick<EventPin,'startsAt'|'expiresAt'>,now:number) {
   const start=pin.startsAt?Date.parse(pin.startsAt):now,end=Date.parse(pin.expiresAt);
   if(!Number.isFinite(end)||end<=now)return {state:'ended',label:'Ended'};
@@ -32,6 +64,10 @@ export function eventBadge(pin:Pick<EventPin,'startsAt'|'expiresAt'>,now:number)
 }
 export function eventLocated(pin:Pick<EventPin,'lat'|'lng'|'freebie'>) {
   return pin.freebie?.attendance!=='online'&&typeof pin.lat==='number'&&Number.isFinite(pin.lat)&&typeof pin.lng==='number'&&Number.isFinite(pin.lng);
+}
+/** The calendar's explicit online flag wins over an incomplete extraction. */
+export function canConfirmEventVenue(event:Pick<EventRecord,'publishedPostId'|'sourceOnline'|'extraction'>) {
+  return Boolean(event.publishedPostId)&&event.sourceOnline!==true&&event.extraction?.attendance!=='online';
 }
 export function admissionLabel(details?:Extraction|null) {
   if(!details)return 'Ticket / membership requirements not stated';
