@@ -61,7 +61,7 @@ test('academic buildings are not misrepresented as lecture rooms or supplied fak
 
 test('arrival guides remain attributed to specific spaces and preserve material access restrictions', () => {
   const guided=places.filter(place=>place.visitGuide?.length);
-  assert.deepEqual(guided.map(place=>place.id).sort(),['ioe-library','main-library','science-library','ssees-library']);
+  assert.deepEqual(guided.map(place=>place.id).sort(),['archaeology-library','ioe-library','main-library','science-library','ssees-library']);
   for (const place of guided) for (const guide of place.visitGuide) {
     assert.equal(new URL(guide.sourceUrl).hostname,'www.ucl.ac.uk');
     assert.match(guide.checkedAt,/^\d{4}-\d{2}-\d{2}$/);
@@ -79,6 +79,21 @@ test('unified search resolves official aliases, address words and space names', 
   assert.ok(matchesPlaceSearch(places.find(place=>place.id==='ssees-library'),'sockets'));
   assert.ok(matchesPlaceSearch(places.find(place=>place.id==='ucl-cruciform-building'),'cruciform'));
   assert.equal(matchesPlaceSearch(places.find(place=>place.id==='ucl-cruciform-building'),'free pizza'),false);
+});
+
+test('Archaeology Library resolves both spellings to its verified parent building without inventing facilities', () => {
+  const library=places.find(place=>place.id==='archaeology-library');
+  const building=places.find(place=>place.id==='ucl-institute-of-archaeology');
+  assert.equal(library.category,'study');
+  assert.equal(library.parentPlaceId,building.id);
+  assert.equal(library.lat,building.lat);assert.equal(library.lng,building.lng);
+  assert.equal(library.locationStatus,'footprint');
+  for (const query of ['archaeology library','archeology library','IoA Library','31 34 Gordon Square']) assert.ok(matchesPlaceSearch(library,query),query);
+  assert.match(library.address,/Fifth floor/);
+  assert.match(library.visitGuide.map(guide=>guide.text).join(' '),/no wheelchair access/);
+  assert.equal(library.tags.some(tag=>/plugs|Wi-Fi|accessible/i.test(tag)),false);
+  assert.equal(hours.openingStatus(library).status,'unknown');
+  assert.equal(hours.placeHoursLinks[library.id],library.sourceUrl);
 });
 
 test('distance depends on the selected origin and unknown locations remain unknown', () => {

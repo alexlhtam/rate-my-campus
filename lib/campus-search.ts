@@ -1,3 +1,5 @@
+import type { CampusAssistantResult } from './campus-assistant-types';
+
 export const searchTags = ['quiet', 'plugs', 'wifi', 'late', 'accessible'] as const;
 export type SearchTag = typeof searchTags[number];
 
@@ -39,16 +41,33 @@ export async function readSearchResponse(response: Response) {
   try { data = await response.json(); }
   catch { throw new Error('Search returned an unreadable response. Please try again.'); }
   if (!response.ok) throw new SearchRequestError(typeof data?.error === 'string' ? data.error : 'Search is unavailable. Please try again.', response.status);
+  if (typeof data?.answer === 'string') {
+    const safeUrl = (value: unknown) => { try { const url = new URL(String(value)); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; } };
+    const sources = data.sources;
+    const suggestions = data.suggestions;
+    if (!data.answer.trim() || data.answer.length > 12000 || !Array.isArray(sources) || sources.length > 30 ||
+        sources.some(source => !source || typeof source.id !== 'string' || typeof source.title !== 'string' || !safeUrl(source.url)) ||
+        new Set(sources.map(source => source.id)).size !== sources.length ||
+        !Array.isArray(suggestions) || suggestions.length > 8 || suggestions.some(item =>
+          !item || typeof item.id !== 'string' || typeof item.name !== 'string' || typeof item.description !== 'string' ||
+          typeof item.address !== 'string' || !['campus', 'google'].includes(item.locationProvider) ||
+          !Array.isArray(item.sourceIds) || item.sourceIds.some((id: unknown) => !sources.some(source => source.id === id)) ||
+          ((item.lat !== undefined || item.lng !== undefined) && !(Number.isFinite(item.lat) && Math.abs(item.lat) <= 85 && Number.isFinite(item.lng) && Math.abs(item.lng) <= 180)) ||
+          (item.mapUrl !== undefined && !safeUrl(item.mapUrl))) || new Set(suggestions.map(item => item.id)).size !== suggestions.length) {
+      throw new SearchRequestError('The researched answer was incomplete. Please try again.');
+    }
+    return { filters: data.filters || null, message: data.answer, assistant: {answer: data.answer, sources, suggestions} as CampusAssistantResult };
+  }
   const filters = data?.filters;
   if (!filters || typeof filters !== 'object' || Array.isArray(filters) || typeof filters.query !== 'string' || !Array.isArray(filters.tags)) {
     throw new Error('Search returned incomplete filters. Please try again.');
   }
   if (typeof filters.clarification === 'string' && filters.clarification.trim()) {
-    return { filters: null, message: filters.clarification.trim() };
+    return { filters: null, message: filters.clarification.trim(), assistant: undefined };
   }
   const labels: Record<string, string> = { study: 'study spaces', lecture: 'lecture halls', halls: 'student halls', rental: 'rentals', building: 'campus buildings', food: 'leftover food', freebie: 'society freebies', event: 'Union events', deal: 'student deals' };
   const details = [filters.query, labels[filters.category] || labels[filters.layer] || 'campus places', ...filters.tags, ...(filters.dietary || []), filters.openNow ? 'open now' : '', filters.near ? `near ${filters.near}` : '', filters.radiusKm ? `within ${filters.radiusKm} km` : ''].filter(Boolean);
-  return { filters, message: `Looking for ${details.join(' · ')}. Only recorded information is matched; missing details can limit results.` };
+  return { filters, message: `Looking for ${details.join(' · ')}. Only recorded information is matched; missing details can limit results.`, assistant: undefined };
 }
 
 /** Bound the whole request, including authentication and a stalled response body. */
@@ -65,7 +84,7 @@ export async function requestCampusSearch(text: string, options: {
     onAbort = () => reject(new DOMException('Search cancelled.', 'AbortError'));
     controller.signal.addEventListener('abort', onAbort, { once: true });
   });
-  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, options.timeoutMs ?? 35_000);
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, options.timeoutMs ?? 65_000);
   try {
     const request = (async () => {
       const response = await (options.fetcher ?? fetch)('/api/assist', {

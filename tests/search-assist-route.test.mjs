@@ -11,7 +11,7 @@ globalThis.__searchAssistRoute={z,IntegrationError,
  currentUser:()=>{calls.push('auth');return auth()},
  consumeRateLimit:(...args)=>{calls.push(['limit',...args]);return limit()},
  assertSameOrigin:()=>{},readLimitedText:request=>request.text(),
- searchWithClaude:text=>{calls.push(['claude',text]);return search()},
+ researchCampus:(text,options)=>{calls.push(['claude',text]);assert.ok(options.signal instanceof AbortSignal);return search()},
  integrationErrorResponse:error=>Response.json({error:error.message},{status:error instanceof z.ZodError?400:error.status||500}),
 };
 const source=(await readFile(new URL('../app/api/assist/route.ts',import.meta.url),'utf8')).replace(/^import\s+\{([^}]+)\}\s+from\s+"[^"]+";/gm,(_match,names)=>`const {${names}}=globalThis.__searchAssistRoute;`);
@@ -21,11 +21,11 @@ delete globalThis.__searchAssistRoute;
 const request=signal=>new Request('https://campus.example/api/assist',{method:'POST',signal,headers:{'Content-Type':'application/json',Origin:'https://campus.example'},body:JSON.stringify({action:'search',text:'a place to study'})});
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no});return{promise,resolve,reject}};
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-test.beforeEach(()=>{calls=[];auth=async()=>({userId:'ucl-student'});limit=async()=>{};search=async()=>filters});
+test.beforeEach(()=>{calls=[];auth=async()=>({userId:'ucl-student'});limit=async()=>{};search=async()=>({answer:'Try a campus library.',sources:[],suggestions:[],filters})});
 
 test('search keeps the authenticated shared rate limit before invoking Claude',async()=>{
  const response=await POST(request());
- assert.equal(response.status,200);assert.deepEqual(await response.json(),{provider:'anthropic',filters});
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{provider:'anthropic',answer:'Try a campus library.',sources:[],suggestions:[],filters});
  assert.deepEqual(calls,['auth',['limit','ucl-student','assist',30,3600],['claude','a place to study']]);
 });
 

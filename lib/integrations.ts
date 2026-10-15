@@ -220,26 +220,26 @@ export async function summarizeReviews(reviews: string[]) {
   return result.summary;
 }
 
-export async function locatePlace(query: string) {
+export async function locatePlace(query: string, callerSignal?: AbortSignal) {
   const key = await secret("GOOGLE_MAPS_API_KEY");
   let response: Response;
   try {
     response = await fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST", headers: { "Content-Type": "application/json", "X-Goog-Api-Key": key, "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.attributions" },
+      method: "POST", headers: { "Content-Type": "application/json", "X-Goog-Api-Key": key, "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.attributions,places.googleMapsUri" },
       body: JSON.stringify({ textQuery: query.slice(0, 180), pageSize: 5, languageCode: "en", regionCode: "GB", locationBias: { circle: { center: { latitude: 51.5246, longitude: -0.134 }, radius: 4000 } } }),
-      signal: AbortSignal.timeout(12_000),
+      signal: callerSignal ? AbortSignal.any([callerSignal, AbortSignal.timeout(12_000)]) : AbortSignal.timeout(12_000),
     });
   } catch { throw new IntegrationError(504, "Location matching took too long. Please choose the location on the map."); }
   if (!response.ok) throw new IntegrationError(response.status === 429 ? 429 : 502, "Google location matching is unavailable. Please choose the location on the map.");
-  let data: { places?: { id: string; displayName?: { text: string }; formattedAddress?: string; location?: { latitude: number; longitude: number }; attributions?: unknown[] }[] };
+  let data: { places?: { id: string; displayName?: { text: string }; formattedAddress?: string; location?: { latitude: number; longitude: number }; attributions?: unknown[]; googleMapsUri?: string }[] };
   try {
     data = z.object({ places: z.array(z.object({
       id: z.string().min(1), displayName: z.object({ text: z.string() }).optional(), formattedAddress: z.string().optional(),
       location: z.object({ latitude: z.number().finite().min(-90).max(90), longitude: z.number().finite().min(-180).max(180) }).optional(),
-      attributions: z.array(z.unknown()).optional(),
+      attributions: z.array(z.unknown()).optional(), googleMapsUri: z.string().url().optional(),
     })).optional() }).parse(await response.json());
   } catch { throw new IntegrationError(502, "Google returned incomplete location details. Please choose the location on the map."); }
-  return (data.places || []).filter(place => place.location).map(place => ({ id: place.id, name: place.displayName?.text || query, address: place.formattedAddress || "", lat: place.location!.latitude, lng: place.location!.longitude, attributions: place.attributions || [] }));
+  return (data.places || []).filter(place => place.location).map(place => ({ id: place.id, name: place.displayName?.text || query, address: place.formattedAddress || "", lat: place.location!.latitude, lng: place.location!.longitude, attributions: place.attributions || [], ...(place.googleMapsUri ? { googleMapsUri: place.googleMapsUri } : {}) }));
 }
 
 type MapSession = { session: string; expiry: string; tileWidth: number; tileHeight: number; imageFormat: string };
