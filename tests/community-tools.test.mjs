@@ -1,5 +1,6 @@
 import {loadFreebie} from './freebies/load.mjs';
 const {publicFreebie,publishFreebie}=await loadFreebie('lib/freebies/publication.ts');
+const {publicIncident}=await loadFreebie('lib/incidents/publication.ts');
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -32,7 +33,7 @@ let photoVerdict = { approved: true, reasons: [] };
 let photoChecks = 0;
 let moderationTexts = [];
 let authStub = null, adminStub = null;
-globalThis.__communityTools = { publicFreebie, db, isUniqueViolation, validation, features, food,
+globalThis.__communityTools = { publicFreebie, publicIncident, db, isUniqueViolation, validation, features, food,
   currentUser: async () => user, runtimeEnv: async () => ({ ADMIN_USER_IDS: "moderator", ANTHROPIC_API_KEY: "test" }),
   authClient: async () => authStub, adminClient: () => adminStub,
   moderateContent: async (text) => { moderationTexts.push(text); if (moderationHook) await moderationHook(); if (serviceFailure) throw serviceFailure; return verdict; }, moderatePhoto: async () => { photoChecks++; return photoVerdict; },
@@ -41,6 +42,7 @@ globalThis.__communityTools = { publicFreebie, db, isUniqueViolation, validation
 };
 const { communityRoute } = await loadTs("community-server", [
   [/import .*publicFreebie.*from .*freebies\/publication.*;/, "const {publicFreebie}=globalThis.__communityTools;"],
+  [/import .*publicIncident.*from .*incidents\/publication.*;/, "const {publicIncident}=globalThis.__communityTools;"],
   [/import \{[^}]+\} from "\.\/db";/, "const {db, isUniqueViolation} = globalThis.__communityTools; const getDatabase = () => db;"],
   [/import \{[^}]+\} from "\.\/integrations";/, "const {moderateContent, moderatePhoto, runtimeEnv} = globalThis.__communityTools;"],
   [/import \{([^}]+)\} from "\.\/community-validation";/, "const {$1} = globalThis.__communityTools.validation;"],
@@ -566,6 +568,37 @@ test("community tools enforce ownership, moderation, private requests and comple
     response=await call('account',undefined,'DELETE');
     assert.equal(response.status,200);assert.equal(deletions,2);assert.equal(signouts,1);
     authStub=null;adminStub=null;
+  });
+  await t.test("incident reports recover through the retry queue, reach the moderator queue, end when hidden and leave with their account", async () => {
+    const now=Date.now(),key='photos/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.png';
+    await db.prepare("INSERT INTO photos(key,user_id,mime,bytes,created_at) VALUES (?,'ivy','image/png',12,?)").bind(key,now).run();
+    await db.prepare("INSERT INTO incidents(id,user_id,category,severity,title,description,location,lat,lng,photo_key,status,moderation_reason,created_at,expires_at) VALUES ('inc-retry','ivy','hazard','warning','Spill in the corridor','Wet floor by the lifts','Quad',51.52,-0.13,?,'pending','Awaiting moderation.',?,?)").bind(key,now,now+3600000).run();
+    await db.prepare("INSERT INTO moderation_retries(target_id,kind,revision,next_attempt_at) VALUES ('inc-retry','incident',0,0)").run();
+    const photoRequest=()=>communityRoute(new Request('https://campus.example/api/community/photo?key='+encodeURIComponent(key)),['photo']);
+    asUser('mallory');
+    assert.equal((await photoRequest()).status,404,'a pending incident photo stays private');
+    const checksBefore=photoChecks;await due();await call('state');
+    assert.equal((await db.prepare("SELECT status FROM incidents WHERE id='inc-retry'").first()).status,'approved');
+    assert.equal(photoChecks,checksBefore+1,'the recovered incident photo is checked too');
+    assert.match(moderationTexts.at(-1),/Spill in the corridor/);
+    assert.equal((await photoRequest()).status,200,'an approved live incident unlocks its photo');
+    await db.prepare("INSERT INTO reports(id,user_id,target_id,reason,created_at) VALUES ('inc-report','bob','inc-retry','Not happening',?)").bind(now).run();
+    asUser('moderator');
+    const item=(await call('moderation')).body.queue.find(row=>row.id==='inc-retry');
+    assert.equal(item.kind,'incident');assert.equal(item.category,'hazard');assert.equal(item.severity,'warning');assert.equal('user_id' in item,false);
+    assert.equal((await call('moderation',{targetId:'inc-retry',decision:'hide',reason:'Not an incident.'})).status,200);
+    const hidden=await db.prepare("SELECT status,resolved_at,resolution FROM incidents WHERE id='inc-retry'").first();
+    assert.equal(hidden.status,'hidden');assert.equal(hidden.resolution,'moderator');assert.ok(hidden.resolved_at,'hiding an incident also ends it');
+    assert.equal(await db.prepare("SELECT id FROM reports WHERE target_id='inc-retry'").first(),null);
+    asUser('mallory');assert.equal((await photoRequest()).status,404);
+    asUser('ivy');
+    await db.prepare("INSERT INTO votes(id,user_id,target_id,kind,created_at) VALUES ('inc-vote','bob','inc-retry','confirm',?)").bind(now).run();
+    const exported=await communityRoute(new Request('https://campus.example/api/community/account/export'),['account','export']);
+    assert.equal((await exported.json()).account.incidents.length,1);
+    adminStub={storage:{from:()=>({remove:async()=>({error:null})})},auth:{admin:{deleteUser:async()=>({error:null})}}};authStub={auth:{signOut:async()=>({error:null})}};
+    try{assert.equal((await call('account',undefined,'DELETE')).status,200);}finally{adminStub=null;authStub=null;asUser('alice');}
+    assert.equal(await db.prepare("SELECT id FROM incidents WHERE id='inc-retry'").first(),null);
+    assert.equal(await db.prepare("SELECT id FROM votes WHERE target_id='inc-retry'").first(),null);
   });
   await pg.close(); delete globalThis.__communityTools;
 });

@@ -12,6 +12,10 @@ Ask for sourced recommendations or a place's location. Claude can search the cam
 
 Moderators can import the next 14 days of live Union listings. Claude checks explicit free items, publishes clear findings and holds uncertain ones for review. Students get Today/Now/week/fortnight filters, event cards and venue pins. Background progress, cached venue matching, optional daily imports (off by default) and deployment settings are documented in [docs/freebies.md](docs/freebies.md).
 
+## Campus incidents
+
+Students can raise a red alert for a fight, a spill, a fire alarm, a medical emergency, a security incident, a protest or a disruption. Others nearby corroborate it or clear it; three clears that outnumber confirmations end an alert, three abuse flags hide it for moderators, and every alert expires within 24 hours. Every incident surface shows 999 and UCL Security first and states that the report alerts nobody. Reports are checked by Claude for personal details before publication and are never described as verified. See [docs/INCIDENTS.md](docs/INCIDENTS.md).
+
 ## Run locally
 
 Requires Node.js 22.13 or newer. Install with `npm ci`, link the Vercel project (`vercel link`), pull its environment with `vercel env pull .env.local`, then run `npm run dev`. Without Supabase variables the app still runs in demo mode and live routes answer "not connected yet".
@@ -70,6 +74,7 @@ The Union importer accepts a single public event URL, extracts explicit food/mer
 - `POST /api/community/upload`: protected image upload.
 - `GET /api/community/account/export`, `DELETE /api/community/account`: account portability/deletion.
 - `GET/POST /api/community/moderation`: protected exception and report queue.
+- `GET /api/incidents/feed`, `GET /api/incidents/item`, `POST /api/incidents/{create,vote,resolve,flag,delete}`: live campus incident reports, corroboration and clearing.
 - `POST /api/assist`: search, extract, locate, summary, or controlled event import.
 - `/api/map/*`: server-only Google map session, tile and attribution proxy.
 
