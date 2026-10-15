@@ -42,7 +42,7 @@ export async function readSearchResponse(response: Response) {
   if (typeof filters.clarification === 'string' && filters.clarification.trim()) {
     return { filters: null, message: filters.clarification.trim() };
   }
-  const labels: Record<string, string> = { study: 'study spaces', lecture: 'lecture halls', halls: 'student halls', rental: 'rentals', building: 'campus buildings', food: 'leftover food', freebie: 'society freebies', deal: 'student deals' };
+  const labels: Record<string, string> = { study: 'study spaces', lecture: 'lecture halls', halls: 'student halls', rental: 'rentals', building: 'campus buildings', food: 'leftover food', freebie: 'society freebies', event: 'Union events', deal: 'student deals' };
   const details = [filters.query, labels[filters.category] || labels[filters.layer] || 'campus places', ...filters.tags, ...(filters.dietary || []), filters.openNow ? 'open now' : '', filters.near ? `near ${filters.near}` : '', filters.radiusKm ? `within ${filters.radiusKm} km` : ''].filter(Boolean);
   return { filters, message: `Looking for ${details.join(' · ')}. Only recorded information is matched; missing details can limit results.` };
 }
@@ -61,13 +61,15 @@ export function localSearchFilters(input: string) {
   // Singular "Hall" is often part of a venue name (for example Logan Hall).
   // Leave it as a name token rather than misclassifying that venue as a residence.
   let category = /\b(study|library|libraries)\b/.test(lower) ? 'study' : /\b(lectures?|theatres?)\b/.test(lower) ? 'lecture' : /\b(halls|accommodation)\b/.test(lower) ? 'halls' : null;
-  const layer = /\b(leftovers?|free food)\b/.test(lower) ? 'food' : /\b(deal|discount)s?\b/.test(lower) ? 'deal' : /\b(?:freebies?|merch)\b/.test(lower) ? 'freebie' : category ? 'rated' : null;
+  const eventIntent = /\b(events?|society socials?|workshops?)\b/.test(lower);
+  const layer = /\b(?:freebies?|merch)\b/.test(lower) || (eventIntent && /\bfree food\b/.test(lower)) ? 'freebie' : /\b(leftovers?|free food)\b/.test(lower) ? 'food' : /\b(deal|discount)s?\b/.test(lower) ? 'deal' : eventIntent ? 'event' : category ? 'rated' : null;
   if (layer && layer !== 'rated') category = null;
   const dietary = ['vegan', 'vegetarian', 'halal', 'gluten-free'].filter(tag => new RegExp(`\\b${tag === 'gluten-free' ? 'gluten[ -]free' : tag}\\b`).test(lower));
   const radius = lower.match(/\b(?:within|under)\s+(\d+(?:\.\d+)?)\s*(km|kilometres?|m|metres?)\b/);
   const radiusKm = radius ? Number(radius[1]) / (/^k/.test(radius[2]) ? 1 : 1000) : undefined;
   const validRadius = radiusKm !== undefined && radiusKm >= .05 && radiusKm <= 50;
   if (validRadius) query = query.replace(/\b(?:within|under)\s+\d+(?:\.\d+)?\s*(km|kilometres?|m|metres?)\b/gi, ' ');
+  if (eventIntent) query = query.replace(/\b(?:students[’']?\s+union|union|society socials?|events?|workshops?)\b/gi, ' ');
   if (tags.length || openNow || category || layer || dietary.length) query = query.replace(/\b(open now|happening now|open late|late[- ]night|quiet|plugs?|sockets?|wi[ -]?fi|study|spots?|spaces?|lectures?|theatres?|libraries|library|halls|accommodation|leftovers?|free food|deals?|discounts?|freebies?|merch|vegan|vegetarian|halal|gluten[ -]free|with|and|a|an|the|find|me|please)\b/gi, ' ');
   return { query: query.replace(/\s+/g, ' ').trim(), category, layer, tags, dietary, openNow, ...(near ? { near } : {}), ...(validRadius ? { radiusKm } : {}) };
 }

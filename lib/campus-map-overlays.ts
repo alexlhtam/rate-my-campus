@@ -6,6 +6,22 @@ type LocatedItem = {id:string;lat:number;lng:number;type?:string;score?:string};
 export type OverlayGroupLayout<T> = {key:string;groups:{x:number;y:number;items:T[]}[]};
 export type OverlayLayoutOptions = {zoom?:number;selected?:string};
 export const UNRATED_PIN_ZOOM=18;
+/** Screen translation is separate from the CSS anchor transform and hover scale.
+ * In particular, scaling a selected bubble must never scale its map coordinates. */
+export const mapOverlayPosition=(x:number,y:number)=>({left:0,top:0,translate:`${x}px ${y}px`});
+
+type BuildingHoverMap = {
+  isMoving():boolean;
+  getLayer(id:string):unknown;
+  getCanvas():{style:{cursor:string}};
+  queryRenderedFeatures(point:[number,number],options:{layers:string[]}):unknown[];
+};
+/** Hit testing is useful for a resting pointer, not while dragging the camera. */
+export function updateBuildingHover(map:BuildingHoverMap,point:[number,number]):void {
+  const cursor=!map.isMoving()&&map.getLayer('campus-buildings')&&map.queryRenderedFeatures(point,{layers:['campus-buildings','campus-ground']}).length?'pointer':'';
+  const style=map.getCanvas().style;
+  if(style.cursor!==cursor)style.cursor=cursor;
+}
 const layer=(item:LocatedItem)=>item.type||'rated';
 /** At campus scale the footprints already identify unrated buildings. Avoid a
  * second layer of empty score bubbles; close zoom and selection reveal them. */
@@ -25,7 +41,9 @@ function groupVisiblePins<T extends LocatedItem>(pins:ScreenPin<T>[],options:Ove
   const selected=visible.filter(pin=>pin.item.id===options.selected).map(pin=>({x:pin.x,y:pin.y,items:[pin.item]}));
   const rest=visible.filter(pin=>pin.item.id!==options.selected);
   const reviews=groupScreenPins(rest.filter(pin=>layer(pin.item)==='rated'),reviewPinSpacing(zoom));
-  const alerts=[...new Set(rest.map(pin=>layer(pin.item)))].filter(kind=>kind!=='rated').flatMap(kind=>groupScreenPins(rest.filter(pin=>layer(pin.item)===kind),42));
+  // Several events, freebies and food alerts can share one real venue. One
+  // picker keeps every alert reachable instead of stacking identical targets.
+  const alerts=groupScreenPins(rest.filter(pin=>layer(pin.item)!=='rated'),42);
   const alertSpace=[...alerts,...selected.filter(group=>layer(group.items[0])!=='rated')];
   // An alert drawn over a review bubble steals its click target. Keep their
   // real geographic anchors and reserve clear space for time-sensitive alerts;
@@ -54,18 +72,20 @@ export function layoutOverlayGroups<T extends LocatedItem>(pins: ScreenPin<T>[],
  */
 export function positionMapOverlays(map: Projector, overlays: Iterable<MapOverlay>): void {
   const viewport=map.getContainer?.();
+  // Read layout once before changing any overlay styles. Reading live container
+  // dimensions after each marker write forces repeated synchronous layouts.
+  const width=viewport?.clientWidth,height=viewport?.clientHeight;
   for (const {point,element} of overlays) {
     const projected = map.project([point.lng,point.lat]);
     if (!Number.isFinite(projected.x) || !Number.isFinite(projected.y)) {
       element.style.visibility = 'hidden';
       continue;
     }
-    const left = `${projected.x}px`, top = `${projected.y}px`;
-    if (element.style.left !== left) element.style.left = left;
-    if (element.style.top !== top) element.style.top = top;
+    const translate = `${projected.x}px ${projected.y}px`;
+    if (element.style.translate !== translate) element.style.translate = translate;
     // Keep off-screen elements mounted but out of keyboard/pointer interaction.
     // A small margin allows the bubble above an edge anchor to remain visible.
-    const outside=viewport&&(projected.x < -80 || projected.x > viewport.clientWidth+80 || projected.y < -80 || projected.y > viewport.clientHeight+80);
+    const outside=width!==undefined&&height!==undefined&&(projected.x < -80 || projected.x > width+80 || projected.y < -80 || projected.y > height+80);
     const visibility=outside?'hidden':'';
     if (element.style.visibility!==visibility) element.style.visibility=visibility;
   }

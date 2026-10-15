@@ -319,6 +319,9 @@ async function action(request: Request): Promise<Response> {
     if (!(target === "post" ? ["still", "gone"] : ["helpful", "unhelpful"]).includes(kind)) throw new HttpError(400, "This vote does not apply to that contribution.");
     await consumeRateLimit(profile.userId, "vote", 80, 3600);
     const targetPost = target === "post" ? await db.prepare("SELECT * FROM posts WHERE id = ?").bind(targetId).first<Row>() : null;
+    if (targetPost && ["event", "freebie"].includes(String(targetPost.type)) && Number(targetPost.starts_at || 0) > now) {
+      throw new HttpError(400, "This event has not started yet. Use Report pin if the listing has changed.");
+    }
     if (targetPost?.type === "food") {
       if (targetPost.user_id === profile.userId) throw new HttpError(400, "Use your food availability controls to update your own alert.");
       if (targetPost.status !== "approved" || Number(targetPost.expires_at) <= now || Number(targetPost.starts_at || 0) > now || targetPost.closed_at != null) throw new HttpError(400, "This food collection is not available now.");
@@ -340,9 +343,10 @@ async function action(request: Request): Promise<Response> {
     await db.prepare("INSERT INTO votes (id, user_id, target_id, kind, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id, target_id) DO UPDATE SET kind = excluded.kind, created_at = excluded.created_at")
       .bind(id, profile.userId, targetId, kind, now).run();
     if (target === "post") {
-      // Three independent reports of gone, exceeding confirmations, remove the live pin.
-      await db.prepare("UPDATE posts SET expires_at = LEAST(expires_at, ?) WHERE id = ? AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') >= 3 AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') > (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'still')")
-        .bind(now, targetId, targetId, targetId, targetId).run();
+      // Keep a durable closure revision so a later source scan cannot resurrect
+      // an event that the community has already marked gone.
+      await db.prepare("UPDATE posts SET expires_at = LEAST(expires_at, ?), closed_at = ?, closure_reason = 'community-gone', availability_updated_at = ?, moderation_revision = moderation_revision + 1 WHERE id = ? AND status = 'approved' AND expires_at > ? AND closed_at IS NULL AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') >= 3 AND (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'gone') > (SELECT count(*) FROM votes WHERE target_id = ? AND kind = 'still')")
+        .bind(now, now, now, targetId, now, targetId, targetId, targetId).run();
     }
     return json({ ok: true });
   }

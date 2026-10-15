@@ -87,6 +87,9 @@ export interface SourceEvent {
   end: string | null;
   imageUrl: string | null;
   sourceLocation: string | null;
+  /** Explicit public calendar metadata; absent in older checkpoints. */
+  sourceOrganizer?: string | null;
+  sourceOnline?: boolean | null;
 }
 
 export interface EventPage {

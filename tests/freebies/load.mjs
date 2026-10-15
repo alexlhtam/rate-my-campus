@@ -1,12 +1,14 @@
 import {readFileSync,writeFileSync,unlinkSync,existsSync} from 'node:fs';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {dirname,resolve,extname} from 'node:path';
-import {after} from 'node:test';
 import ts from 'typescript';
 const files=new Map(),prefix='.freebie-test-'+process.pid+'-'+Math.random().toString(36).slice(2);
 const testRoot=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const repository=resolve(testRoot,'..');
-after(()=>{for(const file of files.values())try{unlinkSync(file)}catch{}});
+// Multiple fixture test modules are loaded with top-level await. A root after()
+// hook can run between those imports on Node 20; keep compiled dependencies
+// until the test process exits instead of deleting modules still being linked.
+process.once('exit',()=>{for(const file of files.values())try{unlinkSync(file)}catch{}});
 export function compileFreebie(file){
  const sourcePath=file instanceof URL?fileURLToPath(file):resolve(file);
  if(files.has(sourcePath))return pathToFileURL(files.get(sourcePath)).href;

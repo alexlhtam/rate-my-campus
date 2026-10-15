@@ -1,5 +1,5 @@
 import {loadFreebie} from './freebies/load.mjs';
-const {publicFreebie}=await loadFreebie('lib/freebies/publication.ts');
+const {publicFreebie,publishFreebie}=await loadFreebie('lib/freebies/publication.ts');
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -404,6 +404,72 @@ test("community tools enforce ownership, moderation, private requests and comple
     for (const value of ["Follow the collection signs", "Retry ingredients", "Retry handling", "Retry society"]) assert.ok(moderationTexts[0].includes(value));
     const row = await db.prepare("SELECT status,closure_reason FROM posts WHERE id='food-retry-details'").first();
     assert.equal(row.status, "pending"); assert.equal(row.closure_reason, "withdrawn");
+  });
+  await t.test("source events keep their type through state and shared links, without exposing private fields", async () => {
+    const now=Date.now(), metadata={hasFreebies:false,freebies:[],summary:'Student society discussion',admission:'free',dietary:[]};
+    for(const [id,status,expiry] of [['union-event','approved',now+600000],['union-held','pending',now+600000],['union-expired','approved',now-1]]){
+      await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,starts_at,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES (?,'system:union','event','Society discussion','Discussion','Venue to be confirmed',?,?,?,?,'[]',?,?)")
+        .bind(id,now-60000,expiry,id,JSON.stringify(metadata),status,now).run();
+    }
+    user=null;
+    const state=await call('state');assert.equal(state.status,200);
+    const event=state.body.posts.find(row=>row.id==='union-event');
+    assert.equal(event.type,'event');assert.equal(event.lat,null);assert.equal(event.lng,null);
+    assert.equal(event.freebie.hasFreebies,false);assert.equal(event.own,false);
+    assert.ok(!state.body.posts.some(row=>['union-held','union-expired'].includes(row.id)));
+    assert.equal(JSON.stringify(event).includes('system:union'),false);
+    const shared=await call('pin?id=union-event');assert.equal(shared.status,200);
+    assert.equal(shared.body.post.type,'event');assert.equal(shared.body.post.expired,false);
+    assert.equal((await call('pin?id=union-held')).status,404);
+    assert.equal((await call('pin?id=union-expired')).body.post.expired,true);
+  });
+  await t.test("student and moderator action requests cannot forge general source events", async () => {
+    const body={...foodBody('Forged event'),type:'event',sourceEventKey:'invented',userId:'system:union',unionImport:true};
+    asUser('event-poster');assert.equal((await call('action',body)).status,400);
+    const sourced={...body,sourceUrl:'https://studentsunionucl.org/whats-on/clubs-societies/forged'};
+    assert.equal((await call('action',sourced)).status,403);
+    asUser('moderator');assert.equal((await call('action',sourced)).status,400);
+    assert.equal(Number((await db.prepare("SELECT count(*) as count FROM posts WHERE title='Forged event'").first()).count),0);
+  });
+  await t.test("upcoming events and freebies cannot receive availability votes but can be reported", async () => {
+    asUser('upcoming-reader');
+    for(const type of ['event','freebie']){
+      const id='future-'+type,now=Date.now();
+      await db.prepare("INSERT INTO posts(id,user_id,type,title,description,location,starts_at,expires_at,source_event_key,freebie_json,dietary,status,created_at) VALUES (?,'system:union',?,'Future fixture','Fixture','TBC',?,?,?,'{}','[]','approved',?)")
+        .bind(id,type,now+60000,now+120000,id,now).run();
+      for(const kind of ['still','gone']){
+        const response=await call('action',{action:'vote',targetId:id,kind});
+        assert.equal(response.status,400);assert.match(response.body.error,/not started/);
+      }
+      assert.equal(Number((await db.prepare('SELECT count(*) as count FROM votes WHERE target_id=?').bind(id).first()).count),0);
+      assert.equal((await call('action',{action:'report',targetId:id,reason:'The organiser has changed this listing'})).status,200);
+      assert.equal((await db.prepare('SELECT status FROM posts WHERE id=?').bind(id).first()).status,'approved');
+    }
+  });
+  await t.test("independent gone votes close a source event durably and a rescan cannot reopen it", async () => {
+    asUser('event-reader');
+    assert.equal((await call('action',{action:'close-post',targetId:'union-event',reason:'ended'})).status,404);
+    for(const name of ['event-reader','event-reader','event-second']){
+      asUser(name);assert.equal((await call('action',{action:'vote',targetId:'union-event',kind:'gone'})).status,200);
+    }
+    let row=await db.prepare("SELECT * FROM posts WHERE id='union-event'").first();
+    assert.equal(row.closed_at,null,'duplicate voter must not count twice');
+    asUser('event-third');assert.equal((await call('action',{action:'vote',targetId:'union-event',kind:'gone'})).status,200);
+    row=await db.prepare("SELECT * FROM posts WHERE id='union-event'").first();
+    assert.equal(row.closure_reason,'community-gone');assert.ok(row.closed_at);assert.equal(row.moderation_revision,1);
+    const source={id:'union-event',title:'Society discussion',url:'https://studentsunionucl.org/whats-on/clubs-societies/discussion',start:new Date(Date.now()-1000).toISOString(),end:new Date(Date.now()+600000).toISOString(),sourceLocation:null,imageUrl:null};
+    const extraction={hasFreebies:false,freebies:[],summary:'Student society discussion',admission:'free',venue:null,address:null,locationEvidence:null,priceDetails:null,bookingRequired:null,bookingUrl:null,eligibility:null,conditions:[]};
+    const result=await publishFreebie(db,source,extraction,{places:[],privacy:()=>null,moderate:async()=>{throw Error('Closed events must not trigger paid moderation');}});
+    assert.equal(result.state,'held_by_moderator');assert.equal(result.id,'union-event');
+    assert.equal((await call('pin?id=union-event')).body.post.expired,true);
+  });
+  await t.test("general source events retain community reporting and hidden-link protection", async () => {
+    await db.prepare("UPDATE posts SET expires_at=?,status='approved' WHERE id='union-expired'").bind(Date.now()+600000).run();
+    for(const name of ['event-reporter-one','event-reporter-two','event-reporter-three']){
+      asUser(name);assert.equal((await call('action',{action:'report',targetId:'union-expired',reason:'The source says this event is cancelled'})).status,200);
+    }
+    assert.equal((await db.prepare("SELECT status FROM posts WHERE id='union-expired'").first()).status,'hidden');
+    assert.equal((await call('pin?id=union-expired')).status,404);
   });
   await pg.close(); delete globalThis.__communityTools;
 });

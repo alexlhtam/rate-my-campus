@@ -49,6 +49,20 @@ test("plain-English search validates filters and calls the versioned Messages AP
   assert.deepEqual(await api.searchWithClaude("quiet study with plugs open now"), expected);
 });
 
+test("Claude search supports ordinary Union events while separating freebies from free entry", async () => {
+  process.env.ANTHROPIC_API_KEY = "test-placeholder";
+  const expected = { query: "chess", category: null, dietary: [], openNow: false, tags: [], layer: "event" };
+  globalThis.fetch = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    assert.match(body.system, /event means Union events without confirmed freebies/);
+    assert.match(body.system, /Free entry alone is not a freebie/);
+    return Response.json({ content: [{ type: "text", text: JSON.stringify(expected) }], stop_reason: "end_turn" });
+  };
+  assert.deepEqual(await api.searchWithClaude("chess society events"), expected);
+  fakeClaude({ ...expected, layer: "freebie" });
+  assert.equal((await api.searchWithClaude("chess events with free food")).layer, "freebie");
+});
+
 test("malformed or truncated model output never becomes a valid moderation verdict", async () => {
   process.env.ANTHROPIC_API_KEY = "test-placeholder";
   fakeClaude({ approved: "yes", reasons: [] });

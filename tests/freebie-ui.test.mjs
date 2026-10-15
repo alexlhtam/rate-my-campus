@@ -16,7 +16,18 @@ test('online events remain location TBC even if stale coordinates were supplied'
 });
 test('unknown society, dietary and prices are labelled rather than inferred',()=>{
  const html=renderToStaticMarkup(React.createElement(FreebieFacts,{pin:{...pin,dietary:[],freebie:null}}));
- for(const value of ['Society not stated','Dietary information not stated','requirements not stated'])assert.ok(html.includes(value));
+ for(const value of ['Organiser not stated','Dietary information not stated','requirements not stated'])assert.ok(html.includes(value));
+});
+
+test('regular Union events are visually distinguished and do not imply food or freebies',()=>{
+ const html=renderToStaticMarkup(React.createElement(FreebieCard,{pin:{...pin,type:'event',dietary:[],description:'Example film screening',freebie:{...pin.freebie,hasFreebies:false,freebies:[],admission:'free',priceDetails:null}},now:Date.parse('2026-10-12T12:00:00Z'),saved:false,onOpen(){},onSave(){}}));
+ for(const value of ['Campus event','Example film screening','Free entry','Union listing'])assert.ok(html.includes(value),value);
+ for(const value of ['Includes freebies','Dietary information not stated','pizza'])assert.ok(!html.includes(value),value);
+});
+
+test('event facts display the actual source end even when pin visibility is capped earlier',()=>{
+ const html=renderToStaticMarkup(React.createElement(FreebieFacts,{pin:{...pin,freebie:{...pin.freebie,eventEnd:'2026-10-29T20:00:00Z'}},expanded:true}));
+ assert.ok(html.includes('29 Oct'));
 });
 test('time filter exposes Today as selected and offers all four time windows',()=>{
  const html=renderToStaticMarkup(React.createElement(FreebieTimeFilter,{value:'today',onChange(){}}));

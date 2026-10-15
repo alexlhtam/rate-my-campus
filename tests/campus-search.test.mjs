@@ -81,3 +81,19 @@ test('distance and dietary parsing preserve bounds and avoid substring claims',(
   assert.deepEqual(localSearchFilters('veganism institute').dietary,[]);
   assert.equal(localSearchFilters('merchandising building').layer,null);
 });
+
+test('Union events have their own search layer and freebie requests stay distinct',async()=>{
+  const events=localSearchFilters('Union events near Wilkins happening now');
+  assert.equal(events.layer,'event');assert.equal(events.category,null);assert.equal(events.query,'');
+  assert.equal(events.near,'Wilkins');assert.equal(events.openNow,true);
+  const discussion=localSearchFilters('philosophy society socials near Bloomsbury');
+  assert.equal(discussion.layer,'event');assert.equal(discussion.query,'philosophy');
+  const freeFood=localSearchFilters('events with free food near Science Library');
+  assert.equal(freeFood.layer,'freebie');assert.equal(freeFood.query,'');
+  assert.equal(freeFood.category,null);assert.equal(freeFood.near,'Science Library');
+  assert.equal(localSearchFilters('freebie events').layer,'freebie');
+  assert.equal(localSearchFilters('free events').layer,'event','free admission alone is not a freebie');
+  assert.equal(localSearchFilters('free events').query,'free','unsupported admission filter must not be silently discarded');
+  const result=await readSearchResponse(Response.json({filters:events}));
+  assert.match(result.message,/Union events/);
+});

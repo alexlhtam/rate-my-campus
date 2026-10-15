@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, Plus, Minus, LocateFixed, Star, Gift, Utensils, Tag, Navigation, Building2, X } from 'lucide-react';
+import { MapPin, Plus, Minus, LocateFixed, Star, Gift, CalendarDays, Utensils, Tag, Navigation, Building2, Layers, X } from 'lucide-react';
 import CampusBuildings from './campus-buildings';
-import {layoutOverlayGroups,type OverlayGroupLayout} from '@/lib/campus-map-overlays';
+import {layoutOverlayGroups,mapOverlayPosition,type OverlayGroupLayout} from '@/lib/campus-map-overlays';
 
 export type MapPosition = { lat: number; lng: number };
 export type MapProvider = 'google' | 'openstreetmap' | 'unavailable';
@@ -20,7 +20,7 @@ type Props = {
 type Coverage = { north: number; south: number; east: number; west: number; zoom: number; copyright: string };
 type Drag = { pointerId: number; x: number; y: number; cx: number; cy: number; start: MapPosition; last: MapPosition; moved: boolean };
 const campus = { lat: 51.5244, lng: -0.1324 };
-const icons: Record<string, typeof Star> = { rated: Star, food: Utensils, freebie: Gift, deal: Tag };
+const icons: Record<string, typeof Star> = { rated: Star, food: Utensils, freebie: Gift, event: CalendarDays, deal: Tag };
 const project = (lat: number, lng: number, z: number) => {
   const n = 256 * 2 ** z, s = Math.sin(Math.max(-85, Math.min(85, lat)) * Math.PI / 180);
   return { x: (lng + 180) / 360 * n, y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n };
@@ -143,6 +143,7 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
   const projected=items.filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)&&(item.locationProvider!=='google'||activeProvider==='google')).map(item=>{const position=project(item.lat,item.lng,zoom);return {item,x:position.x-left,y:position.y-top}});
   const layout=layoutOverlayGroups(projected,groupLayoutRef.current,Boolean(drag.current),{zoom,selected});groupLayoutRef.current=layout;
 
+ const currentPinGroup=(pinGroup||[]).flatMap(previous=>{const current=items.find(item=>item.id===previous.id);return current?[current]:[]});
   return <div className={'campus-map ' + (confirm ? 'confirm-map' : '')} ref={container} tabIndex={0} role="region"
     aria-label={confirm ? 'Confirm pin location. Drag the map or use arrow keys.' : 'Campus map. Use arrow keys to pan.'} style={{ touchAction: 'none', overflow: 'clip' }}
     onPointerDown={event => {
@@ -184,15 +185,15 @@ export default function CampusFlatMap({ items, onSelect, selected, confirm, init
       {waiting ? 'Loading the map…' : 'Google Maps is unavailable. This matched location needs a Google map. Try again later, or reset to a manual campus location.'}
     </div>}
     {!confirm && activeProvider !== 'unavailable' && layout.groups.map(group => {
-      const item=group.items[0],rated=!item.type||item.type==='rated',cluster=group.items.length>1,Icon=rated&&cluster?Building2:icons[item.type||'rated']||Star;
-      const description=cluster?`${group.items.length} ${rated?'places to review':`${item.type} alerts`} nearby`:item.name||item.title;
-      return <button type="button" key={group.items.map(pin=>pin.id).join('-')} className={`map-pin ${item.type || 'rated'} ${group.items.every(item=>item.eventState==='upcoming')?'upcoming':group.items.some(item=>item.eventState==='live')?'live':''} ${selected === item.id ? 'selected' : ''}`} data-map-layer={item.type||'rated'} style={{left:group.x,top:group.y,zIndex:selected===item.id?7:rated?4:5,transitionProperty:'background-color,box-shadow'}}
+      const item=group.items[0],rated=!item.type||item.type==='rated',cluster=group.items.length>1,mixed=new Set(group.items.map(item=>item.type||'rated')).size>1,layer=mixed?'mixed':item.type||'rated',Icon=mixed?Layers:rated&&cluster?Building2:icons[layer]||Star;
+      const description=cluster?`${group.items.length} ${mixed?'events and finds':rated?'places to review':`${item.type} alerts`} nearby`:item.name||item.title;
+      return <button type="button" key={group.items.map(pin=>pin.id).join('-')} className={`map-pin ${layer} ${group.items.every(item=>item.eventState==='upcoming')?'upcoming':group.items.some(item=>item.eventState==='live')?'live':''} ${selected === item.id ? 'selected' : ''}`} data-map-layer={layer} style={{...mapOverlayPosition(group.x,group.y),zIndex:selected===item.id?7:rated?4:5,transitionProperty:'background-color,box-shadow'}}
         onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); if(cluster)setPinGroup(group.items);else onSelect(item.id); }}
         aria-pressed={selected === item.id} aria-label={cluster?description:`View ${description}`}>
         <Icon size={14}/>{item.timeLabel&&!cluster&&<span className="freebie-pin-time">{item.timeLabel}</span>}{rated&&<b>{cluster?group.items.length:item.score||'—'}</b>}{!rated&&cluster&&<span className="atlas-pin-count">{group.items.length}</span>}<span className="pin-tooltip">{description}</span>
       </button>;
     })}
-    {pinGroup&&!confirm&&<section className="atlas-building-card" aria-label="Places at this location"><button type="button" className="atlas-card-close" aria-label="Close places" onClick={()=>setPinGroup(null)}><X size={17}/></button><p className="atlas-eyebrow">A little closer</p><h3>{pinGroup.length} spots here</h3><button type="button" className="atlas-show-gaps" onClick={()=>{setCenter({lat:pinGroup.reduce((sum,pin)=>sum+pin.lat,0)/pinGroup.length,lng:pinGroup.reduce((sum,pin)=>sum+pin.lng,0)/pinGroup.length});setZoom(value=>Math.min(value+1,19));setPinGroup(null)}}>Zoom into these places →</button><div className="atlas-group-list">{pinGroup.map(item=><button type="button" key={item.id} onClick={()=>{setPinGroup(null);onSelect(item.id)}}><span>{item.name||item.title}</span><b>{item.score||'View'} →</b></button>)}</div></section>}
+    {currentPinGroup.length>0&&!confirm&&<section className="atlas-building-card" aria-label="Places at this location"><button type="button" className="atlas-card-close" aria-label="Close places" onClick={()=>setPinGroup(null)}><X size={17}/></button><p className="atlas-eyebrow">A little closer</p><h3>{currentPinGroup.length} spots here</h3><button type="button" className="atlas-show-gaps" onClick={()=>{setCenter({lat:currentPinGroup.reduce((sum,pin)=>sum+pin.lat,0)/currentPinGroup.length,lng:currentPinGroup.reduce((sum,pin)=>sum+pin.lng,0)/currentPinGroup.length});setZoom(value=>Math.min(value+1,19));setPinGroup(null)}}>Zoom into these places →</button><div className="atlas-group-list">{currentPinGroup.map(item=>{const Icon=icons[item.type||'rated']||Star;return <button type="button" key={item.id} onClick={()=>{setPinGroup(null);onSelect(item.id)}}><Icon size={14} aria-hidden="true"/><span>{item.name||item.title}</span><b>{item.score||'View'} →</b></button>})}</div></section>}
     {confirm ? activeProvider !== 'unavailable' && <div className="confirm-cross" aria-hidden="true"><MapPin fill="#e96548" size={42} /></div> : !directoryOverlay && <>
       <div className="map-location"><span className="location-symbol"><MapPin size={17} /></span><span>Bloomsbury, London<small>Your UCL neighbourhood</small></span><span className="location-dot" /></div>
       <div className="map-status"><i /> Explore the neighbourhood</div>

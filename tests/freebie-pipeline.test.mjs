@@ -20,6 +20,7 @@ const now=Date.parse('2026-10-12T12:00:00Z');
 const places=[{id:'wilkins',name:'Wilkins Building',aliases:['Wilkins'],lat:51.5246,lng:-.1338}];
 const source={id:'42:1791831600:1791835200',url:'https://studentsunionucl.org/whats-on/clubs-societies/example?v=1',title:'Example pizza night',start:'2026-10-12T19:00:00Z',end:'2026-10-12T20:00:00Z',sourceLocation:'Wilkins Building',imageUrl:null};
 const extraction={hasFreebies:true,summary:'Pizza is included.',freebies:[{item:'Pizza',category:'food',certainty:'confirmed',evidence:'Free Pizza for everyone'}],venue:'Wilkins Building',address:null,locationEvidence:'Wilkins Building',admission:'paid',priceDetails:'£5 ticket includes pizza',bookingRequired:true,bookingUrl:null,eligibility:'Members',conditions:[],dietary:[]};
+const ordinary={...extraction,hasFreebies:false,summary:'A student society discussion.',freebies:[],admission:'free',priceDetails:'Free entry'};
 const deps={places,moderate:async()=>({approved:true,reasons:[]}),privacy:()=>null,now:()=>now};
 async function clear(){await pg.exec('TRUNCATE freebie_tasks,freebie_scans,posts,freebie_venues RESTART IDENTITY CASCADE');await pg.exec("UPDATE freebie_worker SET lock_token=NULL,lock_until=0");}
 
@@ -30,6 +31,32 @@ test('publication uses the real schema: auto-approval, paid-ticket metadata, ded
  const rows=await db.prepare('SELECT * FROM posts').all();assert.equal(rows.results.length,1);
  assert.equal(Number(rows.results[0].expires_at),Date.parse('2026-10-12T21:20:00Z'));
  assert.equal(publicFreebie(rows.results[0]).freebie.admission,'paid');
+});
+
+test('ordinary events publish without inventing freebies and classification changes update the same occurrence',async()=>{
+ await clear();
+ const first=await publishFreebie(db,{...source,sourceOrganizer:'Example Society'},ordinary,deps);
+ assert.equal(first.state,'published');
+ let row=await db.prepare('SELECT * FROM posts WHERE id=?').bind(first.id).first();
+ assert.equal(row.type,'event');assert.equal(publicFreebie(row).type,'event');
+ assert.equal(publicFreebie(row).freebie.hasFreebies,false);assert.deepEqual(publicFreebie(row).freebie.freebies,[]);
+ assert.equal(publicFreebie(row).freebie.society.name,'Example Society');
+ const offer=await publishFreebie(db,source,extraction,deps);assert.equal(offer.id,first.id);
+ row=await db.prepare('SELECT * FROM posts WHERE id=?').bind(first.id).first();assert.equal(row.type,'freebie');
+ const reverted=await publishFreebie(db,source,ordinary,deps);assert.equal(reverted.id,first.id);
+ row=await db.prepare('SELECT * FROM posts WHERE id=?').bind(first.id).first();assert.equal(row.type,'event');assert.equal(row.status,'approved');
+ assert.equal((await db.prepare('SELECT id FROM posts').all()).results.length,1);
+});
+
+test('missing extraction does not create an event, and ordinary events retain moderation and online safeguards',async()=>{
+ await clear();await publishFreebie(db,source,null,deps);
+ assert.equal((await db.prepare('SELECT id FROM posts').all()).results.length,0);
+ await assert.rejects(publishFreebie(db,source,ordinary,{...deps,moderate:async()=>{throw Error('Unavailable')}}));
+ assert.equal((await db.prepare('SELECT id FROM posts').all()).results.length,0);
+ const event=await publishFreebie(db,{...source,sourceOnline:true},ordinary,{...deps,moderate:async()=>({approved:false,reasons:['Review required']})});
+ const row=await db.prepare('SELECT * FROM posts WHERE id=?').bind(event.id).first();
+ assert.equal(event.state,'needs_review');assert.equal(row.status,'pending');assert.equal(row.lat,null);
+ assert.equal(publicFreebie(row).freebie.attendance,'online');
 });
 test('unknown and online venues stay unlocated; possible costs are pending',async()=>{
  await clear();
@@ -68,12 +95,31 @@ test('a venue correction made during moderation is not overwritten by an old loo
  }});
  assert.equal((await db.prepare('SELECT lat FROM posts WHERE id=?').bind(posted.id).first()).lat,51.55);
 });
-test('Union publication caps lifetime at 14 days and expires at the source end',async()=>{
+test('Union publication caps lifetime at the London fourteen-date boundary and preserves the source end',async()=>{
  await clear();
  const result=await publishFreebie(db,source,extraction,deps);
  assert.equal(Number((await db.prepare('SELECT expires_at FROM posts WHERE id=?').bind(result.id).first()).expires_at),Date.parse(source.end));
  const capped=await publishFreebie(db,{...source,id:'99:2:3',end:'2026-11-20T20:00:00Z'},extraction,deps);
- assert.equal(Number((await db.prepare('SELECT expires_at FROM posts WHERE id=?').bind(capped.id).first()).expires_at),now+14*86400000);
+ const row=await db.prepare('SELECT expires_at,freebie_json FROM posts WHERE id=?').bind(capped.id).first();
+ assert.equal(Number(row.expires_at),Date.parse('2026-10-26T00:00:00Z'));
+ assert.equal(JSON.parse(row.freebie_json).eventEnd,'2026-11-20T20:00:00Z');
+});
+
+test('a last-night event across the London autumn clock change expires after its start',async()=>{
+ await clear();const clock=Date.parse('2026-10-14T23:00:00Z');
+ const late={...source,id:'99:1793230200:1793235600',start:'2026-10-28T23:30:00Z',end:'2026-10-29T01:00:00Z'};
+ const result=await publishFreebie(db,late,ordinary,{...deps,now:()=>clock});
+ assert.equal(result.state,'published');
+ const row=await db.prepare('SELECT starts_at,expires_at,freebie_json FROM posts WHERE id=?').bind(result.id).first();
+ assert.equal(Number(row.expires_at),Date.parse('2026-10-29T00:00:00Z'));
+ assert.ok(Number(row.expires_at)>Number(row.starts_at));
+ assert.equal(JSON.parse(row.freebie_json).eventEnd,late.end);
+});
+
+test('missing or nonpositive event duration cannot become an invented live event',async()=>{
+ await clear();
+ for(const end of [null,source.start,'invalid'])await assert.rejects(publishFreebie(db,{...source,end},ordinary,deps),/later end time/);
+ assert.equal((await db.prepare('SELECT id FROM posts').all()).results.length,0);
 });
 test('campus matching and Google cache avoid duplicate lookups, reject ambiguity and TBC',async()=>{
  await clear();let calls=0;const lookup=async()=>{calls++;return [{id:'place-42',name:'Example Hall',lat:51.51,lng:-.13}]};
@@ -141,6 +187,20 @@ test('a fresh import discovers pages, opens the event, runs Claude and publishes
  assert.equal(result.status,'complete');assert.equal(pages,2);assert.equal(details,1);assert.equal(claude,1);
  const rows=await db.prepare('SELECT * FROM posts').all();assert.equal(rows.results.length,1);assert.equal(rows.results[0].status,'approved');
  assert.equal(Number(rows.results[0].expires_at),endSeconds*1000);
+});
+
+test('ordinary events receive a full Claude check even when a legacy Jev rejection is saved',async(t)=>{
+ await clear();const config={jevKey:'legacy-fixture',claudeKey:'fixture',jevModel:'j',claudeModel:'fixture',threshold:.5};
+ const run=await actOnScan(db,config,{action:'start',startDate:'2026-10-12'});
+ await insertEvents(db,run.run.id,[source]);
+ await db.prepare("UPDATE freebie_scans SET exhausted=1,status='running' WHERE id=?").bind(run.run.id).run();
+ await db.prepare('UPDATE freebie_tasks SET page_json=?,jev_json=? WHERE run_id=?').bind(JSON.stringify({text:'A student society discussion. Wilkins Building. Free entry.',links:[]}),JSON.stringify({score:0}),run.run.id).run();
+ const original=globalThis.fetch;t.after(()=>{globalThis.fetch=original});let claude=0;
+ globalThis.fetch=async(url)=>{assert.match(String(url),/^https:\/\/api\.anthropic\.com\//);claude++;return Response.json({model:'fixture',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(ordinary)}]})};
+ const result=await workFreebies(db,config,(event,details)=>publishFreebie(db,event,details,deps),{sleep:async()=>{}});
+ assert.equal(result.status,'complete');assert.equal(claude,1);
+ const task=await db.prepare('SELECT * FROM freebie_tasks').first();assert.equal(task.status,'no_freebies');assert.equal(task.publication_state,'published');assert.ok(task.published_post_id);
+ assert.equal((await db.prepare('SELECT type FROM posts').first()).type,'event');
 });
 
 

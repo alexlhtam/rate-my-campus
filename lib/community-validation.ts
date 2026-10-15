@@ -133,6 +133,8 @@ export function reviewInput(body: Record<string, unknown>, category?: keyof type
 
 export function postInput(body: Record<string, unknown>, now = Date.now(), trusted: {unionImport?:boolean} = {}) {
   const type = textField(body.type, "Type", 1, 10);
+  // General events come only from the source-grounded Union pipeline. Neither
+  // client flags nor the legacy manual-freebie import can grant that provenance.
   if (!["food", "deal", "freebie"].includes(type)) throw new HttpError(400, "Choose a food alert, deal or freebie.");
   const expiresAt = typeof body.expiresAt === "number" ? body.expiresAt : Date.parse(String(body.expiresAt));
   const union = trusted.unionImport === true && type === "freebie" && !!body.sourceUrl;

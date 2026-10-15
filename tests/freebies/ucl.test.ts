@@ -78,6 +78,17 @@ test("only an actually empty source page ends pagination", () => {
   assert.equal(parseCalendarPage({ "96575": row(), "#cache": {} }, "2026-10-12", "2026-10-26").events.length, 1);
 });
 
+test("calendar organiser and explicit online state are preserved without interpreting free admission as a freebie", () => {
+  const [event] = parseCalendarPage([row({ field_event_owner_group: "Example &amp; Friends Society", field_event_online: "On", ticketingType: "free", price: "0" })], "2026-10-12", "2026-10-26").events;
+  assert.equal(event.sourceOrganizer, "Example & Friends Society");
+  assert.equal(event.sourceOnline, true);
+  assert.equal("hasFreebies" in event, false);
+  const page = parseEventPage(html, event);
+  assert.match(page.text, /Calendar organiser: Example & Friends Society/);
+  assert.match(page.text, /calendar lists this as an online event/);
+  assert.equal(parseCalendarPage([row({ field_event_online: "unexpected" })], "2026-10-12", "2026-10-26").events[0].sourceOnline, null);
+});
+
 test("malformed records preserve an explicit coverage warning, never false emptiness", () => {
   const result = parseCalendarPage([row({ field_date_range_value: "invalid" }), null, row({ title: "" }), row({ variation_url: "https://attacker.example/whats-on/event" })], "2026-10-12", "2026-10-26");
   assert.equal(result.done, false);

@@ -7,11 +7,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 // Server rendering does not run effects, so neither the GPU renderer nor its
 // worker is loaded. Compile the real local dependencies, not a component stub.
-const names = ['data', 'model', 'overlays', 'buildings', 'flat', 'main', 'fallback', 'garden', 'wilkins'];
+const names = ['data', 'model', 'overlays', 'buildings', 'flat', 'main', 'fallback', 'garden', 'wilkins', 'mixedMain', 'mixedFlat'];
 const modules = Object.fromEntries(names.map(name => [name, new URL(`.map-${name}-under-test-${process.pid}.mjs`, import.meta.url)]));
-const paths = { data: '../lib/data.ts', model: '../lib/campus-map-model.ts', overlays: '../lib/campus-map-overlays.ts', buildings: '../components/campus-buildings.tsx', flat: '../components/campus-flat-map.tsx', main: '../components/campus-map.tsx', fallback: '../components/campus-map.tsx', garden: '../components/campus-map.tsx', wilkins: '../components/campus-map.tsx' };
+const paths = { data: '../lib/data.ts', model: '../lib/campus-map-model.ts', overlays: '../lib/campus-map-overlays.ts', buildings: '../components/campus-buildings.tsx', flat: '../components/campus-flat-map.tsx', main: '../components/campus-map.tsx', fallback: '../components/campus-map.tsx', garden: '../components/campus-map.tsx', wilkins: '../components/campus-map.tsx', mixedMain:'../components/campus-map.tsx', mixedFlat:'../components/campus-flat-map.tsx' };
+const mixedItems=[['event','Campus talk'],['freebie','Society giveaway'],['food','Leftover lunch'],['deal','Student discount']].map(([type,title])=>({id:type,type,title,lat:51.525,lng:-.134,eventState:'upcoming',timeLabel:'Tomorrow'}));
 const compile = value => ts.transpileModule(value, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-let CampusMap, FlatCampusMap, FallbackCampusMap, GardenCampusMap, WilkinsCampusMap;
+let CampusMap, FlatCampusMap, FallbackCampusMap, GardenCampusMap, WilkinsCampusMap, MixedMainMap, MixedFlatMap, areCampusMapPropsEqual;
 try {
   for (const name of names) {
     let source = (await fs.readFile(new URL(paths[name], import.meta.url), 'utf8'))
@@ -24,6 +25,13 @@ try {
     if (name === 'data') {
       // Use the real catalogue/index without asking Node to resolve TS paths.
       source = source.replace(/from\s+(['"])\.\.\/public\/data\/([^'"]+\.json)\1/g, (_, _quote, file) => `from '${new URL(`../public/data/${file}`, import.meta.url).href}' with {type:'json'}`);
+    }
+    if(name==='mixedMain'||name==='mixedFlat'){
+      // Seed only the picker-open state; both renderers still execute their real
+      // content, filtering, icon and accessibility code with current props.
+      const before='useState<MapItem[]|null>(null)';
+      assert.equal(source.split(before).length,2);
+      source=source.replace(before,`useState<MapItem[]|null>(${JSON.stringify(mixedItems)})`);
     }
     if (name === 'garden' || name === 'wilkins') {
       const directory = JSON.parse(await fs.readFile(new URL('../public/data/campus-directory.json', import.meta.url), 'utf8'));
@@ -53,12 +61,73 @@ try {
     }
     await fs.writeFile(modules[name], compile(source));
   }
-  CampusMap = (await import(modules.main.href)).default;
+  const mainModule = await import(modules.main.href);
+  CampusMap = mainModule.default;
+  areCampusMapPropsEqual = mainModule.areCampusMapPropsEqual;
   FlatCampusMap = (await import(modules.flat.href)).default;
   FallbackCampusMap = (await import(modules.fallback.href)).default;
   GardenCampusMap = (await import(modules.garden.href)).default;
   WilkinsCampusMap = (await import(modules.wilkins.href)).default;
+  MixedMainMap = (await import(modules.mixedMain.href)).default;
+  MixedFlatMap = (await import(modules.mixedFlat.href)).default;
 } finally { await Promise.all(Object.values(modules).map(file => fs.unlink(file).catch(() => {}))); }
+
+test('map memo skips equivalent parent countdown props but updates every displayed item field', () => {
+  assert.equal(CampusMap.compare,areCampusMapPropsEqual,'The rendered map uses this comparison');
+  const item={id:'talk',lat:51.525,lng:-.134,name:'Lecture room',title:'Evening talk',type:'event',score:'4.0',timeLabel:'Thu 19:00',eventState:'upcoming',locationProvider:'manual',campusBuildingId:'ucl-test'};
+  const props={items:[item],onSelect(){},initialPosition:{lat:51.525,lng:-.134}};
+  assert.equal(areCampusMapPropsEqual(props,{...props,items:[{...item,description:'Unrelated sidebar text'}],initialPosition:{...props.initialPosition}}),true);
+  for(const [field,value] of Object.entries({id:'new-id',lat:51.526,lng:-.135,name:'New room',title:'Updated talk',type:'freebie',score:'4.1',timeLabel:'Live',eventState:'live',locationProvider:'google',campusBuildingId:'ucl-another'})) {
+    assert.equal(areCampusMapPropsEqual(props,{...props,items:[{...item,[field]:value}]}),false,field+' must remain live');
+  }
+  assert.equal(areCampusMapPropsEqual(props,{...props,items:[]}),false,'Expired/filtered pins disappear');
+  assert.equal(areCampusMapPropsEqual({...props,items:[item,{...item,id:'other'}]},{...props,items:[{...item,id:'other'},item]}),false,'Order affects the chosen cluster representative');
+});
+
+test('map memo never retains stale callbacks, selection or confirmation settings', () => {
+  const props={items:[],onSelect(){},onPosition(){},onProviderChange(){},selected:'a',confirm:false,requireGoogle:false,initialPosition:{lat:51.525,lng:-.134}};
+  for(const field of ['onSelect','onPosition','onProviderChange'])assert.equal(areCampusMapPropsEqual(props,{...props,[field]:()=>{}}),false,field);
+  for(const [field,value] of Object.entries({selected:'b',confirm:true,requireGoogle:true,initialPosition:{lat:51.526,lng:-.134}}))assert.equal(areCampusMapPropsEqual(props,{...props,[field]:value}),false,field);
+  assert.equal(areCampusMapPropsEqual(props,{...props,initialPosition:{lat:51.525,lng:-.135}}),false,'Longitude changes must update a confirmed position');
+});
+
+test('general events retain calendar icons, time labels, accessible targets and live/upcoming state',()=>{
+  for(const [eventState,timeLabel] of [['upcoming','Thu 19:00'],['live','Live']]){
+    const markup=renderToStaticMarkup(React.createElement(FlatCampusMap,{items:[{id:'talk',title:'Campus talk',type:'event',lat:51.525,lng:-.134,eventState,timeLabel}],onSelect(){}}));
+    assert.match(markup,/lucide-calendar-days/);
+    assert.match(markup,new RegExp(`map-pin event ${eventState}`));
+    assert.ok(markup.includes(timeLabel));
+    assert.match(markup,/aria-label="View Campus talk"/);
+    assert.match(markup,/translate:/,'Screen coordinates preserve the CSS anchor and selected/hover scale');
+  }
+});
+
+test('one mixed alert target leads to every co-located event and find with its own icon',()=>{
+  const markup=renderToStaticMarkup(React.createElement(FlatCampusMap,{items:mixedItems,onSelect(){}}));
+  assert.equal(markup.split('data-map-layer="mixed"').length-1,1);
+  assert.match(markup,/aria-label="4 events and finds nearby"/);
+  assert.match(markup,/lucide-layers/);
+  for(const Component of [MixedMainMap,MixedFlatMap]){
+    const html=renderToStaticMarkup(React.createElement(Component,{items:mixedItems,onSelect(){}}));
+    const picker=html.split('aria-label="Places at this location"')[1]?.split('</section>')[0];
+    assert.ok(picker,'The mixed target opens a picker');
+    for(const item of mixedItems)assert.ok(picker.includes(item.title),item.title+' remains selectable');
+    for(const icon of ['calendar-days','gift','utensils','tag'])assert.ok(picker.includes('lucide-'+icon),icon);
+    assert.equal((picker.match(/<button\b/g)||[]).length,6,'Close, zoom and four individual item buttons');
+  }
+});
+
+test('open mixed pickers refresh current content and remove expired/filtered alerts',()=>{
+  const remaining=mixedItems.filter(item=>item.id!=='food').map(item=>item.id==='event'?{...item,title:'Updated campus talk',eventState:'live'}:item);
+  for(const Component of [MixedMainMap,MixedFlatMap]){
+    const html=renderToStaticMarkup(React.createElement(Component,{items:remaining,onSelect(){}}));
+    const picker=html.split('aria-label="Places at this location"')[1]?.split('</section>')[0];
+    assert.ok(picker.includes('Updated campus talk'));
+    assert.ok(!picker.includes('Leftover lunch'),'An expired pickup cannot remain in a stale picker snapshot');
+    const empty=renderToStaticMarkup(React.createElement(Component,{items:[],onSelect(){}}));
+    assert.ok(!empty.includes('aria-label="Places at this location"'),'No empty picker or invalid zoom bounds');
+  }
+});
 
 test('Google-derived location stays hidden until its attributed Google map is ready', () => {
   for (const Component of [CampusMap, FlatCampusMap]) {

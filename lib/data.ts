@@ -9,7 +9,7 @@ import footprintIndex from '../public/data/campus-footprint-index.json';
 import type { CampusBuilding } from './campus-map-model';
 
 export type PlaceCategory = "study" | "lecture" | "halls" | "rental" | "building";
-export type PinType = "freebie" | "food" | "deal";
+export type PinType = "freebie" | "event" | "food" | "deal";
 
 export interface Place {
   id: string;
@@ -68,6 +68,8 @@ export interface Pin {
   dietary: string[];
   /** Demo countdown starts when a demo session begins; never a real event time. */
   durationMinutes: number;
+  /** Optional fictional start offset from the same private demo session. */
+  startsInMinutes?: number;
   image?: string;
   imageCredit?: string;
   price?: number;
@@ -331,6 +333,12 @@ export const seedReviews: Review[] = reviewInputs.map(([placeId, rating, text, t
   };
 });
 
+function demoEventPosition(buildingId: string): {lat:number;lng:number} {
+  const point = verifiedPoints.get(buildingId);
+  if (!point) throw new Error(`Missing known campus position for example event: ${buildingId}`);
+  return {lat:point.lat,lng:point.lng};
+}
+
 /** Every pin below is a fictional demo, including its society/committee. */
 export const seedPins: Pin[] = [
   { id: "demo-food-pizza", campusBuildingId: "ucl-student-centre", type: "food", title: "Pizza looking for a good home", description: "Demo alert: a few slices left after a society meetup. Stock photo for illustration. Ask the organiser about ingredients and handling; dietary tags are illustrative.", location: "Student Centre · ground floor", lat: 51.5247529, lng: -0.1326144, dietary: ["Vegetarian"], durationMinutes: 24, image: "/images/pizza-demo.jpg", imageCredit: "pizza-demo", demo: true, organizer: "Example society committee" },
@@ -339,6 +347,9 @@ export const seedPins: Pin[] = [
   { id: "demo-food-sandwiches", campusBuildingId: "ucl-wilkins-building", type: "food", title: "Lunch meeting, bonus sandwiches", description: "Demo alert: unopened sandwich packs from an example event, including illustrative vegan options. Check ingredients, use-by date and storage directly with the host.", location: "Wilkins Building · foyer", lat: 51.5246607, lng: -0.1338349, dietary: ["Vegan"], durationMinutes: 16, demo: true, organizer: "Example event team" },
   { id: "demo-deal-fruit", type: "deal", title: "A little fruit, a smaller price", description: "Illustrative deal for a mixed fruit bag. This is a fictional offer, not a claim about any local retailer.", location: "Torrington Place area · example shop", lat: 51.52287, lng: -0.13405, dietary: ["Vegan", "Vegetarian"], durationMinutes: 78, price: 0.75, originalPrice: 2.5, demo: true },
   { id: "demo-freebie-coffee", type: "freebie", title: "Coffee & a conversation", description: "Fictional society drop-in with coffee and biscuits. Try the filters and card details; no real event is taking place at this demo pin.", location: "Gordon Square", lat: 51.52434, lng: -0.13052, dietary: ["Vegetarian"], durationMinutes: 65, demo: true, organizer: "Example student society" },
+  { id: "demo-event-discussion", campusBuildingId: "ucl-student-centre", type: "event", title: "Example event · a society discussion", description: "Fictional demo discussion at a known campus building. This is not a scheduled Union event and does not promise food, merchandise or admission terms.", location: "Student Centre · example venue", ...demoEventPosition("ucl-student-centre"), dietary: [], startsInMinutes: 0, durationMinutes: 90, demo: true, organizer: "Example discussion society" },
+  { id: "demo-event-workshop", campusBuildingId: "ucl-wilkins-building", type: "event", title: "Example event · creative workshop", description: "Fictional workshop shown two days into your private demo to illustrate upcoming events. No workshop, booking or giveaway is actually arranged here.", location: "Wilkins Building · example venue", ...demoEventPosition("ucl-wilkins-building"), dietary: [], startsInMinutes: 2 * 1440, durationMinutes: 2 * 1440 + 120, demo: true, organizer: "Example creative society" },
+  { id: "demo-event-reading", campusBuildingId: "ucl-dms-watson-building", type: "event", title: "Example event · reading circle", description: "Fictional reading circle shown eight days into your private demo. The building position is real; the event, organiser and times are illustrative, with no freebies claimed.", location: "DMS Watson Building · example venue", ...demoEventPosition("ucl-dms-watson-building"), dietary: [], startsInMinutes: 8 * 1440, durationMinutes: 8 * 1440 + 60, demo: true, organizer: "Example reading society" },
 ];
 
 export const seedThreads: Thread[] = [

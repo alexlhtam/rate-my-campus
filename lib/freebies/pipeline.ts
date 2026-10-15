@@ -1,5 +1,5 @@
 import type { Database } from '../db';
-import { askClaude, askJev, ProviderError } from "./providers";
+import { askClaude, ProviderError } from "./providers";
 import type { ProviderConfig } from "./providers";
 import type { EventPage, SourceEvent, Extraction } from "./types";
 import { addDays, discoverPage, fetchEventPage, londonDate, londonMidnight } from "./ucl";
@@ -76,18 +76,8 @@ async function processEvent(db: Database, task: TaskRow, run: RunRow, config: Pr
       await db.prepare("UPDATE freebie_tasks SET status = 'out_of_window', checked_at = ? WHERE id = ?").bind(checkedAt(), task.id).run();
       return null;
     }
-    stage = "jev";
-    const jev = !config.jevKey ? {score:1} : task.jev_json ? JSON.parse(task.jev_json) : await askJev(page, config);
-    if (config.jevKey && !task.jev_json) {
-      await db.prepare("UPDATE freebie_tasks SET jev_json = ? WHERE id = ?").bind(JSON.stringify(jev), task.id).run();
-      return null;
-    }
-    if (jev.score < config.threshold) {
-      stage = "publish";
-      if (publish) await publish(source, null);
-      await db.prepare("UPDATE freebie_tasks SET status = 'no_freebies', checked_at = ? WHERE id = ?").bind(checkedAt(), task.id).run();
-      return null;
-    }
+    // Every listing needs complete event details. A legacy Jev score only
+    // estimates freebie likelihood and must not omit an ordinary event.
     stage = "claude";
     if (!task.extraction_json) {
       const result = await askClaude(page, config);
@@ -153,9 +143,9 @@ export async function actOnScan(db: Database, config: ProviderConfig, body: Reco
         await db.prepare("UPDATE freebie_tasks SET status = 'queued', error = NULL, failed_stage = NULL WHERE run_id = ? AND status = 'failed'").bind(runId).run();
       }
       if (action === "recheck") {
-        // Re-extract prior candidates after a prompt/model improvement. Source
-        // pages and Jev decisions remain saved, so screening is not charged again.
-        await db.prepare("UPDATE freebie_tasks SET status = 'queued', extraction_json = NULL, claude_model = NULL, error = NULL, failed_stage = NULL WHERE run_id = ? AND (extraction_json IS NOT NULL OR failed_stage = 'claude')").bind(runId).run();
+        // Recheck all saved listings, including legacy Jev exclusions, so an
+        // earlier freebie-only scan can produce complete event classifications.
+        await db.prepare("UPDATE freebie_tasks SET status = 'queued', extraction_json = NULL, claude_model = NULL, error = NULL, failed_stage = NULL WHERE run_id = ? AND (extraction_json IS NOT NULL OR failed_stage = 'claude' OR status = 'no_freebies')").bind(runId).run();
       }
       if (["paused", "failed", "partial", "running", "discovering"].includes(run.status) || (action === "recheck" && run.status === "complete")) {
         await db.prepare("UPDATE freebie_scans SET status = ?, active_slot = 1, error = NULL, updated_at = ? WHERE id = ?")
