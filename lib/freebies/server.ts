@@ -10,13 +10,13 @@ import {dashboard} from './store';
 import {publishFreebie,publicFreebie} from './publication';
 import {resolveVenue} from './venues';
 import {workFreebies} from './worker';
-import {londonDate} from './ucl';
+import {addDays,londonDate,londonMidnight} from './ucl';
 import type {ProviderConfig} from './providers';
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
 function config(env:Record<string,unknown>):ProviderConfig {
  const value=(key:string,fallback='')=>typeof env[key]==='string'?String(env[key]).trim()||fallback:fallback;
  const threshold=Number(value('JEV_THRESHOLD','0.5'));
- return {jevKey:env.FREEBIE_JEV_SCREENING==='true'?value('JEV_API_KEY'):'',claudeKey:value('ANTHROPIC_API_KEY'),jevModel:value('JEV_MODEL','jev-latest'),claudeModel:value('FREEBIE_CLAUDE_MODEL',value('ANTHROPIC_MODEL','claude-sonnet-4-6')),threshold:Number.isFinite(threshold)&&threshold>=0&&threshold<=1?threshold:0.5};
+ return {jevKey:'',claudeKey:value('ANTHROPIC_API_KEY'),jevModel:value('JEV_MODEL','jev-latest'),claudeModel:value('FREEBIE_CLAUDE_MODEL',value('ANTHROPIC_MODEL','claude-sonnet-4-6')),threshold:Number.isFinite(threshold)&&threshold>=0&&threshold<=1?threshold:0.5};
 }
 export function workerAuthorized(request:Request,env:Record<string,unknown>){
  const secret=String(env.CRON_SECRET||''),provided=request.headers.get('authorization')||'',expected='Bearer '+secret;
@@ -59,8 +59,11 @@ export async function freebiesRoute(request:Request,path:string[]) {
    launch();return json({accepted:true},202);
   }
   if(request.method==='GET'&&endpoint==='feed'){
-   const offset=Math.min(10000,Math.max(0,Number(new URL(request.url).searchParams.get('offset'))||0));
-   const result=await db.prepare("SELECT * FROM posts WHERE type = 'freebie' AND source_event_key IS NOT NULL AND status = 'approved' AND expires_at > ? ORDER BY starts_at ASC,id ASC LIMIT 51 OFFSET ?").bind(Date.now(),Math.floor(offset)).all<Record<string,unknown>>();
+   const params=new URL(request.url).searchParams,type=params.get('type');
+   if(type!==null&&!['event','freebie'].includes(type))throw new HttpError(400,'Choose event or freebie.');
+   const offset=Math.floor(Math.min(10000,Math.max(0,Number(params.get('offset'))||0))),now=Date.now();
+   const end=londonMidnight(addDays(londonDate(new Date(now)),14)).getTime();
+   const result=await db.prepare("SELECT * FROM posts WHERE type IN ('event','freebie') AND (?::text IS NULL OR type = ?) AND source_event_key IS NOT NULL AND status = 'approved' AND expires_at > ? AND starts_at < ? ORDER BY starts_at ASC,id ASC LIMIT 51 OFFSET ?").bind(type,type,now,end,offset).all<Record<string,unknown>>();
    const last=await db.prepare('SELECT updated_at,status,exhausted FROM freebie_scans ORDER BY ordinal DESC LIMIT 1').first();
    return json({posts:result.results.slice(0,50).map(publicFreebie),nextOffset:result.results.length>50?offset+50:null,lastScan:last});
   }

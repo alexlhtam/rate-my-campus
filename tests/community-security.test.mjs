@@ -68,6 +68,15 @@ test("event sources use the public Union event allowlist and normalize duplicate
   assert.throws(() => postInput({ ...event, startsAt: event.expiresAt }, now), HttpError);
 });
 
+test("ordinary post intake cannot manufacture the imported event type or provenance", () => {
+  const now = Date.now();
+  const event = { type: "event", title: "Society event", location: "Wilkins foyer", lat: 51.524, lng: -0.133,
+    expiresAt: now + 60000, sourceUrl: "https://studentsunionucl.org/whats-on/clubs-societies/welcome", unionImport: true,
+    sourceEventKey: "123:456", userId: "system:union" };
+  assert.throws(() => postInput(event, now), HttpError);
+  assert.throws(() => postInput(event, now, { unionImport: true }), HttpError);
+});
+
 test("private contact details and flat numbers are rejected while public room labels work", () => {
   assert.ok(privateInformationReason("Contact landlord@example.com"));
   assert.ok(privateInformationReason("Call 07123 456789"));

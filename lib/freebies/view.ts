@@ -1,14 +1,15 @@
 import {addDays,londonDate,londonMidnight} from './ucl';
 import type {Extraction} from './types';
+import type {PinType} from '../data';
 
 export type FreebieTime = 'now'|'today'|'week'|'fortnight';
 export const freebieTimes: {id:FreebieTime;label:string}[] = [
   {id:'now',label:'Now'},{id:'today',label:'Today'},{id:'week',label:'This week'},{id:'fortnight',label:'2 weeks'},
 ];
 export type EventPin = {
-  id:string;title:string;location:string;description?:string;organizer?:string;lat?:number|null;lng?:number|null;
+  id:string;type?:PinType;title:string;location:string;description?:string;organizer?:string;lat?:number|null;lng?:number|null;
   startsAt?:string|null;expiresAt:string;sourceUrl?:string|null;dietary?:string[];
-  freebie?:(Extraction&{locationProvider?:string})|null;demo?:boolean;
+  freebie?:(Extraction&{locationProvider?:string;eventEnd?:string|null})|null;demo?:boolean;
 };
 export function eventWindow(filter:FreebieTime,now:number) {
   const today=londonDate(new Date(now));
