@@ -40,6 +40,19 @@ Ask a question and Claude, an AI assistant, finds an answer for you.
 - **Honest about uncertainty.** If it can't confirm something, such as whether a place has plug sockets, it says so instead of making it up. It never invents a location.
 - You need to be signed in to use the assistant.
 
+## For international students
+
+Arriving at UCL from abroad means learning a new campus, a new city and often a new language all at once. Rate Our Campus is built to make that easier.
+
+- **Ask in your own language.** The campus assistant understands questions in any language Claude supports and answers in the same one. You can ask "我可以在哪里安静地学习？" or "¿Dónde está la biblioteca de arqueología?" and get a sourced answer and map pins, the same as asking in English. The rest of the app's screens are in English for now.
+- **Learn campus names quickly.** UCL buildings often go by nicknames and abbreviations. The building directory and search match nicknames and addresses as well as official names, so you can find a place however you heard it described.
+- **Find your way before you go.** Map views for Bloomsbury and UCL East, distances from any building you choose, and official "before you visit" notes for four libraries help you plan a trip to somewhere you've never been.
+- **Choose where to live with real experiences.** Student halls are rated on value, cleanliness, social life, staff and location. Rentals are rated on landlord responsiveness, getting your deposit back, and damp or mould: things that are hard to judge from another country.
+- **Food that fits your diet.** Free food can be filtered for vegan, vegetarian, halal and gluten-free, with a reminder to check allergens with the person sharing.
+- **Meet the community.** Ask a question on any place's page and get answers from students who've been there. Society freebies and Union events help you discover groups to join.
+- **Know who to call.** Every incident screen shows the UK emergency number (999) and UCL Security's numbers, which are easy to miss when you're new.
+- **Look around before you sign up.** Demo mode lets you explore the whole app with sample content before you have a UCL email address.
+
 ## Reviews and ratings
 
 - **Rate a place out of five** and say whether you'd recommend it.
