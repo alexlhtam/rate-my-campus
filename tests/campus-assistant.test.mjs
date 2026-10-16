@@ -27,6 +27,23 @@ function harness(pages,extra={}){
 }
 const choice=(candidateId='c1',sourceIds=['s1'],description='The specialist collection is on the fifth floor.')=>({candidateId,description,sourceIds});
 
+test('the assistant has no emergency contact tool and rejects attempted dispatch without performing a lookup',async()=>{
+ const originalFetch=globalThis.fetch;
+ globalThis.fetch=async()=>{throw new Error('No real network call is permitted in this test')};
+ try{
+  let lookups=0;
+  const run=harness([
+   payload([tool('contact_emergency_services',{number:'999',recipient:'UCL Security'})]),
+   payload([final('I cannot contact emergency services or UCL Security. You need to contact them directly yourself.')]),
+  ],{locate:async()=>{lookups++;throw new Error('Dispatch must not invoke place lookup')}});
+  const answer=await run.run('Can you contact campus security for me?');
+  assert.deepEqual(run.requests[0].tools.map(tool=>tool.name).sort(),['locate_place','respond','search_campus','web_search']);
+  assert.match(run.requests[0].system,/cannot call, message, notify or contact emergency services/);
+  assert.match(JSON.parse(run.requests[1].messages.at(-1).content[0].content).error,/Unknown tool/);
+  assert.equal(lookups,0);assert.deepEqual(answer.suggestions,[]);assert.match(answer.answer,/cannot contact/);
+ }finally{globalThis.fetch=originalFetch}
+});
+
 test('reasoning uses a sourced library child, its known building position and no synthetic reviews',async()=>{
  const run=harness([
   payload([tool('search_campus',{query:'Archeology Library',category:'study'})]),

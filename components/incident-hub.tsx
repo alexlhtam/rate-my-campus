@@ -31,8 +31,9 @@ export function useIncidentFeed(demo:boolean,signedIn=false) {
 export function EmergencyStrip({compact=false}:{compact?:boolean}) {
   const c=EMERGENCY_CONTACTS;
   return <div className={`inc-emergency ${compact?'compact':''}`} role="note" aria-label="Emergency contacts">
-    <b><Phone size={14}/>Someone in danger? Call for help first. This app does not alert anyone.</b>
-    <div className="inc-numbers"><a href={`tel:${c.emergency.dial}`}><Phone size={12}/>{c.emergency.number} emergency services</a><a className="secondary" href={`tel:${c.bloomsbury.dial}`}>UCL Security {c.bloomsbury.number}</a>{!compact&&<a className="secondary" href={`tel:${c.east.dial}`}>UCL East {c.east.number}</a>}</div>
+    <b><Phone size={14}/>Someone in danger? Contact help yourself.</b>
+    <p>Rate Our Campus never calls, messages or contacts emergency services or UCL Security. These numbers are for reference only.</p>
+    <div className="inc-numbers"><span className="inc-number">{c.emergency.number} emergency services</span><span className="inc-number secondary">UCL Security {c.bloomsbury.number}</span>{!compact&&<span className="inc-number secondary">UCL East {c.east.number}</span>}</div>
     {!compact&&<small>On a Bloomsbury campus phone dial {c.bloomsbury.extension}. UCL asks you to call Security first on campus so they can direct the emergency services. Numbers checked against <a href={c.sourceUrl} target="_blank" rel="noreferrer">UCL’s emergency contacts page</a> on 15 October 2026.</small>}
   </div>;
 }

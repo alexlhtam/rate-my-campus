@@ -19,11 +19,12 @@ export type IncidentSeverity = typeof INCIDENT_SEVERITIES[number]['id'];
 export const INCIDENT_DURATIONS = [{minutes:30,label:'30 minutes'},{minutes:60,label:'1 hour'},{minutes:120,label:'2 hours'},{minutes:240,label:'4 hours'},{minutes:480,label:'8 hours'},{minutes:1440,label:'24 hours'}] as const;
 export const INCIDENT_MAX_MINUTES = 1440;
 export const INCIDENT_CLEAR_QUORUM = 3;
-/** Verified against UCL's emergency-contacts page on 15 October 2026. */
+/** Reference text only: never use these numbers to initiate calls or messages.
+ * Verified against UCL's emergency-contacts page on 15 October 2026. */
 export const EMERGENCY_CONTACTS = {
-  emergency:{label:'Emergency services',number:'999',dial:'999'},
-  bloomsbury:{label:'UCL Security · Bloomsbury (24h)',number:'020 7679 2222',dial:'+442076792222',extension:'ext. 222'},
-  east:{label:'UCL Security · UCL East',number:'0208 016 0555',dial:'+442080160555'},
+  emergency:{label:'Emergency services',number:'999'},
+  bloomsbury:{label:'UCL Security · Bloomsbury (24h)',number:'020 7679 2222',extension:'ext. 222'},
+  east:{label:'UCL Security · UCL East',number:'0208 016 0555'},
   sourceUrl:'https://www.ucl.ac.uk/students/support-and-wellbeing-services/emergency-contacts',
 } as const;
 export const severityRank:Record<IncidentSeverity,number>={urgent:0,warning:1,notice:2};

@@ -55,6 +55,21 @@ test('an approved report goes live, is owned by its reporter and reaches the pub
  user=null;const item=await (await call('item?id='+body.incident.id)).json();assert.equal(item.incident.title,'Chemical smell on the first floor');
 });
 
+test('publishing an urgent incident stores an app report without an outbound dispatch request',async()=>{
+ as('alice');
+ const originalFetch=globalThis.fetch;let externalRequests=0;
+ // Auth and content moderation are mocked above; any additional transport is
+ // unexpected. Never make a live request while checking emergency behaviour.
+ globalThis.fetch=async()=>{externalRequests++;throw new Error('Unexpected outbound dispatch')};
+ try{
+  const {response,body}=await create({severity:'urgent',category:'fire',title:'Fictional test fire alarm',description:'Fictional test only: alarm sounding in a public corridor.'});
+  assert.equal(response.status,201);assert.equal(body.incident.severity,'urgent');
+  assert.equal(externalRequests,0);
+  assert.equal((await feed()).incidents[0].id,body.incident.id);
+  assert.deepEqual(scheduled,[{id:body.incident.id,kind:'incident',retryable:false}]);
+ }finally{globalThis.fetch=originalFetch}
+});
+
 test('validation rejects long windows, missing confirmations, contact details and bad coordinates',async()=>{
  as('alice');
  for(const [overrides,pattern] of [

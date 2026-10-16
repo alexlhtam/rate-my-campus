@@ -25,7 +25,7 @@ function LinkActions({url,label}:{url:string;label:string}) {
   return <div className="share-link-actions">
     <div className="share-row"><button type="button" onClick={copy}>Copy link</button><button type="button" onClick={share}>Share</button><button type="button" onClick={generateQr} disabled={busy}>{busy?'Making QR…':'Show QR'}</button></div>
     <label className="share-url">Share address<input aria-label={`Share address for ${label}`} value={url} readOnly onFocus={event=>event.currentTarget.select()}/></label>
-    {qr&&<div className="share-qr"><img src={qr} alt={`QR code for ${label}`} width="240" height="240"/><a href={qr} download="rate-my-campus-qr.png">Download QR image</a></div>}
+    {qr&&<div className="share-qr"><img src={qr} alt={`QR code for ${label}`} width="240" height="240"/><a href={qr} download="rate-our-campus-qr.png">Download QR image</a></div>}
     {message&&<p role="status" className="share-note">{message}</p>}
   </div>;
 }

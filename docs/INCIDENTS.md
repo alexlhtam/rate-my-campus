@@ -6,7 +6,9 @@ The design register is deliberately different from the rest of the app: black gr
 
 ## What this is not
 
-This is not a way to call for help, and the UI says so on every incident surface. Every hub, composer and urgent detail view shows the emergency strip: **999**, **UCL Security Bloomsbury 020 7679 2222 (ext. 222)** and **UCL East 0208 016 0555**, with a link to [UCL’s emergency contacts page](https://www.ucl.ac.uk/students/support-and-wellbeing-services/emergency-contacts), checked on 15 October 2026. The composer cannot proceed until the reporter confirms they understand the report alerts nobody and that they have already called for help if someone is in danger. Reports are student accounts in the moment; the app never describes them as verified, and corroboration counts other students, not officials.
+Rate Our Campus never calls, messages or contacts emergency services or UCL Security. Incident reports only go through the app's storage and moderation process and, when approved, appear for other students. There is no emergency dispatch, security notification, email, SMS or calling integration in this feature, and Claude has no tool to contact anyone.
+
+Every hub, composer and urgent detail view shows reference numbers as plain, noninteractive text: **999**, **UCL Security Bloomsbury 020 7679 2222 (ext. 222)** and (in the full strip) **UCL East 0208 016 0555**, with an ordinary link to [UCL’s emergency contacts page](https://www.ucl.ac.uk/students/support-and-wellbeing-services/emergency-contacts), checked on 15 October 2026. No number is a telephone, SMS or email link. The page disables automatic phone-number detection on browsers that support that setting. Anyone who needs help must contact services independently. The composer cannot proceed until the reporter confirms they understand the report alerts nobody and that they have already called for help if someone is in danger. Reports are student accounts in the moment; the app never describes them as verified, and corroboration counts other students, not officials.
 
 ## Student flow
 
