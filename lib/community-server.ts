@@ -7,6 +7,7 @@ import {
   communityRequestInput, collectionUpdateInput, foodDetailsInput, foodPortions, foodRevision,
 } from "./community-validation";
 import { placeSummaries, pageOffset, retryModeration } from "./community-features";
+import { publicIncident } from "./incidents/publication";
 import { readFoodDetails } from "./food";
 import { places } from "./data";
 import { adminClient, authClient, authConfigured, currentUser, photoStorage } from "./supabase";
@@ -46,7 +47,7 @@ export async function requireVerified(): Promise<VerifiedProfile> {
 /** Provider checks may outlive account deletion or a change to a non-UCL email.
  * Never recreate a profile when rechecking a delayed write. This is not session
  * revocation: the request's token can remain valid after remote sign-out. */
-async function requireActiveWrite(userId: string): Promise<void> {
+export async function requireActiveWrite(userId: string): Promise<void> {
   const user = await currentUser();
   if (user?.userId !== userId || !await database().prepare("SELECT user_id FROM profiles WHERE user_id = ?").bind(userId).first()) {
     throw new HttpError(403, "Your account changed while this contribution was checked. Sign in again before submitting.");
@@ -212,7 +213,7 @@ function placeCategory(placeId: string): "study" | "lecture" | "accommodation" |
   return place.category === "halls" ? "accommodation" : place.category;
 }
 
-async function moderation(content: string, kind: "review" | "pin" | "thread", privateHome = false): Promise<ModerationResult> {
+export async function moderation(content: string, kind: "review" | "pin" | "thread" | "incident", privateHome = false): Promise<ModerationResult> {
   const privateReason = privateInformationReason(content, privateHome);
   if (privateReason) throw new HttpError(400, privateReason);
   try {
@@ -223,7 +224,7 @@ async function moderation(content: string, kind: "review" | "pin" | "thread", pr
 
 function transientFailure(error: unknown): boolean { return Boolean(error && typeof error === "object" && [429, 502, 504].includes(Number((error as { status?: number }).status))); }
 
-async function photoModeration(key: string, text: string): Promise<ModerationResult> {
+export async function photoModeration(key: string, text: string): Promise<ModerationResult> {
   try {
     const download = await photoStorage()?.download(key);
     const photo = download?.data;
@@ -410,7 +411,7 @@ async function upload(request: Request): Promise<Response> {
   return json({ ok: true, key, url: `/api/community/photo?key=${encodeURIComponent(key)}` }, 201);
 }
 
-async function scheduleModeration(row: Row, kind: string, result: ModerationResult): Promise<void> {
+export async function scheduleModeration(row: Row, kind: string, result: ModerationResult): Promise<void> {
   if (result.retryable) {
     await database().prepare("INSERT INTO moderation_retries (target_id, kind, revision, next_attempt_at) VALUES (?, ?, ?, ?) ON CONFLICT(target_id) DO UPDATE SET kind = excluded.kind, revision = excluded.revision, attempts = 0, next_attempt_at = excluded.next_attempt_at, lease_until = NULL WHERE moderation_retries.revision <= excluded.revision")
       .bind(row.id, kind, Number(row.moderation_revision || 0), Date.now() + 120000).run();
@@ -426,17 +427,17 @@ async function drainModerationRetries(): Promise<void> {
   const job = await db.prepare("UPDATE moderation_retries SET attempts = attempts + 1, lease_until = ? WHERE target_id = (SELECT target_id FROM moderation_retries WHERE next_attempt_at <= ? AND (lease_until IS NULL OR lease_until < ?) AND attempts < 3 ORDER BY next_attempt_at LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *")
     .bind(now + 180000, now, now).first<Row>();
   if (!job) return;
-  const table = ({ review: "reviews", post: "posts", thread: "threads", reply: "replies" } as Record<string, string>)[String(job.kind)];
+  const table = ({ review: "reviews", post: "posts", thread: "threads", reply: "replies", incident: "incidents" } as Record<string, string>)[String(job.kind)];
   const clear = () => db.prepare("DELETE FROM moderation_retries WHERE target_id = ? AND revision = ? AND attempts = ?").bind(job.target_id, job.revision, job.attempts).run();
   if (!table) { await clear(); return; }
   const row = await db.prepare(`SELECT * FROM ${table} WHERE id = ? AND moderation_revision = ? AND status = 'pending'`).bind(job.target_id, job.revision).first<Row>();
-  if (!row || (job.kind === "post" && Number(row.expires_at) <= now)) { await clear(); return; }
+  if (!row || ((job.kind === "post" || job.kind === "incident") && Number(row.expires_at) <= now)) { await clear(); return; }
   let result: ModerationResult;
   try {
     const content = [row.title, row.text, row.description, row.location, row.tags, row.term, row.collection_instructions, row.food_details].filter(Boolean).join("\n");
     const privateHome = job.kind === "review" && places.find((place) => place.id === row.place_id)?.category === "rental";
-    result = await moderation(content, job.kind === "review" ? "review" : job.kind === "post" ? "pin" : "thread", privateHome);
-    if (job.kind === "post" && row.photo_key && result.status === "approved") result = await photoModeration(String(row.photo_key), content);
+    result = await moderation(content, job.kind === "review" ? "review" : job.kind === "post" ? "pin" : job.kind === "incident" ? "incident" : "thread", privateHome);
+    if ((job.kind === "post" || job.kind === "incident") && row.photo_key && result.status === "approved") result = await photoModeration(String(row.photo_key), content);
   } catch { result = { status: "pending", reason: "A moderator needs to review this contribution." }; }
   // An edit, report or moderator decision made during the provider request wins.
   await db.prepare(`UPDATE ${table} SET status = ?, moderation_reason = ? WHERE id = ? AND moderation_revision = ? AND status = 'pending'`)
@@ -580,22 +581,26 @@ async function submitRequest(request: Request): Promise<Response> {
 }
 
 /** Bounded, traffic-triggered retention; reported/hidden/pending pins are preserved for review. */
-async function retentionSweep(): Promise<void> {
+export async function retentionSweep(): Promise<void> {
   try {
     const db = database(); const now = Date.now(); const day = 86400000;
     const claimed = await db.prepare("INSERT INTO rate_limits (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO NOTHING RETURNING key").bind(`maintenance:${Math.floor(now / 3600000)}`, now + 2 * 3600000).first();
     if (!claimed) return;
+    const attached = "EXISTS (SELECT 1 FROM posts WHERE photo_key = photos.key) OR EXISTS (SELECT 1 FROM incidents WHERE photo_key = photos.key)";
     await db.batch([
       db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM posts WHERE status = 'approved' AND expires_at < ? AND NOT EXISTS (SELECT 1 FROM reports WHERE target_id = posts.id) AND NOT EXISTS (SELECT 1 FROM community_requests WHERE target_id = posts.id AND status = 'pending') ORDER BY expires_at ASC LIMIT 50)").bind(now - 30 * day),
       db.prepare("DELETE FROM posts WHERE id IN (SELECT id FROM posts WHERE status = 'approved' AND expires_at < ? AND NOT EXISTS (SELECT 1 FROM reports WHERE target_id = posts.id) AND NOT EXISTS (SELECT 1 FROM community_requests WHERE target_id = posts.id AND status = 'pending') ORDER BY expires_at ASC LIMIT 50)").bind(now - 30 * day),
+      // Expired incident reports are operational records, not reviews: keep them 30 days, then remove unless a report is outstanding.
+      db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM incidents WHERE status = 'approved' AND expires_at < ? AND NOT EXISTS (SELECT 1 FROM reports WHERE target_id = incidents.id) ORDER BY expires_at ASC LIMIT 50)").bind(now - 30 * day),
+      db.prepare("DELETE FROM incidents WHERE id IN (SELECT id FROM incidents WHERE status = 'approved' AND expires_at < ? AND NOT EXISTS (SELECT 1 FROM reports WHERE target_id = incidents.id) ORDER BY expires_at ASC LIMIT 50)").bind(now - 30 * day),
       db.prepare("DELETE FROM community_requests WHERE status = 'resolved' AND resolved_at < ?").bind(now - 90 * day),
     ]);
     const storage = photoStorage();
     if (!storage) return;
-    const orphaned = await db.prepare("SELECT key FROM photos WHERE created_at < ? AND NOT EXISTS (SELECT 1 FROM posts WHERE photo_key = photos.key) ORDER BY created_at ASC LIMIT 20").bind(now - 7 * day).all<{ key: string }>();
+    const orphaned = await db.prepare(`SELECT key FROM photos WHERE created_at < ? AND NOT (${attached}) ORDER BY created_at ASC LIMIT 20`).bind(now - 7 * day).all<{ key: string }>();
     if (!orphaned.results.length) return;
     const removed = await storage.remove(orphaned.results.map((row) => row.key));
-    if (!removed.error) await db.batch(orphaned.results.map((row) => db.prepare("DELETE FROM photos WHERE key = ? AND NOT EXISTS (SELECT 1 FROM posts WHERE photo_key = photos.key)").bind(row.key)));
+    if (!removed.error) await db.batch(orphaned.results.map((row) => db.prepare(`DELETE FROM photos WHERE key = ? AND NOT (${attached})`).bind(row.key)));
   } catch { /* Maintenance never turns a successful contribution into a failed submission. */ }
 }
 
@@ -666,8 +671,8 @@ async function photo(request: Request): Promise<Response> {
   const storage = photoStorage();
   if (!/^photos\/[a-f0-9-]+\.(jpg|png|webp)$/.test(key) || !storage) throw new HttpError(404, "Photo not found.");
   const userId = (await currentUser())?.userId || "";
-  let allowed = await database().prepare("SELECT mime FROM photos WHERE key = ? AND (user_id = ? OR EXISTS (SELECT 1 FROM posts WHERE photo_key = ? AND status = 'approved' AND expires_at > ?))")
-    .bind(key, userId, key, Date.now()).first<{ mime: string }>();
+  let allowed = await database().prepare("SELECT mime FROM photos WHERE key = ? AND (user_id = ? OR EXISTS (SELECT 1 FROM posts WHERE photo_key = ? AND status = 'approved' AND expires_at > ?) OR EXISTS (SELECT 1 FROM incidents WHERE photo_key = ? AND status = 'approved' AND expires_at > ?))")
+    .bind(key, userId, key, Date.now(), key, Date.now()).first<{ mime: string }>();
   if (!allowed && userId) {
     try {
       await requireModerator();
@@ -692,12 +697,12 @@ async function moderationQueue(request: Request): Promise<Response> {
   await requireModerator();
   const db = database();
   const result = await db.batch<Row>([
-    ...["reviews", "posts", "threads", "replies"].map((table) => db.prepare(`SELECT * FROM ${table} WHERE status IN ('pending', 'hidden') OR id IN (SELECT target_id FROM reports) ORDER BY CASE WHEN status = 'pending' THEN 0 WHEN id IN (SELECT target_id FROM reports) THEN 1 ELSE 2 END, created_at ASC, id ASC LIMIT 200`)),
+    ...["reviews", "posts", "threads", "replies", "incidents"].map((table) => db.prepare(`SELECT * FROM ${table} WHERE status IN ('pending', 'hidden') OR id IN (SELECT target_id FROM reports) ORDER BY CASE WHEN status = 'pending' THEN 0 WHEN id IN (SELECT target_id FROM reports) THEN 1 ELSE 2 END, created_at ASC, id ASC LIMIT 200`)),
     db.prepare("SELECT id, target_id, reason, created_at FROM reports ORDER BY created_at DESC LIMIT 500"),
     db.prepare("SELECT id, kind, contact, target_id, reason, evidence_url, status, moderator_note, created_at FROM community_requests WHERE status = 'pending' ORDER BY created_at ASC LIMIT 200"),
   ]);
-  const maps = [publicReview, publicPost, publicThread, publicReply];
-  return json({ queue: result.slice(0, 4).flatMap((table, i) => table.results.map((row) => ({ ...maps[i](row), kind: ["review", "post", "thread", "reply"][i], moderationReason: row.moderation_reason }))), reports: result[4].results.map((row) => ({ id: row.id, targetId: row.target_id, reason: row.reason, createdAt: iso(row.created_at) })), requests: result[5].results.map((row) => ({ id: row.id, kind: row.kind, contact: row.contact, targetId: row.target_id, reason: row.reason, evidenceUrl: row.evidence_url, createdAt: iso(row.created_at) })) });
+  const maps = [publicReview, publicPost, publicThread, publicReply, publicIncident];
+  return json({ queue: result.slice(0, 5).flatMap((table, i) => table.results.map((row) => ({ ...maps[i](row), kind: ["review", "post", "thread", "reply", "incident"][i], moderationReason: row.moderation_reason }))), reports: result[5].results.map((row) => ({ id: row.id, targetId: row.target_id, reason: row.reason, createdAt: iso(row.created_at) })), requests: result[6].results.map((row) => ({ id: row.id, kind: row.kind, contact: row.contact, targetId: row.target_id, reason: row.reason, evidenceUrl: row.evidence_url, createdAt: iso(row.created_at) })) });
 }
 
 async function moderateAction(request: Request): Promise<Response> {
@@ -722,7 +727,7 @@ async function moderateAction(request: Request): Promise<Response> {
   if (!["approve", "hide"].includes(decision)) throw new HttpError(400, "Choose approve or hide.");
   const reason = textField(body.reason ?? (decision === "hide" ? "Hidden by a community moderator." : ""), "Reason", 0, 500);
   await consumeRateLimit(profile.userId, "moderation", 100, 3600);
-  for (const table of ["reviews", "posts", "threads", "replies"]) {
+  for (const table of ["reviews", "posts", "threads", "replies", "incidents"]) {
     const row = await database().prepare(`SELECT * FROM ${table} WHERE id = ?`).bind(targetId).first<Row>();
     if (!row) continue;
     if (decision === "approve") {
@@ -730,8 +735,10 @@ async function moderateAction(request: Request): Promise<Response> {
       const privacy = privateInformationReason([row.title, row.text, row.description, row.location, row.tags, row.term, row.collection_instructions, row.food_details, row.freebie_json].filter(Boolean).join("\n"), privateHome);
       if (privacy) throw new HttpError(400, privacy);
     }
+    // Hiding a live incident also ends it, so a cleared heads-up never resurfaces if later re-approved by mistake.
+    const hideIncident = table === "incidents" && decision === "hide" ? ", resolved_at = COALESCE(resolved_at, ?), resolution = COALESCE(resolution, 'moderator')" : "";
     await database().batch([
-      database().prepare(`UPDATE ${table} SET status = ?, moderation_reason = ?, moderation_revision = moderation_revision + 1 WHERE id = ?`).bind(decision === "approve" ? "approved" : "hidden", reason || null, targetId),
+      database().prepare(`UPDATE ${table} SET status = ?, moderation_reason = ?, moderation_revision = moderation_revision + 1${hideIncident} WHERE id = ?`).bind(decision === "approve" ? "approved" : "hidden", reason || null, ...(hideIncident ? [Date.now()] : []), targetId),
       database().prepare("DELETE FROM reports WHERE target_id = ?").bind(targetId),
       database().prepare("DELETE FROM moderation_retries WHERE target_id = ?").bind(targetId),
     ]);
@@ -743,7 +750,7 @@ async function moderateAction(request: Request): Promise<Response> {
 async function exportAccount(): Promise<Response> {
   const userId = await identity();
   const db = database();
-  const tables = ["profiles", "reviews", "posts", "threads", "replies", "votes", "reports", "photos", "community_requests", "community_preferences"] as const;
+  const tables = ["profiles", "reviews", "posts", "threads", "replies", "incidents", "votes", "reports", "photos", "community_requests", "community_preferences"] as const;
   const data = await db.batch(tables.map((table) => db.prepare(`SELECT * FROM ${table} WHERE user_id = ?`).bind(userId)));
   const account = Object.fromEntries(tables.map((table, i) => [table, data[i].results]));
   return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), account }, null, 2), { headers: { "Content-Type": "application/json", "Content-Disposition": "attachment; filename=community-account.json", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
@@ -761,13 +768,13 @@ async function deleteAccount(): Promise<Response> {
   }
   await db.batch([
     db.prepare("SELECT id FROM threads WHERE user_id = ? FOR UPDATE").bind(userId),
-    db.prepare("DELETE FROM moderation_retries WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ? UNION SELECT r.id FROM replies r JOIN threads t ON t.id = r.thread_id WHERE t.user_id = ?)").bind(userId, userId, userId, userId, userId),
-    db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ?)").bind(userId, userId, userId, userId),
-    db.prepare("DELETE FROM reports WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ?)").bind(userId, userId, userId, userId),
+    db.prepare("DELETE FROM moderation_retries WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ? UNION SELECT id FROM incidents WHERE user_id = ? UNION SELECT r.id FROM replies r JOIN threads t ON t.id = r.thread_id WHERE t.user_id = ?)").bind(userId, userId, userId, userId, userId, userId),
+    db.prepare("DELETE FROM votes WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ? UNION SELECT id FROM incidents WHERE user_id = ?)").bind(userId, userId, userId, userId, userId),
+    db.prepare("DELETE FROM reports WHERE target_id IN (SELECT id FROM reviews WHERE user_id = ? UNION SELECT id FROM posts WHERE user_id = ? UNION SELECT id FROM threads WHERE user_id = ? UNION SELECT id FROM replies WHERE user_id = ? UNION SELECT id FROM incidents WHERE user_id = ?)").bind(userId, userId, userId, userId, userId),
     db.prepare("DELETE FROM votes WHERE target_id IN (SELECT r.id FROM replies r JOIN threads t ON t.id = r.thread_id WHERE t.user_id = ?)").bind(userId),
     db.prepare("DELETE FROM reports WHERE target_id IN (SELECT r.id FROM replies r JOIN threads t ON t.id = r.thread_id WHERE t.user_id = ?)").bind(userId),
     db.prepare("DELETE FROM replies WHERE thread_id IN (SELECT id FROM threads WHERE user_id = ?)").bind(userId),
-    ...["reviews", "posts", "threads", "replies", "votes", "reports", "photos", "profiles", "community_requests", "community_preferences"].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(userId)),
+    ...["reviews", "posts", "threads", "replies", "incidents", "votes", "reports", "photos", "profiles", "community_requests", "community_preferences"].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(userId)),
     db.prepare("DELETE FROM rate_limits WHERE key LIKE ? ESCAPE '\\'").bind(`%:${userId.replace(/[\\%_]/g, "\\$&") }:%`),
   ]);
   const removed = await admin.auth.admin.deleteUser(userId);

@@ -6,14 +6,15 @@ import {FreebieFacts} from './freebie-events';
 import type {EventPin} from '@/lib/freebies/view';
 import { places } from "@/lib/data";
 import { FOOD_ALLERGENS, readFoodDetails } from "@/lib/food";
+import { categoryInfo, severityInfo } from "@/lib/incidents/model";
 
 type Item = Partial<EventPin> & {
-  id: string; kind: "review" | "post" | "thread" | "reply";
+  id: string; kind: "review" | "post" | "thread" | "reply" | "incident";
   status: "approved" | "pending" | "hidden"; createdAt: string; moderationReason?: string;
   placeId?: string; title?: string; text?: string; description?: string;
   location?: string; photoUrl?: string; rating?: number; tags?: string[]; term?: string;
   type?: string; foodDetails?: unknown; collectionInstructions?: string; portionsRemaining?: number | null;
-  dietary?: string[]; expiresAt?: string;
+  dietary?: string[]; expiresAt?: string; category?: string; severity?: string; resolvedAt?: string | null;
 };
 type Report = { id: string; targetId: string; reason: string; createdAt: string };
 type CommunityRequest = { id: string; kind: "correction" | "takedown"; contact?: string; targetId: string; reason: string; evidenceUrl?: string; createdAt: string };
@@ -155,6 +156,7 @@ export default function ModerationPanel({ onAccount }: { onAccount?: () => void 
             <time dateTime={item.createdAt} style={styles.muted}>{new Date(item.createdAt).toLocaleDateString("en-GB", { timeZone: "Europe/London", day: "numeric", month: "short", year: "numeric" })}</time>
           </div>
           <h3 style={{ margin: 0, fontSize: 17 }}>{item.title || place?.name || (item.kind === "reply" ? "Discussion reply" : "Student review")}</h3>
+          {item.kind === "incident" && <p style={{ ...styles.note, background: "#fdecec", color: "#8f1a1f" }}><strong>Incident report</strong> · {categoryInfo(item.category).label} · {severityInfo(item.severity).label}{item.expiresAt ? ` · live until ${new Date(item.expiresAt).toLocaleString("en-GB", { timeZone: "Europe/London" })}` : ""}{item.resolvedAt ? " · already cleared" : ""}. Hiding an incident also ends it. Approve only if it describes a place and an event, not an identifiable person.</p>}
           {item.location && <p style={styles.muted}>{item.location}</p>}
           {item.rating && <span style={styles.muted}>{item.rating} / 5 · {item.term}</span>}
           <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{item.text || item.description || "No written review supplied."}</p>{item.freebie&&<><FreebieFacts pin={item as EventPin} expanded/>{item.sourceUrl&&<a className="source-link" href={item.sourceUrl} target="_blank" rel="noreferrer">Original Union listing</a>}</>}

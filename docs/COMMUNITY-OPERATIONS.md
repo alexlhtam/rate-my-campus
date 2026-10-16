@@ -10,6 +10,8 @@ All 12 public-schema application tables have RLS enabled without client policies
 
 The [rollback-only hosted SQL check](../scripts/verify-food-backend.sql) passed for feed/metadata, ownership/revision checks, fresh distinct-account feedback, quorum, idempotent closure and client-role isolation; zero synthetic fixtures remained. Execute the whole script in one transaction when reproducing it. The final repository suite passes 194/194 tests and the production build passes after Toolkit removal. These checks do not verify app sign-in, actual photo upload, Claude/Google calls or deployment. No live app keys were available locally; Alex's runtime credentials remain the application's prerequisites.
 
+The campus incidents migration `supabase/migrations/20261015000000_campus_incidents.sql` has **not** been applied to the hosted project yet. It adds the `incidents` table and lets `moderation_retries.kind` hold `incident`. Apply it before deploying the incidents feature; until then the incident routes answer 500 on database access and the demo still works. Incident lifecycle, API and retention are documented in the [incidents handoff](INCIDENTS.md).
+
 ## Automatic moderation recovery
 
 - New submissions retry transient Claude errors (429, 502, 504) once immediately. They remain private if both checks fail.
@@ -26,6 +28,7 @@ A bounded sweep runs at most hourly on community contribution or private-request
 | Data | Policy |
 | --- | --- |
 | Approved expired pins | Remove after 30 days, up to 50 per sweep. Preserve content with an outstanding report or pending request. Pending/hidden moderation content is preserved. |
+| Approved expired incident reports | Remove after 30 days with their responses, up to 50 per sweep. Preserve reports with an outstanding flag. Photos referenced by an incident are not treated as orphans. |
 | Unattached uploaded photos | Remove after seven days, up to 20 per sweep. Database metadata is removed only after storage deletion succeeds. New posts can attach only photos uploaded within six days, leaving a cleanup grace period. |
 | Resolved correction/privacy requests | Remove 90 days after resolution. Unresolved requests stay available for action. |
 | Temporary request identifiers | Stored as hashes in expiring rate-limit rows; raw network addresses are not retained by these features. |
